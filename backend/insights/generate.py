@@ -1,6 +1,7 @@
 """Public API for rule-backed executive observations and priority interpretation."""
-import re
-from .rules import evaluate_rules, INDUSTRY_RULES
+from .rules import evaluate_rules
+from .priority import interpret_prompt
+from .formatting import fmt
 
 COPY = {
     'R1': ('Lowest-use sites warrant an allocation review; unscanned stock is not proof of waste.', 'Review locker buffers and shift requirements before rebalancing garments.', 'Customer', 'Where can we pilot an allocation review while maintaining garment availability?'),
@@ -15,8 +16,6 @@ COPY = {
 
 def _evidence(fact):
     """Render only deterministic numbers with metric/site references."""
-    def fmt(v):
-        return f'{v:,.2f}'.rstrip('0').rstrip('.') if isinstance(v, float) else f'{v:,}'
     rule = fact['rule_id']
     values = fact['numbers']
     if rule == 'R5':
@@ -44,8 +43,11 @@ def render_fact(fact, index):
         observation += ' Evidence: ' + _evidence(fact) + '.'
     if fact['rule_id'] == 'R6':
         # Retain exact source messages without turning known inconsistent registry prose into computed claims.
-        observation += ' Sources to resolve: ' + '; '.join(g['gap'] for g in fact.get('data_gaps', [])) + '.'
-        observation += ' Checks: ' + ', '.join(q['check_id'] for q in fact.get('data_quality', [])) + '.'
+        gaps = fact.get('data_gaps', [])
+        observation += ' Sources to resolve: ' + '; '.join(g['gap'] for g in gaps[:2]) + '.'
+        if len(gaps) > 2:
+            observation += f' Additional gaps: {len(gaps) - 2}; see the data-readiness registry.'
+        observation += ' Checks: ' + ', '.join(dict.fromkeys(q['check_id'] for q in fact.get('data_quality', []))) + '.'
     return dict(id=f'OBS{index}', title=fact['title'], observation=observation,
                 recommended_action=action, owner=owner, steering_question=question,
                 metric_ids=fact['metric_ids'], site_ids=fact['site_ids'],
@@ -64,20 +66,3 @@ def generate_observations(review: dict, use_llm: bool = True) -> list[dict]:
         from .llm import polish
         return polish(facts, fallback)
     return fallback
-
-
-def interpret_prompt(text: str, industry: str) -> str:
-    """First explicit topic wins; unknown text uses the industry's top priority."""
-    aliases = {
-        'water': r'water|litres?|liters?|freshwater',
-        'emissions': r'emissions?|carbon|co2e?|climate|ghg',
-        'cost': r'costs?|price|pricing|budget|money|allocation',
-        'circularity': r'circularity|circular|repairs?|reuse|recycling|waste|lifetime',
-        'service': r'service|hygiene|delivery|deliveries|reliability|turnaround|on.time',
-        'improvement': r'improvement|improve|next.year|optimi[sz]ation',
-    }
-    matches = [(m.start(), key) for key, pattern in aliases.items() if (m := re.search(r'\b(?:' + pattern + r')\b', text.lower()))]
-    if matches:
-        return min(matches)[1]
-    first = INDUSTRY_RULES.get(industry, ['R6'])[0]
-    return {'R3': 'service', 'R1': 'cost'}.get(first, 'improvement')

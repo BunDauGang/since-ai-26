@@ -15,6 +15,14 @@ REQUIRED_SHEETS = (
 )
 
 
+class WorkbookTables(dict):
+    """Tables plus nonfatal adapter findings, separate from data sheet records."""
+
+    def __init__(self):
+        super().__init__()
+        self.diagnostics = []
+
+
 def load_tables(source_path: str | Path | None = None) -> dict[str, list[dict]]:
     """Read records without silently dropping incomplete or unmapped rows.
 
@@ -31,17 +39,29 @@ def load_tables(source_path: str | Path | None = None) -> dict[str, list[dict]]:
         missing = sorted(set(REQUIRED_SHEETS) - set(workbook.sheetnames))
         if missing:
             raise ValueError(f"Missing workbook sheets: {', '.join(missing)}")
-        tables = {}
+        tables = WorkbookTables()
         for sheet in workbook:
             if sheet.title == "README":
                 continue  # Cover page, not a rectangular data table.
             rows = sheet.iter_rows(values_only=True)
             header = next(rows, ())
             columns = [str(value).strip() if value is not None else "" for value in header]
+            error = None
             if not columns or any(not column for column in columns):
-                raise ValueError(f"{sheet.title}: missing column header")
-            if len(columns) != len(set(columns)):
-                raise ValueError(f"{sheet.title}: duplicate column header")
+                error = "missing column header"
+            elif len(columns) != len(set(columns)):
+                error = "duplicate column header"
+            if error:
+                if sheet.title in REQUIRED_SHEETS:
+                    # Guessing a key in a calculation table could silently misattribute data.
+                    raise ValueError(f"{sheet.title}: {error}")
+                tables.diagnostics.append(dict(
+                    check_id="DQ_HEADER", dataset=sheet.title, severity="warning",
+                    message=f"{sheet.title}: {error} in optional/reference sheet.",
+                    affected_rows=max(0, (sheet.max_row or 1) - 1),
+                    treatment="Optional sheet excluded; repair its headers to restore reference context. Calculation inputs are unchanged.",
+                ))
+                continue
             records = []
             for values in rows:
                 if all(value is None for value in values):

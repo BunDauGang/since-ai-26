@@ -191,3 +191,95 @@ def test_bad_data_review_reports_missing_and_unmapped(pack_builder, pack_tables)
 def test_invalid_selections(pack_builder, kwargs):
     with pytest.raises(ValueError):
         pack_builder(**kwargs)
+
+
+@pytest.mark.parametrize('headers', [['key', None], ['key', 'key']])
+def test_malformed_reference_headers_are_reported_without_aborting(tmp_path, headers):
+    book = Workbook()
+    book.remove(book.active)
+    for name in REQUIRED_SHEETS:
+        book.create_sheet(name).append(['key', 'value'])
+    ref = book.create_sheet('Sample_Output')
+    ref.append(headers)
+    ref.append(['reference', 'unused'])
+    path = tmp_path / 'optional-header.xlsx'
+    book.save(path)
+    tables = load_tables(path)
+    assert set(REQUIRED_SHEETS) <= tables.keys()
+    assert 'Sample_Output' not in tables
+    assert tables.diagnostics[0]['check_id'] == 'DQ_HEADER'
+    assert tables.diagnostics[0]['severity'] == 'warning'
+    assert tables.diagnostics[0]['affected_rows'] == 1
+
+
+@pytest.mark.parametrize('headers', [['key', None], ['key', 'key']])
+def test_ambiguous_required_headers_still_fail_explicitly(tmp_path, headers):
+    book = Workbook()
+    book.remove(book.active)
+    for name in REQUIRED_SHEETS:
+        book.create_sheet(name).append(['key', 'value'])
+    book['Service_Activity'].delete_rows(1)
+    book['Service_Activity'].append(headers)
+    path = tmp_path / 'required-header.xlsx'
+    book.save(path)
+    with pytest.raises(ValueError, match='Service_Activity: .* column header'):
+        load_tables(path)
+
+
+def test_all_dq_warnings_use_contract_severity_and_structured_target(pack_tables):
+    findings = validate_tables(pack_tables)
+    assert findings and all(q['severity'] == 'warning' for q in findings)
+    monthly = [q for q in findings if q['check_id'] == 'DQ4']
+    assert len(monthly) == 12
+    assert all(q['laundry_id'] == 'L003' and q['month'].startswith('2025-') for q in monthly)
+
+
+@pytest.mark.parametrize('structured', [True, False])
+def test_site_flags_match_complete_laundry_id(pack_builder, pack_tables, monkeypatch, structured):
+    import importlib
+    from copy import deepcopy
+    sites = deepcopy(pack_tables['Sites'])
+    for row, laundry in zip(sites, ['L1', 'L10', 'L12']):
+        row['primary_laundry_id'] = laundry
+    monkeypatch.setitem(pack_tables, 'Sites', sites)
+    finding = dict(check_id='EXACT_LAUNDRY_TEST', dataset='Laundry_Resources', severity='warning',
+                   affected_rows=1, message='Laundry L10 volume requires reconciliation.', treatment='Check source.')
+    if structured:
+        finding['laundry_id'] = 'L10'
+    module = importlib.import_module('backend.engine.build_review')
+    monkeypatch.setattr(module, 'validate_tables', lambda _: [finding])
+    result = pack_builder()
+    assert 'EXACT_LAUNDRY_TEST' not in result['sites'][0]['flags']
+    assert 'EXACT_LAUNDRY_TEST' in result['sites'][1]['flags']
+    assert 'EXACT_LAUNDRY_TEST' not in result['sites'][2]['flags']
+
+
+def test_site_laundry_alias_preserves_identity_and_flags(pack_builder, pack_tables, monkeypatch):
+    from copy import deepcopy
+    sites = deepcopy(pack_tables['Sites'])
+    target = next(s for s in sites if s.get('primary_laundry_id') == 'L003')
+    target['laundry_id'] = target.pop('primary_laundry_id')
+    monkeypatch.setitem(pack_tables, 'Sites', sites)
+    review = pack_builder()
+    output = next(s for s in review['sites'] if s['site_id'] == target['site_id'])
+    assert output['laundry_id'] == 'L003'
+    assert 'DQ4' in output['flags']
+
+
+@pytest.mark.parametrize('topics', ['cost before water', 'service, then water', 'circularity and cost', 'emissions then water', ''])
+def test_default_priority_matches_prompt_resolution(pack_builder, pack_tables, monkeypatch, topics):
+    from copy import deepcopy
+    from backend.insights import interpret_prompt
+    customers = deepcopy(pack_tables['Customers'])
+    customer = next(c for c in customers if c['customer_id'] == 'CUST001')
+    customer['priority_topics'] = topics
+    monkeypatch.setitem(pack_tables, 'Customers', customers)
+    review = pack_builder()
+    assert review['meta']['priority'] == interpret_prompt(topics, customer['industry'])
+    assert review['priority_view']['priority'] == review['meta']['priority']
+
+
+def test_nonfatal_adapter_diagnostics_reach_review(pack_builder, pack_tables, monkeypatch):
+    monkeypatch.setattr(pack_tables, 'diagnostics', [dict(check_id='DQ_HEADER', dataset='Sample_Output',
+        severity='warning', affected_rows=1, message='Optional header invalid', treatment='Fix reference header')])
+    assert any(q['check_id'] == 'DQ_HEADER' for q in pack_builder()['data_quality'])

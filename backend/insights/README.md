@@ -38,7 +38,9 @@ The selected priority leads. Remaining findings follow the rank-ordered
 fallbacks. If needed, factual context observations supplement sparse outliers.
 Unknown prompts use service for Food & Beverage/Healthcare, cost for
 Manufacturing, and improvement otherwise. Multiple explicit topics use the
-first mentioned topic. Prompt interpretation is offline and deterministic.
+first mentioned topic. Prompt interpretation is offline and deterministic. Engine defaults use the
+same resolver in `backend/insights/priority.py`, so the same topic text cannot
+select a different priority merely because it came from the customer master.
 
 ## Optional Gemini
 

@@ -16,9 +16,9 @@ def validate_tables(tables: dict[str, list[dict]]) -> list[dict]:
     """
     findings = []
 
-    def report(check, dataset, count, message, treatment):
-        finding = dict(check_id=check, dataset=dataset, severity="WARNING",
-                       message=message, affected_rows=count, treatment=treatment)
+    def report(check, dataset, count, message, treatment, **target):
+        finding = dict(check_id=check, dataset=dataset, severity="warning",
+                       message=message, affected_rows=count, treatment=treatment, **target)
         findings.append(finding)
         LOGGER.warning("%s %s: %s", check, dataset, message)
 
@@ -66,5 +66,6 @@ def validate_tables(tables: dict[str, list[dict]]) -> list[dict]:
             share = volumes[key] / total
             report("DQ4", "Laundry_Resources", counts[key],
                    f"Laundry {key[0]} {key[1]}: customer shares total {share:.1%} (>100%).",
-                   "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag.")
+                   "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag.",
+                   laundry_id=key[0], month=key[1])
     return findings

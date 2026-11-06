@@ -1,24 +1,9 @@
 """One presentation model shared by the PowerPoint and PDF renderers."""
 import re
 from backend.insights.generate import generate_observations
+from backend.insights.formatting import fmt
 
 FOOTER = 'Synthetic, illustrative data. Not audited. Not an approved Lindström claim.'
-PRIORITIES = {
-    'water': ['water_saving_l', 'customer_water_l', 'washed_kg'],
-    'emissions': ['co2e_saving_kg', 'customer_co2e_kg', 'energy_saving_kwh'],
-    'cost': ['idle_value_eur', 'idle_pieces', 'allocation_use_rate'],
-    'circularity': ['repairs_total', 'replacements_postponed', 'avoided_product_co2e_kg'],
-    'service': ['on_time_rate', 'median_cycle_hours', 'service_requests'],
-    'improvement': ['allocation_use_rate', 'on_time_rate', 'circular_waste_share'],
-}
-
-
-def fmt(value):
-    if isinstance(value, (int, float)):
-        return f'{value:,.2f}'.rstrip('0').rstrip('.') if isinstance(value, float) else f'{value:,}'
-    return str(value)
-
-
 def metric_block(metric, case='base'):
     v = metric['value']
     return (metric['label'],
@@ -59,7 +44,14 @@ def build_pages(review):
          'Full source review and provenance: PowerPoint methodology notes / PDF review.json attachment.')])
     page('Executive summary', blocks(['delivery_sites', 'wearers_min_est', 'washed_kg', 'repairs_total', 'water_saving_l', 'co2e_saving_kg']))
     priority = meta['priority']
-    page(f'Priority spotlight | {priority.title()}', blocks(PRIORITIES.get(priority, [])) + [
+    emphasized = list(dict.fromkeys(review.get('priority_view', {}).get('emphasized_metric_ids', [])))
+    spotlight = blocks(emphasized)
+    unavailable = [i for i in emphasized if i not in metrics]
+    if unavailable:
+        spotlight.append(('Unavailable spotlight indicators', ', '.join(unavailable) + '\nNo value supplied; see data gaps.'))
+    if not emphasized:
+        spotlight.append(('Priority indicators', 'No emphasized metric IDs supplied in priority_view.'))
+    page(f'Priority spotlight | {priority.title()}', spotlight + [
         ('Industry context', '\n'.join(review.get('priority_view', {}).get('industry_rules', [])) +
          ('\nIllustrative capital value only; no demonstrated cost saving.' if priority == 'cost' else '\nIndustry context guides emphasis; it is not compliance advice.'))])
     baseline_blocks = []
@@ -87,12 +79,25 @@ def build_pages(review):
         site_blocks.append((country + ' | lowest / highest on-time rate', '\n\n'.join(text) + '\nSynthetic site inputs; rates calculated.'))
     page('Multi-site performance', site_blocks + [('Read the outliers', 'Site selection uses on-time rate within each country. Rates are fractions of one.\n'
          'Source: review.sites; service-cycle and allocation data.\nInvestigate causes before attributing responsibility.')])
+    breakdown_lines = []
+    for metric_id, key, dimension, label in [
+        ('repairs_total', 'by_repair_type', 'repair_type', 'Repair types'),
+        ('textile_waste_kg', 'by_route', 'route', 'Waste routes'),
+    ]:
+        metric = metrics.get(metric_id, {})
+        entries = metric.get('breakdown', {}).get(key)
+        if not entries:
+            breakdown_lines.append(label + ': not supplied in this review.')
+            continue
+        breakdown_lines.append(label + ' (' + metric.get('unit', '') + '): ' +
+                               '; '.join(str(row[dimension]) + ': ' + fmt(row['value']) for row in entries))
+        breakdown_lines.append(metric['status'] + ' | Confidence: ' + metric['confidence'])
+    breakdown_lines.append('Repair effects are estimates; no avoided purchase is established. Circular share covers reuse + recycling.')
     page('Circularity & repair handprint', blocks(['repairs_total', 'replacements_postponed', 'avoided_product_co2e_kg', 'textile_waste_kg', 'circular_waste_share']) + [
-        ('Breakdown availability', 'Repair types and individual waste routes are not supplied by the current shared contract.\n'
-         'The aggregate circular share covers reuse + recycling.\nRepair effects are estimates; no avoided purchase is established.\n'
-         'Request contract-backed breakdowns from the data engine; never infer them from totals.')])
+        ('Repair types & waste routes', '\n'.join(breakdown_lines))])
     page('Observations & recommended next actions', [(o['title'], o['observation'] + '\nAction: ' + o['recommended_action'] +
-         '\nOwner: ' + o['owner'] + '\nReferences: ' + ', '.join(o['metric_ids'] + o['site_ids']) + '\n' + o['status']) for o in observations])
+         '\nOwner: ' + o['owner'] + '\nReferences: ' + ', '.join(o['metric_ids'] + o['site_ids'][:3]) +
+         (f" (+{len(o['site_ids']) - 3} more sites in source review)" if len(o['site_ids']) > 3 else '') + '\n' + o['status']) for o in observations])
     page('Steering-committee discussion', [(o['title'], o['steering_question'] + '\nDecision owner: ' + o['owner']) for o in observations])
     methodology = [('Calculation boundaries', 'All values are synthetic. Footprint uses laundry intensity × customer washed kg.\n'
                     'Handprint is the selected alternative minus the allocated service footprint.\n'
@@ -100,13 +105,33 @@ def build_pages(review):
                     'Full metric formulas, sources and uncertainty are retained in the embedded source review.\n'
                     'Registry prose is supplied context and may conflict with metric totals; use structured metrics for current values.')]
     methodology.append(('Assumption registry', '\n'.join(f"{a['id']}: {a['value_or_rule']} [{a['confidence']}]" for a in review.get('assumptions', []))))
-    dq_all = review.get('data_quality', [])
-    dq_prioritized = [q for q in dq_all if 'L003' in q.get('message', '')][:1] + [q for q in dq_all if 'L003' not in q.get('message', '')]
-    dq_shown = dq_prioritized[:4]
-    dq_text = '\n'.join(f"{q['check_id']}: {q['message']}\nTreatment: {q['treatment']}" for q in dq_shown)
-    if len(dq_all) > len(dq_shown):
-        dq_text += f"\n(+{len(dq_all) - len(dq_shown)} more checks in embedded review.json)"
-    methodology.append(('Data-quality flags', dq_text or 'No flags supplied.'))
+    methodology.append(('Data-quality flags', summarize_quality(review.get('data_quality', []))))
     methodology.append(('Production data gaps', '\n'.join(f"{g['gap']} → {g['future_source']}" for g in review.get('data_gaps', [])) or 'No gaps supplied.'))
     page('Methodology, assumptions & data readiness', methodology)
     return pages
+
+
+def summarize_quality(findings):
+    """Summarize repeated findings; preserve full messages/treatments in provenance."""
+    groups = {}
+    for finding in findings:
+        match = re.search(r'\bLaundry\s+([A-Za-z0-9_-]+)', finding.get('message', ''), re.I)
+        laundry = finding.get('laundry_id') or (match.group(1) if match else '')
+        key = (finding['check_id'], finding['severity'].lower(), laundry)
+        groups.setdefault(key, []).append(finding)
+    lines = []
+    ordered = sorted(groups.items(), key=lambda item: (item[0][0] != 'DQ4', item[0][1] == 'info', item[0]))
+    for (check, severity, laundry), rows in ordered:
+        first = rows[0]
+        datasets = ', '.join(dict.fromkeys(r['dataset'] for r in rows))
+        heading = f"{check} [{severity}] / {len(rows)} finding(s)"
+        if laundry:
+            heading += ' / ' + laundry
+        # This is an explicit preview; source facts are never rewritten or discarded.
+        preview = first['message']
+        if len(preview) > 130:
+            preview = preview[:127].rsplit(' ', 1)[0] + '…'
+        lines.append(heading + ': ' + preview + '\nSources: ' + datasets)
+    if findings:
+        lines.append('Summarized findings. Full messages, affected rows and treatments: embedded source review.')
+    return '\n'.join(lines) or 'No flags supplied.'
