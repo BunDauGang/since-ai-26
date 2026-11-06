@@ -15,9 +15,16 @@ from .content import build_pages, FOOTER
 
 def _font():
     if 'ReviewSans' not in pdfmetrics.getRegisteredFontNames():
-        path = Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
-        if not path.exists():
-            raise RuntimeError('Install DejaVu Sans fonts for Unicode PDF output')
+        candidates = [
+            Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
+            Path('C:/Windows/Fonts/DejaVuSans.ttf'),
+            Path('C:/Windows/Fonts/arial.ttf'),
+            Path('C:/Windows/Fonts/segoeui.ttf'),
+            Path('/System/Library/Fonts/Supplemental/Arial.ttf'),
+        ]
+        path = next((p for p in candidates if p.exists()), None)
+        if path is None:
+            raise RuntimeError('Install DejaVu Sans or Arial fonts for Unicode PDF output')
         pdfmetrics.registerFont(TTFont('ReviewSans', str(path)))
     return 'ReviewSans'
 

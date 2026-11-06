@@ -100,7 +100,13 @@ def build_pages(review):
                     'Full metric formulas, sources and uncertainty are retained in the embedded source review.\n'
                     'Registry prose is supplied context and may conflict with metric totals; use structured metrics for current values.')]
     methodology.append(('Assumption registry', '\n'.join(f"{a['id']}: {a['value_or_rule']} [{a['confidence']}]" for a in review.get('assumptions', []))))
-    methodology.append(('Data-quality flags', '\n'.join(f"{q['check_id']}: {q['message']}\nTreatment: {q['treatment']}" for q in review.get('data_quality', [])) or 'No flags supplied.'))
+    dq_all = review.get('data_quality', [])
+    dq_prioritized = [q for q in dq_all if 'L003' in q.get('message', '')][:1] + [q for q in dq_all if 'L003' not in q.get('message', '')]
+    dq_shown = dq_prioritized[:4]
+    dq_text = '\n'.join(f"{q['check_id']}: {q['message']}\nTreatment: {q['treatment']}" for q in dq_shown)
+    if len(dq_all) > len(dq_shown):
+        dq_text += f"\n(+{len(dq_all) - len(dq_shown)} more checks in embedded review.json)"
+    methodology.append(('Data-quality flags', dq_text or 'No flags supplied.'))
     methodology.append(('Production data gaps', '\n'.join(f"{g['gap']} → {g['future_source']}" for g in review.get('data_gaps', [])) or 'No gaps supplied.'))
     page('Methodology, assumptions & data readiness', methodology)
     return pages
