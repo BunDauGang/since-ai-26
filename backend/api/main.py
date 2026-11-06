@@ -153,9 +153,25 @@ def _compute_full_review(req: ReviewRequest) -> dict:
     except Exception:
         review = _apply_dynamic_overrides(_load_sample_review(), req, resolved_priority)
 
-    # Step 3: Run Worker B's observations generator if available
+    # Step 3: Run Worker B's rules & observations generator if available
     try:
         from backend.insights.generate import generate_observations  # type: ignore
+        from backend.insights.rules import evaluate_rules  # type: ignore
+
+        rule_flag_map = {
+            "R1": "R1_LOW_ALLOCATION_USE",
+            "R2": "R2_HIGH_REPAIR_RATE",
+            "R3": "R3_LATE_CYCLES",
+            "R4": "R4_SERVICE_REQUESTS",
+        }
+        facts = evaluate_rules(review)
+        site_map = {s["site_id"]: s for s in review.get("sites", [])}
+        for fact in facts:
+            flag_code = rule_flag_map.get(fact.get("rule_id", ""))
+            if flag_code:
+                for sid in fact.get("site_ids", []):
+                    if sid in site_map and flag_code not in site_map[sid]["flags"]:
+                        site_map[sid]["flags"].append(flag_code)
 
         obs = generate_observations(review, use_llm=req.use_llm)
         if obs:
@@ -260,12 +276,16 @@ def get_default_customer_review(
 
 @app.post("/api/export")
 def export_customer_review(
-    req: ReviewRequest,
+    payload: dict,
     format: Literal["pptx", "pdf"] = Query(default="pptx"),
 ) -> FileResponse:
-    review = _compute_full_review(req)
+    if "meta" in payload and "metrics" in payload:
+        review = payload
+    else:
+        req = ReviewRequest(**payload)
+        review = _compute_full_review(req)
     tmp_dir = Path(tempfile.mkdtemp(prefix="lindstrom_export_"))
-    cid = review["meta"]["customer_id"]
+    cid = review.get("meta", {}).get("customer_id", "CUST001")
 
     if format == "pptx":
         out_file = tmp_dir / f"Lindstrom_Value_Review_{cid}.pptx"
