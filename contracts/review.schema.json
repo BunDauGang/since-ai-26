@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LindstromCustomerValueReview",
+  "description": "Shared data contract for the Lindström Customer Value & Sustainability Review Generator",
+  "type": "object",
+  "required": [
+    "meta",
+    "metrics",
+    "sites",
+    "products",
+    "timeseries",
+    "baseline_comparison",
+    "priority_view",
+    "observations",
+    "data_quality",
+    "assumptions",
+    "data_gaps"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "customer_id",
+        "customer_name",
+        "industry",
+        "period",
+        "baseline_id",
+        "sensitivity",
+        "priority",
+        "generated_at",
+        "data_notice"
+      ],
+      "properties": {
+        "customer_id": { "type": "string" },
+        "customer_name": { "type": "string" },
+        "industry": { "type": "string" },
+        "segment": { "type": "string" },
+        "hq_country": { "type": "string" },
+        "period": {
+          "type": "object",
+          "required": ["from", "to"],
+          "properties": {
+            "from": { "type": "string" },
+            "to": { "type": "string" }
+          }
+        },
+        "baseline_id": { "type": "string", "enum": ["B_LOCAL", "B_HOME", "B_INHOUSE"] },
+        "baseline_name": { "type": "string" },
+        "sensitivity": { "type": "string", "enum": ["low", "base", "high"] },
+        "priority": {
+          "type": "string",
+          "enum": ["water", "emissions", "cost", "circularity", "service", "improvement"]
+        },
+        "generated_at": { "type": "string" },
+        "data_notice": { "type": "string" }
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "category",
+          "value",
+          "unit",
+          "status",
+          "formula",
+          "sources",
+          "assumptions",
+          "confidence"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["scale", "allocation", "service", "repair", "footprint", "handprint"]
+          },
+          "value": {
+            "type": "object",
+            "required": ["low", "base", "high"],
+            "properties": {
+              "low": { "type": "number" },
+              "base": { "type": "number" },
+              "high": { "type": "number" }
+            }
+          },
+          "unit": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": [
+              "MEASURED",
+              "CALCULATED",
+              "ALLOCATED_ESTIMATE",
+              "ESTIMATE",
+              "SYNTHETIC",
+              "PUBLIC_REFERENCE"
+            ]
+          },
+          "formula": { "type": "string" },
+          "sources": { "type": "array", "items": { "type": "string" } },
+          "assumptions": { "type": "array", "items": { "type": "string" } },
+          "confidence": { "type": "string" }
+        }
+      }
+    },
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["site_id", "site_name", "country", "city", "site_type", "laundry_id", "metrics", "flags"],
+        "properties": {
+          "site_id": { "type": "string" },
+          "site_name": { "type": "string" },
+          "country": { "type": "string" },
+          "city": { "type": "string" },
+          "site_type": { "type": "string" },
+          "laundry_id": { "type": "string" },
+          "metrics": { "type": "object" },
+          "flags": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["product_id", "product_name", "product_group", "metrics"],
+        "properties": {
+          "product_id": { "type": "string" },
+          "product_name": { "type": "string" },
+          "product_group": { "type": "string" },
+          "metrics": { "type": "object" }
+        }
+      }
+    },
+    "timeseries": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["month", "value"],
+          "properties": {
+            "month": { "type": "string" },
+            "value": { "type": "number" }
+          }
+        }
+      }
+    },
+    "baseline_comparison": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["baseline_id", "name", "water_saving_l", "energy_saving_kwh", "co2e_saving_kg"],
+        "properties": {
+          "baseline_id": { "type": "string" },
+          "name": { "type": "string" },
+          "water_saving_l": { "type": "object" },
+          "energy_saving_kwh": { "type": "object" },
+          "co2e_saving_kg": { "type": "object" }
+        }
+      }
+    },
+    "priority_view": {
+      "type": "object",
+      "required": ["priority", "emphasized_metric_ids", "industry_rules"],
+      "properties": {
+        "priority": { "type": "string" },
+        "emphasized_metric_ids": { "type": "array", "items": { "type": "string" } },
+        "industry_rules": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "observation",
+          "recommended_action",
+          "owner",
+          "steering_question",
+          "metric_ids",
+          "site_ids",
+          "status",
+          "confidence"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "observation": { "type": "string" },
+          "recommended_action": { "type": "string" },
+          "owner": { "type": "string" },
+          "steering_question": { "type": "string" },
+          "metric_ids": { "type": "array", "items": { "type": "string" } },
+          "site_ids": { "type": "array", "items": { "type": "string" } },
+          "status": { "type": "string" },
+          "confidence": { "type": "string" }
+        }
+      }
+    },
+    "data_quality": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check_id", "dataset", "severity", "message", "affected_rows", "treatment"]
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "assumption", "value_or_rule", "rationale", "category", "confidence", "source"]
+      }
+    },
+    "data_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gap", "impact", "future_source"]
+      }
+    }
+  }
+}

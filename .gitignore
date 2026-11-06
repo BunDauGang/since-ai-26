@@ -1,0 +1,33 @@
+# Synthetic data files and exports (do not upload to GitHub)
+data/*.xlsx
+data/*.xls
+data/*.csv
+out/
+*.pptx
+*.pdf
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.pytest_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+dist/
+build/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
