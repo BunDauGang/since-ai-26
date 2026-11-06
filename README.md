@@ -10,6 +10,7 @@ A web application where a Lindström Key Account Manager selects a multi-site cu
 
 ## 2. 10-Minute Reading Order for Teammates
 
+0. **[`docs/TEAM_STUDY_GUIDE.md`](./docs/TEAM_STUDY_GUIDE.md)** — **START HERE FOR TOMORROW'S MEETING:** Plain-English walkthrough of what each person's code actually does, which 3 files to open, your 3-minute script to explain your part to the team, and the exact judge Q&A answers for your seat.
 1. **[`docs/PROJECT_OVERVIEW.md`](./docs/PROJECT_OVERVIEW.md)** — Plain-English summary, the 7-step demo flow, and how the parts connect.
 2. **[`docs/WORKSTREAMS.md`](./docs/WORKSTREAMS.md)** — **Who builds what**, folder ownership, and the **copy-paste prompt brief** for your tool (Codex / Claude Code / Antigravity).
 3. **[`docs/IMPLEMENTATION_GUIDE.md`](./docs/IMPLEMENTATION_GUIDE.md)** — Verified formulas, rules `R1–R6`, dashboard screens, 9-slide export layout, and data-quality flags.
