@@ -72,7 +72,7 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
         <Field label="Customer">
           <select
             aria-label="Customer"
-            className="select min-w-56"
+            className="select min-w-56 max-w-full"
             value={controls.customerId}
             onChange={(e) => {
               const c = CUSTOMERS.find((x) => x.id === e.target.value)!;
@@ -233,7 +233,7 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div role="group" aria-label={label} className="flex flex-col gap-1">
+    <div role="group" aria-label={label} className="flex min-w-0 max-w-full flex-col gap-1">
       <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</span>
       {children}
     </div>

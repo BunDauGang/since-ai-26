@@ -6,16 +6,44 @@ import { shortSiteName } from "@/lib/config";
 import { formatPeer, PEER_KPIS, peerSummary, type PeerRow, type PeerSummary } from "@/lib/peers";
 import type { Review } from "@/lib/types";
 import { Segmented } from "../ui";
+import { CompetitorCompare } from "./CompetitorCompare";
 import { StepHeader } from "./parts";
 
-export function StepPeers({ review, onOpenSite }: { review: Review; onOpenSite: (id: string) => void }) {
+/** Step 4: Lindström vs competing providers first (mentor feedback), then the customer's own sites side by side. */
+export function StepPeers({ review, onOpenSite, onOpenMetric }: { review: Review; onOpenSite: (id: string) => void; onOpenMetric: (id: string) => void }) {
+  const [mode, setMode] = useState<"competitors" | "sites">("competitors");
+  const toggle = (
+    <Segmented
+      value={mode}
+      onChange={setMode}
+      options={[
+        { value: "competitors", label: "Lindström vs competitors" },
+        { value: "sites", label: "Your sites side by side" },
+      ]}
+    />
+  );
+  if (mode === "sites") return <SitePeers review={review} onOpenSite={onOpenSite} toggle={toggle} />;
+  return (
+    <div>
+      <StepHeader
+        kicker="Peer review"
+        title="Why Lindström stands out against the alternatives"
+        sub="The same service compared with a competing rental provider, a wash-only local laundry and washing in-house. Every cell shows where its number comes from."
+        right={toggle}
+      />
+      <CompetitorCompare review={review} onOpenMetric={onOpenMetric} />
+    </div>
+  );
+}
+
+function SitePeers({ review, onOpenSite, toggle }: { review: Review; onOpenSite: (id: string) => void; toggle: React.ReactNode }) {
   const available = PEER_KPIS.map((k) => peerSummary(review, k)).filter((s): s is PeerSummary => !!s);
   const [kpiId, setKpiId] = useState(available[0]?.kpi.id ?? "");
   const s = available.find((x) => x.kpi.id === kpiId) ?? available[0];
   if (!s) {
     return (
       <div>
-        <StepHeader kicker="Peer review" title="Not enough site data to compare" />
+        <StepHeader kicker="Peer review" title="Not enough site data to compare" right={toggle} />
       </div>
     );
   }
@@ -32,15 +60,11 @@ export function StepPeers({ review, onOpenSite }: { review: Review; onOpenSite: 
         kicker="Peer review"
         title={`Your best sites already reach ${fmt(s.topQuartile)}`}
         sub={`${s.kpi.label}: the best quarter of your ${s.rows.length} sites reach ${fmt(s.topQuartile)} or better; the median site is at ${fmt(s.median)}. The gap between your own sites is the most credible benchmark we have.`}
-        right={
-          <Segmented
-            size="sm"
-            value={s.kpi.id}
-            onChange={setKpiId}
-            options={available.map((x) => ({ value: x.kpi.id, label: x.kpi.label }))}
-          />
-        }
+        right={toggle}
       />
+      <div className="mb-3 overflow-x-auto">
+        <Segmented size="sm" value={s.kpi.id} onChange={setKpiId} options={available.map((x) => ({ value: x.kpi.id, label: x.kpi.label }))} />
+      </div>
 
       <section className="card p-5">
         <Strip s={s} onOpenSite={onOpenSite} name={name} />

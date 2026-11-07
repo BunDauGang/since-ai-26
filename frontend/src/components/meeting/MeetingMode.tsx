@@ -108,7 +108,7 @@ export function MeetingMode({ review, meeting, onMeeting, onPersona, onOpenMetri
         {step === 1 && <StepTitle review={review} persona={meeting.persona} onGo={go} />}
         {step === 2 && <StepSummary review={review} persona={meeting.persona} onOpenMetric={onOpenMetric} />}
         {step === 3 && <StepAgreement review={review} meeting={meeting} onChange={onMeeting} onOpenMetric={onOpenMetric} />}
-        {step === 4 && <StepPeers review={review} onOpenSite={onOpenSite} />}
+        {step === 4 && <StepPeers review={review} onOpenSite={onOpenSite} onOpenMetric={onOpenMetric} />}
         {step === 5 && <StepRoughCalc review={review} meeting={meeting} onChange={onMeeting} onOpenMetric={onOpenMetric} />}
         {step === 6 && <StepNextSteps review={review} meeting={meeting} onChange={onMeeting} onExport={onExport} exporting={exporting} canExport={canExport} />}
       </div>
