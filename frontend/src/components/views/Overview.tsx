@@ -1,12 +1,16 @@
 "use client";
 
-import { ArrowRight, Lightbulb, Target } from "lucide-react";
+import { ChevronDown, Search, Target } from "lucide-react";
+import { useState } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { INDUSTRY_RULES, isOutlier, priorityDef, shortSiteName, SITE_METRIC_META, type ViewId } from "@/lib/config";
 import { metricMap } from "@/lib/derive";
+import { dqNotes, type DqNote } from "@/lib/dq";
 import { compact, formatValue, monthLabel } from "@/lib/format";
 import type { Metric, Priority, Review, Sensitivity } from "@/lib/types";
 import { KpiCard } from "../KpiCard";
+import { StoryStrip } from "../StoryStrip";
+import { WhatIfSimulator } from "../WhatIfSimulator";
 import { SectionTitle } from "../ui";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -32,9 +36,8 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
   const byId = metricMap(review);
   const spotlight = emphasized.map((id) => byId.get(id)).filter(Boolean) as Metric[];
   const rest = review.metrics.filter((m) => !emphasized.includes(m.id));
-  const categories = Array.from(new Set(rest.map((m) => m.category)));
   const industryRule = INDUSTRY_RULES[review.meta.industry]?.find((r) => r.priority === priority);
-  const topObs = review.observations[0];
+  const dq = dqNotes(review);
 
   // Spotlight chart: sites ranked by the priority's site metric.
   const sm = SITE_METRIC_META[p.siteMetric];
@@ -70,10 +73,23 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
         </div>
         <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
           {spotlight.map((m) => (
-            <KpiCard key={`${priority}-${m.id}`} metric={m} sensitivity={sensitivity} emphasized onOpen={onOpenMetric} size="lg" />
+            <KpiCard key={`${priority}-${m.id}`} metric={m} sensitivity={sensitivity} emphasized onOpen={onOpenMetric} size="lg" notes={dq.byMetric.get(m.id)} />
           ))}
         </div>
       </div>
+
+      <StoryStrip
+        key={`story-${priority}`}
+        review={review}
+        priority={priority}
+        sensitivity={sensitivity}
+        lead={spotlight[0]}
+        onOpenMetric={onOpenMetric}
+        onOpenObservations={() => onView("observations")}
+      />
+
+      {/* Forward-looking lenses get the decision tool right here, not two clicks away. */}
+      {(priority === "cost" || priority === "improvement") && <WhatIfSimulator review={review} onOpenSite={onOpenSite} />}
 
       {/* Charts */}
       <div className="grid gap-4 xl:grid-cols-5">
@@ -144,41 +160,91 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
         </div>
       </div>
 
-      {/* Top observation */}
-      {topObs && (
-        <button onClick={() => onView("observations")} className="card flex w-full items-start gap-3 p-4 text-left transition hover:shadow-md">
-          <div className="rounded-lg bg-brand-red-soft p-2 text-brand-red">
-            <Lightbulb size={18} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Top observation for this lens</div>
-            <div className="mt-0.5 font-semibold text-ink">{topObs.title}</div>
-            <div className="mt-1 line-clamp-2 text-[13px] text-slate-600">{topObs.recommended_action}</div>
-          </div>
-          <span className="flex items-center gap-1 self-center text-[13px] font-medium text-navy">
-            All {review.observations.length} <ArrowRight size={14} />
-          </span>
-        </button>
-      )}
-
-      {/* All other indicators */}
-      <div>
-        <SectionTitle sub="Every value keeps its evidence status, confidence and low–high range. Click any card to see the calculation.">All indicators</SectionTitle>
-        <div className="space-y-5">
-          {categories.map((c) => (
-            <div key={c}>
-              <div className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted">{CATEGORY_LABEL[c] ?? c}</div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-                {rest
-                  .filter((m) => m.category === c)
-                  .map((m) => (
-                    <KpiCard key={m.id} metric={m} sensitivity={sensitivity} onOpen={onOpenMetric} />
-                  ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <MoreIndicators metrics={rest} sensitivity={sensitivity} lensLabel={p.label} onOpenMetric={onOpenMetric} notes={dq.byMetric} />
     </div>
+  );
+}
+
+/** Progressive disclosure: everything outside the lens stays one click away, never in the way. */
+function MoreIndicators({ metrics, sensitivity, lensLabel, onOpenMetric, notes }: {
+  notes: Map<string, DqNote[]>;
+  metrics: Metric[];
+  sensitivity: Sensitivity;
+  lensLabel: string;
+  onOpenMetric: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [category, setCategory] = useState<string>("all");
+  const [query, setQuery] = useState("");
+  const categories = Array.from(new Set(metrics.map((m) => m.category)));
+  const q = query.trim().toLowerCase();
+  const shown = metrics.filter(
+    (m) => (category === "all" || m.category === category) && (!q || m.label.toLowerCase().includes(q) || m.id.includes(q)),
+  );
+
+  return (
+    <div className="card">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+      >
+        <span>
+          <span className="text-[14px] font-semibold text-ink">{open ? "Other indicators" : `Show ${metrics.length} more indicators`}</span>
+          <span className="ml-2 text-[12.5px] text-muted">
+            Outside the {lensLabel} lens · every value keeps its status, confidence and range
+          </span>
+        </span>
+        <ChevronDown size={18} className={`shrink-0 text-muted transition ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="border-t border-line px-4 pb-4 pt-3">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <FilterChip active={category === "all"} onClick={() => setCategory("all")} label="All" count={metrics.length} />
+            {categories.map((c) => (
+              <FilterChip
+                key={c}
+                active={category === c}
+                onClick={() => setCategory(c)}
+                label={CATEGORY_LABEL[c] ?? c}
+                count={metrics.filter((m) => m.category === c).length}
+              />
+            ))}
+            <label className="ml-auto flex items-center gap-1.5 rounded-lg bg-canvas px-2.5 py-1.5 ring-1 ring-inset ring-line focus-within:ring-navy/50">
+              <Search size={13} className="text-muted" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Find an indicator"
+                aria-label="Find an indicator"
+                className="w-40 bg-transparent text-[12.5px] outline-none placeholder:text-slate-400"
+              />
+            </label>
+          </div>
+          {shown.length ? (
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+              {shown.map((m) => (
+                <KpiCard key={m.id} metric={m} sensitivity={sensitivity} onOpen={onOpenMetric} size="sm" notes={notes.get(m.id)} />
+              ))}
+            </div>
+          ) : (
+            <p className="py-4 text-center text-[13px] text-muted">No indicator matches “{query}”.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilterChip({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string; count: number }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full px-2.5 py-1 text-[12px] font-medium ring-1 ring-inset transition ${
+        active ? "bg-navy text-white ring-navy" : "bg-white text-slate-700 ring-line hover:ring-navy/40"
+      }`}
+    >
+      {label} <span className={active ? "text-blue-200" : "text-muted"}>{count}</span>
+    </button>
   );
 }

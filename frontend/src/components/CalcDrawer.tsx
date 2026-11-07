@@ -1,6 +1,8 @@
 "use client";
 
-import { BookOpen, Database, FunctionSquare, Info, MapPin, MessageSquareQuote } from "lucide-react";
+import { BookOpen, CheckCircle2, Database, FunctionSquare, Info, MapPin, MessageSquareQuote, Scale, Sparkles } from "lucide-react";
+import { equivalents, parseTrace, rangeReason, walkthrough } from "@/lib/calc";
+import { dqNotes } from "@/lib/dq";
 import { shortSiteName, SITE_METRIC_META } from "@/lib/config";
 import { formatValue, full, unitLabel } from "@/lib/format";
 import type { Metric, Review, Sensitivity, SiteMetricKey } from "@/lib/types";
@@ -31,8 +33,9 @@ const STATUS_EXPLAIN: Record<string, string> = {
   PUBLIC_REFERENCE: "Publicly stated context — not used as a calculation input.",
 };
 
-export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, siteBaselineNote }: {
+export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, onOpenMetric, siteBaselineNote }: {
   metric: Metric | null;
+  onOpenMetric?: (id: string) => void;
   siteBaselineNote?: string;
   review: Review;
   sensitivity: Sensitivity;
@@ -52,9 +55,15 @@ export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, s
     : [];
   const siteMax = Math.max(...siteRows.map((r) => r.val), 0);
   const referencing = review.observations.filter((o) => o.metric_ids.includes(metric.id));
-  const { rule, trace } = splitFormula(metric.formula);
+  const trace = parseTrace(metric.formula);
   const traceMismatch =
-    !!trace && ((trace.scenario && trace.scenario !== sensitivity) || (trace.baseline && trace.baseline !== review.meta.baseline_id));
+    trace.terms.length > 0 && ((trace.scenario && trace.scenario !== sensitivity) || (trace.baseline && trace.baseline !== review.meta.baseline_id));
+  // Re-play the formula from the review's own inputs; only shown if it reproduces the engine's value.
+  const walk = walkthrough(metric, review, sensitivity);
+  const verified = walk && walk.gap < 0.001 ? walk : null;
+  const reason = rangeReason(metric);
+  const everyday = equivalents(metric.value[sensitivity], metric.unit);
+  const notes = dqNotes(review).byMetric.get(metric.id) ?? [];
 
   return (
     <Drawer
@@ -91,24 +100,112 @@ export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, s
         {!hasRange && <p className="mt-2 text-[12px] text-muted">Low, base and high are identical: this value does not depend on a sensitivity assumption.</p>}
       </div>
 
-      <Section icon={FunctionSquare} title="Formula">
-        <pre className="whitespace-pre-wrap rounded-lg bg-navy-900 px-3.5 py-3 font-mono text-[12.5px] leading-relaxed text-blue-50">{rule}</pre>
-        {trace && (
-          <div className="mt-2 rounded-lg border border-navy/20 bg-navy-50 px-3.5 py-2.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-navy">With this review&apos;s numbers</div>
-            <div className="mt-1 font-mono text-[12.5px] leading-relaxed text-ink">{trace.expr}</div>
-            {(trace.scenario || trace.baseline) && (
-              <div className="mt-1 text-[11.5px] text-muted">
-                Computed by the engine for {trace.scenario ?? "?"} case{trace.baseline ? ` · ${trace.baseline}` : ""}
-                {traceMismatch && <span className="font-medium text-amber-700"> — differs from the case/baseline currently shown</span>}
-              </div>
-            )}
+      {notes.map((n) => (
+        <div key={n.code} className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-800">Data-quality note · {n.short}</div>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-amber-950">{n.detail}</p>
+        </div>
+      ))}
+
+      {everyday.length > 0 && (
+        <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-800">
+            <Sparkles size={13} /> In everyday terms ({sensitivity} case)
           </div>
+          {everyday.map((e) => (
+            <div key={e.text} className="mt-1">
+              <div className="text-[14px] font-medium text-ink">{e.text}</div>
+              <div className="text-[11px] text-muted">
+                Basis: {e.basis}. Illustrative public reference, not from the data pack and not a Lindström claim.
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Section icon={FunctionSquare} title="Step by step, with this review's numbers">
+        {verified ? (
+          <>
+            <ol className="space-y-1.5">
+              {verified.steps.map((st, i) => (
+                <li
+                  key={i}
+                  className={`rounded-lg px-3 py-2 ${st.kind === "result" ? "bg-navy text-white" : "bg-canvas"}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className={`text-[12.5px] ${st.kind === "result" ? "font-semibold" : "text-slate-700"}`}>
+                      <span className={`mr-1.5 font-mono text-[11px] ${st.kind === "result" ? "text-blue-200" : "text-muted"}`}>{i + 1}</span>
+                      {st.metricId && onOpenMetric ? (
+                        <button onClick={() => onOpenMetric(st.metricId!)} className="text-left underline decoration-dotted underline-offset-2 hover:text-navy">
+                          {st.label}
+                        </button>
+                      ) : (
+                        st.label
+                      )}
+                    </span>
+                    <span className="whitespace-nowrap font-semibold tnum">{st.value}</span>
+                  </div>
+                  {st.expr && st.kind !== "input" && (
+                    <div className={`mt-0.5 pl-5 font-mono text-[11.5px] ${st.kind === "result" ? "text-blue-100" : "text-muted"}`}>{st.expr}</div>
+                  )}
+                </li>
+              ))}
+            </ol>
+            <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-emerald-700">
+              <CheckCircle2 size={13} /> Re-played in your browser from this review&apos;s inputs: matches the engine&apos;s result
+              {verified.gap > 0 ? ` (difference ${(verified.gap * 100).toFixed(3)}%)` : " exactly"}.
+            </p>
+          </>
+        ) : trace.terms.length > 0 ? (
+          <div className="rounded-lg border border-navy/20 bg-navy-50 px-3.5 py-2.5">
+            <div className="font-mono text-[12.5px] leading-relaxed text-ink">
+              {(trace.terms.length > 8 ? trace.terms.slice(0, 6) : trace.terms).map((t, i) => (
+                <div key={i}>
+                  <span className="inline-block w-4 text-navy">{t.op}</span>
+                  {t.text}
+                </div>
+              ))}
+              {trace.terms.length > 8 && <div className="pl-4 text-muted">… {trace.terms.length - 6} more terms</div>}
+              {trace.result && (
+                <div className="mt-1 border-t border-navy/20 pt-1 font-semibold">
+                  <span className="inline-block w-4 text-navy">=</span>
+                  {trace.result}
+                </div>
+              )}
+            </div>
+            <div className="mt-1.5 text-[11.5px] text-muted">
+              Arithmetic trace written by the engine
+              {trace.scenario ? ` for the ${trace.scenario} case` : ""}
+              {trace.baseline ? ` · ${trace.baseline}` : ""}
+              {traceMismatch && <span className="font-medium text-amber-700"> (differs from the case or baseline currently shown)</span>}
+            </div>
+          </div>
+        ) : (
+          <p className="text-[12.5px] text-muted">The engine did not attach a worked example to this metric; the general formula is below.</p>
         )}
+        <div className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted">General formula</div>
+        <pre className="mt-1 whitespace-pre-wrap rounded-lg bg-navy-900 px-3.5 py-2.5 font-mono text-[12px] leading-relaxed text-blue-50">{trace.rule}</pre>
         <p className="mt-2 text-[12.5px] text-slate-600">
           <Info size={12} className="mr-1 inline -translate-y-px text-navy" />
           {STATUS_EXPLAIN[metric.status] ?? metric.status}
         </p>
+      </Section>
+
+      <Section icon={Scale} title={reason.title}>
+        <p className="text-[13px] leading-relaxed text-slate-700">{reason.body}</p>
+        {reason.cases && (
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {reason.cases.map((c) => (
+              <div key={c.case} className={`rounded-lg border px-2.5 py-2 ${c.case === sensitivity ? "border-navy/40 bg-navy-50" : "border-line"}`}>
+                <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted">{c.case}</div>
+                <div className="text-[11.5px] text-slate-600">{c.factor}</div>
+                <div className="mt-0.5 text-[13px] font-semibold text-ink tnum">
+                  {formatValue(metric.value[c.case], metric.unit)} <span className="text-[11px] font-normal text-muted">{unitLabel(metric.unit)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
 
       <Section icon={Database} title="Source sheets">
@@ -180,22 +277,6 @@ export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, s
       )}
     </Drawer>
   );
-}
-
-/**
- * The engine appends a worked example to each formula:
- * "RULE | Live arithmetic (display rounded…): 502,074.7 kg * 9.5 … = 1,406,620.29; scenario=base; baseline=B_LOCAL"
- */
-function splitFormula(formula: string): { rule: string; trace: { expr: string; scenario?: string; baseline?: string } | null } {
-  const i = formula.indexOf(" | Live arithmetic");
-  if (i < 0) return { rule: formula, trace: null };
-  let rest = formula.slice(i + 3);
-  const colon = rest.indexOf("): ");
-  rest = colon >= 0 ? rest.slice(colon + 3) : rest.replace(/^Live arithmetic:?\s*/, "");
-  const parts = rest.split(";").map((x) => x.trim());
-  const kv = (k: string) => parts.find((x) => x.startsWith(`${k}=`))?.slice(k.length + 1);
-  const expr = parts.filter((x) => !/^(scenario|baseline)=/.test(x)).join("; ");
-  return { rule: formula.slice(0, i), trace: { expr, scenario: kv("scenario"), baseline: kv("baseline") } };
 }
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {

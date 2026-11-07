@@ -11,6 +11,7 @@ import { Methodology } from "@/components/views/Methodology";
 import { Observations } from "@/components/views/Observations";
 import { Overview } from "@/components/views/Overview";
 import { Sites } from "@/components/views/Sites";
+import { WhatIfSimulator } from "@/components/WhatIfSimulator";
 import { ApiError, downloadJson, exportReview } from "@/lib/api";
 import { isOutlier, priorityDef, type ViewId } from "@/lib/config";
 import { baselineName } from "@/lib/derive";
@@ -20,7 +21,7 @@ const TITLES: Record<ViewId, string> = {
   overview: "Executive value overview",
   sites: "Multi-site consolidation & drill-down",
   baselines: "Baseline comparison & circularity",
-  observations: "Observations, actions & steering questions",
+  observations: "2026 actions, what-if & steering questions",
   methodology: "Methodology, data quality & data gaps",
 };
 
@@ -217,7 +218,10 @@ export default function Page() {
             />
           )}
           {view === "observations" && (
-            <Observations review={review} priority={controls.priority} emphasized={emphasized} onOpenMetric={openMetric} onOpenSite={openSite} />
+            <div className="space-y-6">
+              <WhatIfSimulator review={review} onOpenSite={openSite} />
+              <Observations review={review} priority={controls.priority} emphasized={emphasized} onOpenMetric={openMetric} onOpenSite={openSite} />
+            </div>
           )}
           {view === "methodology" && <Methodology review={review} sensitivity={controls.sensitivity} onOpenMetric={openMetric} />}
           </div>
@@ -236,6 +240,7 @@ export default function Page() {
         sensitivity={controls.sensitivity}
         onClose={() => setMetricId(null)}
         onOpenSite={openSite}
+        onOpenMetric={openMetric}
         siteBaselineNote={siteBaselineNote}
       />
       <SiteDrawer siteId={siteId} review={review} onClose={() => setSiteId(null)} onOpenMetric={openMetric} siteBaselineNote={siteBaselineNote} />

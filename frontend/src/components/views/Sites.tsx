@@ -4,10 +4,11 @@ import { ArrowDown, ArrowUp, Filter } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CartesianGrid, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
 import { isOutlier, SITE_METRIC_META } from "@/lib/config";
+import { dqNotes, type DqNote } from "@/lib/dq";
 import { median } from "@/lib/derive";
 import { compact, formatValue, pct } from "@/lib/format";
 import type { Review, Site, SiteMetricKey } from "@/lib/types";
-import { FlagChip, SectionTitle, Segmented } from "../ui";
+import { DqPill, FlagChip, SectionTitle, Segmented } from "../ui";
 
 const COLUMNS: SiteMetricKey[] = [
   "wearers_min_est",
@@ -30,6 +31,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [sort, setSort] = useState<{ key: SiteMetricKey | "site_name"; dir: 1 | -1 }>({ key: "allocation_use_rate", dir: 1 });
 
+  const dq = useMemo(() => dqNotes(review).bySite, [review]);
   const countries = Array.from(new Set(review.sites.map((s) => s.country)));
   const types = Array.from(new Set(review.sites.map((s) => s.site_type))).sort();
 
@@ -184,7 +186,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
             </thead>
             <tbody>
               {rows.map((s) => (
-                <SiteRow key={s.site_id} s={s} onOpen={onOpenSite} medUse={medUse} />
+                <SiteRow key={s.site_id} s={s} onOpen={onOpenSite} medUse={medUse} notes={dq.get(s.site_id) ?? []} />
               ))}
             </tbody>
           </table>
@@ -215,12 +217,17 @@ function Th({ label, k, sort, setSort, right }: {
   );
 }
 
-function SiteRow({ s, onOpen, medUse }: { s: Site; onOpen: (id: string) => void; medUse: number }) {
+function SiteRow({ s, onOpen, medUse, notes }: { s: Site; onOpen: (id: string) => void; medUse: number; notes: DqNote[] }) {
   const m = s.metrics;
   return (
     <tr onClick={() => onOpen(s.site_id)} className="cursor-pointer border-t border-line hover:bg-navy-50/50">
       <td className="px-3 py-2">
-        <div className="font-medium text-ink">{s.site_name}</div>
+        <div className="flex flex-wrap items-center gap-1.5 font-medium text-ink">
+          {s.site_name}
+          {notes.map((n) => (
+            <DqPill key={n.code} note={n} />
+          ))}
+        </div>
         <div className="text-[11px] text-muted">
           {s.site_id} · {s.city} · {s.site_type}
         </div>
@@ -248,9 +255,11 @@ function SiteRow({ s, onOpen, medUse }: { s: Site; onOpen: (id: string) => void;
       })}
       <td className="px-3 py-2">
         <div className="flex flex-wrap gap-1">
-          {s.flags.map((f) => (
-            <FlagChip key={f} flag={f} />
-          ))}
+          {s.flags
+            .filter((f) => !f.startsWith("DQ"))
+            .map((f) => (
+              <FlagChip key={f} flag={f} />
+            ))}
         </div>
       </td>
     </tr>

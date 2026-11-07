@@ -8,7 +8,7 @@ const NAV: { id: ViewId; label: string; icon: React.ElementType }[] = [
   { id: "overview", label: "Executive overview", icon: LayoutDashboard },
   { id: "sites", label: "Sites & drill-down", icon: MapPin },
   { id: "baselines", label: "Baseline & circularity", icon: Scale },
-  { id: "observations", label: "Observations & actions", icon: ClipboardList },
+  { id: "observations", label: "Actions & 2026 what-if", icon: ClipboardList },
   { id: "methodology", label: "Methodology & data", icon: FlaskConical },
 ];
 

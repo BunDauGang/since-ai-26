@@ -27,13 +27,15 @@ After the Lead updates the contract, run `npm run sync-contract`.
 
 ## Screens
 
-1. **Executive overview**: priority spotlight (with the industry rule that explains *why*), emphasized KPI cards, site ranking for the lens, monthly trend, top observation, and all indicators grouped by category.
+1. **Executive overview**: priority spotlight (with the industry rule that explains *why*), the emphasized KPI cards, and a 3-column story strip (*What happened → Why it matters → Next action*) built verbatim from the engine's observations. Then the site ranking and trend for the lens. The other ~20 indicators are folded behind a toggle with category filters and search. The Cost and Next-year improvement lenses also show the what-if simulator here.
 2. **Sites & drill-down**: FI/SE/PL roll-up, allocation-vs-repair scatter (R2 threshold line), sortable and filterable 24-site table, site drawer comparing each site with the customer median.
 3. **Baseline & circularity**: savings vs local/home/in-house with low–high whiskers, per-kg baseline factors, repair handprint by product, textile waste routes.
-4. **Observations & actions**: owner tags, steering questions (copy all), clickable metric/site evidence chips.
-5. **Methodology & data**: boundaries, DQ findings (L003, wearer de-duplication), metric registry, assumptions A/T, data gaps, path to production.
+4. **Actions & 2026 what-if**: an interactive simulator (reclaim idle garments at R1 low-use sites; close the gap to the median repair rate) with projected utilisation, reclaimed pieces, illustrative stock value and avoided repairs. All results are labelled ESTIMATE, with assumptions listed and never written into the review. Below it: observations with owner tags, steering questions (copy all) and clickable metric/site evidence chips.
+5. **Methodology & data**: boundaries, a production integration diagram (Sources → pluggable adapter → engine → review.json → dashboard / deck / eLindström, with each source showing the data gaps it closes), DQ findings, metric registry, assumptions A/T and data gaps.
 
-**Show the calculation**: click any KPI (or any metric chip anywhere) to see the value, the low/base/high range, the formula, source sheets, linked assumptions, the per-site breakdown and the observations that cite it.
+**Data-quality warnings in context**: DQ4 (Malmö L003 laundry volume mismatch) pills appear on the affected sites and on every laundry-dependent metric; DQ5 (wearer multi-product counting) pills appear on the wearer metrics. Hover a pill, or open the metric, for the engine's own numbers.
+
+**Show the calculation**: click any KPI (or any metric chip anywhere). For handprint, repair and utilisation metrics the drawer re-plays the formula step by step with the review's own inputs, and shows it only when it reproduces the engine's value (✓). Other metrics show the engine's arithmetic trace. The drawer also explains why the Low/Base/High range exists (T002 baseline ±20%, T001 repair factor), gives everyday comparisons for water / CO₂e / energy (illustrative public reference factors, labelled, never used in calculations), and lists source sheets, linked assumptions, the per-site breakdown and the observations that cite the metric.
 
 ## Structure
 

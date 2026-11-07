@@ -152,3 +152,16 @@ export function Segmented<T extends string>({ value, options, onChange, size = "
     </div>
   );
 }
+
+/** Inline data-quality warning. Hover (title) or the drawer shows the full explanation. */
+export function DqPill({ note, className = "" }: { note: { code: string; short: string; detail: string }; className?: string }) {
+  return (
+    <span
+      title={note.detail}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 px-1.5 py-px text-[10px] font-semibold text-amber-800 ring-1 ring-inset ring-amber-300 ${className}`}
+    >
+      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+      {note.short}
+    </span>
+  );
+}

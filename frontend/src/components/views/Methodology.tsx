@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, ArrowRight, Database, Info, Layers, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, Database, Info, ShieldCheck } from "lucide-react";
+import { PipelineDiagram } from "../PipelineDiagram";
 import { formatValue, unitLabel } from "@/lib/format";
 import type { DataQualityItem, Review, Sensitivity } from "@/lib/types";
 import { ConfidenceDots, SectionTitle, StatusBadge } from "../ui";
@@ -22,6 +23,8 @@ export function Methodology({ review, sensitivity, onOpenMetric }: { review: Rev
           </span>
         </div>
       </div>
+
+      <PipelineDiagram gaps={review.data_gaps} />
 
       {/* Data quality */}
       <div>
@@ -145,18 +148,6 @@ export function Methodology({ review, sensitivity, onOpenMetric }: { review: Rev
               ))}
             </ul>
           </div>
-          <div className="card p-4">
-            <SectionTitle>
-              <span className="inline-flex items-center gap-1.5">
-                <Layers size={15} className="text-navy" /> Path to production
-              </span>
-            </SectionTitle>
-            <ol className="relative space-y-3 border-l-2 border-line pl-4 text-[12.5px]">
-              <Step n="1" title="Hackathon prototype (now)" body="Excel adapter → deterministic engine → review.json → dashboard + PPTX/PDF. Synthetic data only." active />
-              <Step n="2" title="Pilot on approved sources" body="Swap only the adapter: Tableau / Power BI exports (Allocated pieces, Washing %, End-to-end delivery, Repairs, WWS Washed Kg) + approved LCA factors. Dashboard and export stay unchanged." />
-              <Step n="3" title="eLindström module" body="Self-service customer decision-maker view across countries and service lines (Workwear, Mats, Cleanroom, Industrial wipers)." />
-            </ol>
-          </div>
         </div>
       </div>
     </div>
@@ -180,15 +171,5 @@ function Fact({ label, value }: { label: string; value: string }) {
       <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</div>
       <div className="mt-0.5 text-[13.5px] font-medium text-ink">{value}</div>
     </div>
-  );
-}
-
-function Step({ n, title, body, active }: { n: string; title: string; body: string; active?: boolean }) {
-  return (
-    <li className="relative">
-      <span className={`absolute -left-[25px] flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold ${active ? "bg-brand-red text-white" : "bg-line text-muted"}`}>{n}</span>
-      <div className="font-semibold text-ink">{title}</div>
-      <div className="text-slate-600">{body}</div>
-    </li>
   );
 }

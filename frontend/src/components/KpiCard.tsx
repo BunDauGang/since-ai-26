@@ -3,18 +3,49 @@
 import { Calculator, Star } from "lucide-react";
 import { formatValue, unitLabel } from "@/lib/format";
 import type { Metric, Sensitivity } from "@/lib/types";
-import { ConfidenceDots, RangeBar, StatusBadge } from "./ui";
+import type { DqNote } from "@/lib/dq";
+import { ConfidenceDots, DqPill, RangeBar, StatusBadge } from "./ui";
 
-export function KpiCard({ metric, sensitivity, emphasized, onOpen, size = "md" }: {
+export function KpiCard({ metric, sensitivity, emphasized, onOpen, size = "md", notes = [] }: {
+  notes?: DqNote[];
   metric: Metric;
   sensitivity: Sensitivity;
   emphasized?: boolean;
   onOpen: (id: string) => void;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
 }) {
   const { low, base, high } = metric.value;
   const value = metric.value[sensitivity];
   const hasRange = high > low;
+  if (size === "sm") {
+    // Compact row-like card for secondary indicators: same evidence, a third of the height.
+    return (
+      <button
+        onClick={() => onOpen(metric.id)}
+        title="Show the calculation"
+        className="lift-in group flex h-full flex-col rounded-lg border border-line bg-white px-3 py-2.5 text-left transition hover:border-navy/40 hover:shadow-sm"
+      >
+        <span className="line-clamp-1 text-[12px] font-medium text-slate-600">{metric.label}</span>
+        {notes.length > 0 && (
+          <span className="mt-1 flex flex-wrap gap-1">
+            {notes.map((n) => (
+              <DqPill key={n.code} note={n} />
+            ))}
+          </span>
+        )}
+        <span className="mt-0.5 flex items-baseline gap-1">
+          <span className="text-lg font-semibold text-ink tnum">{formatValue(value, metric.unit)}</span>
+          <span className="text-[11.5px] text-muted">{unitLabel(metric.unit)}</span>
+        </span>
+        <span className="mt-1 flex flex-wrap items-center justify-between gap-1.5">
+          <StatusBadge status={metric.status} small />
+          <span className="text-[10.5px] text-muted tnum">
+            {hasRange ? `${formatValue(low, metric.unit)}–${formatValue(high, metric.unit)}` : metric.confidence}
+          </span>
+        </span>
+      </button>
+    );
+  }
   return (
     <button
       onClick={() => onOpen(metric.id)}
@@ -27,6 +58,13 @@ export function KpiCard({ metric, sensitivity, emphasized, onOpen, size = "md" }
         <span className="text-[12.5px] font-medium leading-snug text-slate-600">{metric.label}</span>
         {emphasized && <Star size={13} className="mt-0.5 shrink-0 fill-brand-red text-brand-red" aria-label="Emphasized for this priority" />}
       </div>
+      {notes.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {notes.map((n) => (
+            <DqPill key={n.code} note={n} />
+          ))}
+        </div>
+      )}
       <div className="mt-2 flex items-baseline gap-1.5">
         <span className={`tnum font-semibold tracking-tight text-ink ${size === "lg" ? "text-3xl" : "text-2xl"}`}>{formatValue(value, metric.unit)}</span>
         <span className="text-[13px] text-muted">{unitLabel(metric.unit)}</span>
