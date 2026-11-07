@@ -11,6 +11,7 @@ import { Methodology } from "@/components/views/Methodology";
 import { Observations } from "@/components/views/Observations";
 import { Overview } from "@/components/views/Overview";
 import { Sites } from "@/components/views/Sites";
+import { ObjectionPrep } from "@/components/ObjectionPrep";
 import { SafeToSay } from "@/components/SafeToSay";
 import { WhatIfSimulator } from "@/components/WhatIfSimulator";
 import { ApiError, downloadJson, exportReview } from "@/lib/api";
@@ -260,6 +261,7 @@ export default function Page() {
           {view === "observations" && (
             <div className="space-y-6">
               <SafeToSay review={review} onOpenMetric={openMetric} audience={audience} />
+              {!customerView && <ObjectionPrep review={review} onOpenMetric={openMetric} />}
               <WhatIfSimulator review={review} onOpenSite={openSite} />
               <Observations review={review} priority={controls.priority} emphasized={emphasized} onOpenMetric={openMetric} onOpenSite={openSite} />
             </div>
