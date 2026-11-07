@@ -1,7 +1,7 @@
 "use client";
 
 import { FileDown, Loader2, Presentation, Sparkles, Wand2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { interpretPrompt } from "@/lib/api";
 import { BASELINES, CUSTOMERS, INDUSTRY_RULES, interpretPromptOffline, PRIORITIES, priorityDef, SUGGESTED_PROMPTS, type ViewId } from "@/lib/config";
 import type { Controls, Mode } from "@/lib/useReview";
@@ -10,7 +10,7 @@ import { Segmented } from "./ui";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => `2025-${String(i + 1).padStart(2, "0")}`);
 
-export function ControlBar({ controls, update, mode, industry, customerAvailable, onView, onExport, exporting }: {
+export function ControlBar({ controls, update, mode, industry, customerAvailable, onView, onExport, exporting, canExport, exportBlockedReason }: {
   controls: Controls;
   update: (p: Partial<Controls>) => void;
   mode: Mode;
@@ -19,22 +19,35 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
   onView: (v: ViewId) => void;
   onExport: (f: "pptx" | "pdf") => void;
   exporting: "pptx" | "pdf" | null;
+  canExport: boolean;
+  exportBlockedReason?: string;
 }) {
   const [draft, setDraft] = useState(controls.prompt);
-  const [interp, setInterp] = useState<{ text: string; priority: Priority; secondary: Priority[]; source: "AI" | "keywords" | "industry default" } | null>(null);
+  const [interp, setInterp] = useState<{ text: string; priority: Priority; secondary: Priority[]; source: "interpret API" | "keywords" | "industry default" } | null>(null);
   const [busy, setBusy] = useState(false);
+  // Every prompt or manual lens click bumps this; a late /api/interpret answer for an older prompt is dropped.
+  const intent = useRef(0);
+
+  function choosePriority(p: Priority) {
+    intent.current++;
+    setBusy(false);
+    setInterp(null);
+    update({ priority: p });
+  }
 
   async function runPrompt(text: string, jumpTo?: ViewId) {
     if (!text.trim()) return;
+    const id = ++intent.current;
     setBusy(true);
     const offline = interpretPromptOffline(text, industry);
     let priority = offline.priority;
-    let source: "AI" | "keywords" | "industry default" = offline.matched ? "keywords" : "industry default";
+    let source: "interpret API" | "keywords" | "industry default" = offline.matched ? "keywords" : "industry default";
     if (mode === "live") {
       const ai = await interpretPrompt(text, industry);
+      if (id !== intent.current) return; // user moved on while we waited
       if (ai) {
         priority = ai;
-        source = "AI";
+        source = "interpret API";
       }
     }
     setInterp({ text, priority, secondary: offline.secondary.filter((p) => p !== priority), source });
@@ -52,12 +65,16 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
       <div className="flex flex-wrap items-end gap-x-5 gap-y-3 px-4 pt-4 lg:px-8">
         <Field label="Customer">
           <select
+            aria-label="Customer"
             className="select min-w-56"
             value={controls.customerId}
             onChange={(e) => {
               const c = CUSTOMERS.find((x) => x.id === e.target.value)!;
-              update({ customerId: c.id, priority: c.defaultPriority });
+              intent.current++;
+              setBusy(false);
               setInterp(null);
+              setDraft("");
+              update({ customerId: c.id, priority: c.defaultPriority, prompt: "" });
             }}
           >
             {CUSTOMERS.map((c) => (
@@ -70,18 +87,18 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
         </Field>
         <Field label="Reporting period">
           <div className="flex items-center gap-1.5" title={periodLocked ? "Bundled sample covers the full year 2025. Connect the engine to change the period." : undefined}>
-            <select className="select" value={controls.periodFrom} disabled={periodLocked} onChange={(e) => update({ periodFrom: e.target.value })}>
+            <select aria-label="Period from" className="select" value={controls.periodFrom} disabled={periodLocked} onChange={(e) => update({ periodFrom: e.target.value })}>
               {MONTHS.map((m) => <option key={m}>{m}</option>)}
             </select>
             <span className="text-muted">–</span>
-            <select className="select" value={controls.periodTo} disabled={periodLocked} onChange={(e) => update({ periodTo: e.target.value })}>
+            <select aria-label="Period to" className="select" value={controls.periodTo} disabled={periodLocked} onChange={(e) => update({ periodTo: e.target.value })}>
               {MONTHS.map((m) => <option key={m}>{m}</option>)}
             </select>
           </div>
           {!periodOk && <span className="text-[11px] text-red-600">Start month is after end month</span>}
         </Field>
         <Field label="Comparison baseline">
-          <select className="select min-w-52" value={controls.baselineId} onChange={(e) => update({ baselineId: e.target.value })}>
+          <select aria-label="Comparison baseline" className="select min-w-52" value={controls.baselineId} onChange={(e) => update({ baselineId: e.target.value })}>
             {BASELINES.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
@@ -102,10 +119,10 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
           />
         </Field>
         <div className="ml-auto flex items-center gap-2 pb-0.5">
-          <button onClick={() => onExport("pptx")} disabled={!!exporting} className="btn-primary">
+          <button onClick={() => onExport("pptx")} disabled={!!exporting || !canExport} title={canExport ? undefined : exportBlockedReason} className="btn-primary">
             {exporting === "pptx" ? <Loader2 size={15} className="animate-spin" /> : <Presentation size={15} />} Download PPTX
           </button>
-          <button onClick={() => onExport("pdf")} disabled={!!exporting} className="btn-secondary">
+          <button onClick={() => onExport("pdf")} disabled={!!exporting || !canExport} title={canExport ? undefined : exportBlockedReason} className="btn-secondary">
             {exporting === "pdf" ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />} PDF
           </button>
         </div>
@@ -121,10 +138,7 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
             return (
               <button
                 key={p.id}
-                onClick={() => {
-                  update({ priority: p.id });
-                  setInterp(null);
-                }}
+                onClick={() => choosePriority(p.id)}
                 className={`rounded-full px-3 py-1.5 text-[13px] font-medium ring-1 ring-inset transition ${
                   active ? "bg-navy text-white ring-navy" : "bg-white text-slate-700 ring-line hover:ring-navy/40"
                 }`}
@@ -164,7 +178,7 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
               <span className="text-muted">
                 also mentions{" "}
                 {interp.secondary.map((s) => (
-                  <button key={s} onClick={() => update({ priority: s })} className="mr-1 font-medium text-navy underline decoration-dotted">
+                  <button key={s} onClick={() => choosePriority(s)} className="mr-1 font-medium text-navy underline decoration-dotted">
                     {priorityDef(s).label}
                   </button>
                 ))}
@@ -179,11 +193,12 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
             {SUGGESTED_PROMPTS.map((s) => (
               <button
                 key={s.prompt}
+                disabled={busy}
                 onClick={() => {
                   setDraft(s.prompt);
                   void runPrompt(s.prompt, s.view);
                 }}
-                className="rounded-full border border-dashed border-slate-300 bg-white px-2.5 py-1 text-[12px] text-slate-600 hover:border-navy hover:text-navy"
+                className="rounded-full border border-dashed border-slate-300 bg-white px-2.5 py-1 text-[12px] text-slate-600 hover:border-navy hover:text-navy disabled:opacity-50"
               >
                 <span className="mr-1 text-[10px] font-semibold uppercase text-muted">{s.who}</span>
                 {s.prompt}
@@ -198,9 +213,9 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1">
+    <div role="group" aria-label={label} className="flex flex-col gap-1">
       <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</span>
       {children}
-    </label>
+    </div>
   );
 }

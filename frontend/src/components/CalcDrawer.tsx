@@ -1,7 +1,7 @@
 "use client";
 
 import { BookOpen, Database, FunctionSquare, Info, MapPin, MessageSquareQuote } from "lucide-react";
-import { SITE_METRIC_META } from "@/lib/config";
+import { shortSiteName, SITE_METRIC_META } from "@/lib/config";
 import { formatValue, full, unitLabel } from "@/lib/format";
 import type { Metric, Review, Sensitivity, SiteMetricKey } from "@/lib/types";
 import { ConfidenceDots, Drawer, RangeBar, StatusBadge } from "./ui";
@@ -136,7 +136,7 @@ export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, s
             {siteRows.map(({ s, val }) => (
               <li key={s.site_id}>
                 <button onClick={() => onOpenSite(s.site_id)} className="group flex w-full items-center gap-2 text-left text-[12.5px]">
-                  <span className="w-40 truncate text-slate-700 group-hover:text-navy group-hover:underline">{s.site_name.replace("NorthStar ", "")}</span>
+                  <span className="w-40 truncate text-slate-700 group-hover:text-navy group-hover:underline">{shortSiteName(s.site_name, review.meta.customer_name)}</span>
                   <span className="relative h-2 flex-1 rounded-full bg-canvas">
                     <span className="absolute inset-y-0 left-0 rounded-full bg-navy/70" style={{ width: `${siteMax ? (val / siteMax) * 100 : 0}%` }} />
                   </span>
@@ -157,8 +157,8 @@ export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, s
       {referencing.length > 0 && (
         <Section icon={MessageSquareQuote} title="Cited by observations">
           <ul className="space-y-1.5">
-            {referencing.map((o) => (
-              <li key={o.title} className="text-[13px] text-slate-700">• {o.title}</li>
+            {referencing.map((o, i) => (
+              <li key={o.id ?? i} className="text-[13px] text-slate-700">• {o.title}</li>
             ))}
           </ul>
         </Section>

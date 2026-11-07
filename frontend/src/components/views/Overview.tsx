@@ -2,7 +2,8 @@
 
 import { ArrowRight, Lightbulb, Target } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { INDUSTRY_RULES, priorityDef, SITE_METRIC_META, type ViewId } from "@/lib/config";
+import { INDUSTRY_RULES, isOutlier, priorityDef, shortSiteName, SITE_METRIC_META, type ViewId } from "@/lib/config";
+import { metricMap } from "@/lib/derive";
 import { compact, formatValue, monthLabel } from "@/lib/format";
 import type { Metric, Priority, Review, Sensitivity } from "@/lib/types";
 import { KpiCard } from "../KpiCard";
@@ -28,7 +29,7 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
   siteBaselineNote?: string;
 }) {
   const p = priorityDef(priority);
-  const byId = new Map(review.metrics.map((m) => [m.id, m]));
+  const byId = metricMap(review);
   const spotlight = emphasized.map((id) => byId.get(id)).filter(Boolean) as Metric[];
   const rest = review.metrics.filter((m) => !emphasized.includes(m.id));
   const categories = Array.from(new Set(rest.map((m) => m.category)));
@@ -38,7 +39,7 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
   // Spotlight chart: sites ranked by the priority's site metric.
   const sm = SITE_METRIC_META[p.siteMetric];
   const siteData = review.sites
-    .map((s) => ({ id: s.site_id, name: s.site_name.replace(/^NorthStar /, ""), value: s.metrics[p.siteMetric] ?? 0, flagged: s.flags.length > 0 }))
+    .map((s) => ({ id: s.site_id, name: shortSiteName(s.site_name, review.meta.customer_name), value: s.metrics[p.siteMetric] ?? 0, flagged: isOutlier(s) }))
     .sort((a, b) => (p.siteSort === "desc" ? b.value - a.value : a.value - b.value))
     .slice(0, 10);
   const ts = p.timeseries ? review.timeseries[p.timeseries] : undefined;
@@ -94,7 +95,7 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
           </div>
           <div className="mt-1 flex gap-4 text-[11px] text-muted">
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-navy" /> Site</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-brand-red" /> Site with a rule flag (R1–R4)</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-brand-red" /> Outlier site (R1 low use · R2 high repairs · R4 many requests)</span>
           </div>
         </div>
         <div className="card p-4 xl:col-span-2">
@@ -126,7 +127,7 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
               <SectionTitle sub="Rules flagged these sites for follow-up">Sites to discuss</SectionTitle>
               <ul className="space-y-1.5">
                 {review.sites
-                  .filter((s) => s.flags.length)
+                  .filter(isOutlier)
                   .slice(0, 8)
                   .map((s) => (
                     <li key={s.site_id}>

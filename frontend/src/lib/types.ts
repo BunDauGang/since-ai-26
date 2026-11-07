@@ -40,6 +40,14 @@ export interface Metric {
   sources: string[];
   assumptions: string[];
   confidence: string;
+  /** Optional engine detail (Worker A). Absent in the hand-made sample. */
+  breakdown?: {
+    by_site?: { site_id: string; value: number }[];
+    by_product?: { product_id: string; value: number }[];
+    by_month?: TimePoint[];
+    by_route?: { route: string; value: number | null }[];
+    by_repair_type?: { repair_type: string; value: number | null }[];
+  };
 }
 
 export type SiteMetricKey =

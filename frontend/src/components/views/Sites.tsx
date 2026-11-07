@@ -3,7 +3,7 @@
 import { ArrowDown, ArrowUp, Filter } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CartesianGrid, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
-import { SITE_METRIC_META } from "@/lib/config";
+import { isOutlier, SITE_METRIC_META } from "@/lib/config";
 import { median } from "@/lib/derive";
 import { compact, formatValue, pct } from "@/lib/format";
 import type { Review, Site, SiteMetricKey } from "@/lib/types";
@@ -35,7 +35,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
 
   const rows = useMemo(() => {
     const r = review.sites.filter(
-      (s) => (country === "all" || s.country === country) && (type === "all" || s.site_type === type) && (!flaggedOnly || s.flags.length > 0),
+      (s) => (country === "all" || s.country === country) && (type === "all" || s.site_type === type) && (!flaggedOnly || isOutlier(s)),
     );
     return r.sort((a, b) => {
       if (sort.key === "site_name") return a.site_name.localeCompare(b.site_name) * sort.dir;
@@ -49,7 +49,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
     return {
       country: c,
       sites: ss.length,
-      flagged: ss.filter((s) => s.flags.length).length,
+      flagged: ss.filter(isOutlier).length,
       washed: sum("washed_kg"),
       wearers: sum("wearers_min_est"),
       use: sum("garments_allocated") ? (sum("garments_allocated") - sum("idle_pieces")) / sum("garments_allocated") : NaN,
@@ -64,7 +64,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
     x: (s.metrics.allocation_use_rate ?? 0) * 100,
     y: s.metrics.repair_rate_per_1000 ?? 0,
     z: s.metrics.washed_kg ?? 0,
-    flagged: s.flags.length > 0,
+    flagged: isOutlier(s),
   }));
 
   return (
@@ -102,8 +102,8 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
 
       {/* Scatter: where are the outliers */}
       <div className="card p-4">
-        <SectionTitle sub="Bubble size = washed kg. Bottom-left quadrant of a well-run site is high use, low repairs. Red = rule-flagged. Click a bubble to drill down.">
-          Allocation use vs repair rate — 24 sites
+        <SectionTitle sub="Bubble size = washed kg. Healthy sites sit bottom-right (high use, few repairs). Red = outlier rule (R1, R2, R4). Click a bubble to drill down.">
+          Allocation use vs repair rate — {review.sites.length} sites
         </SectionTitle>
         <div className="h-80">
           <ResponsiveContainer>
@@ -154,7 +154,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
           </select>
           <label className="flex items-center gap-1.5 text-[12.5px] text-slate-700">
             <input type="checkbox" checked={flaggedOnly} onChange={(e) => setFlaggedOnly(e.target.checked)} className="accent-[#e30613]" />
-            Flagged only
+            Outliers only
           </label>
           <span className="ml-auto text-[12px] text-muted">
             {rows.length} of {review.sites.length} sites{siteBaselineNote ? ` · savings ${siteBaselineNote}` : ""}

@@ -24,6 +24,7 @@ const FLAG_EXPLAIN: Record<string, string> = {
   R2_HIGH_REPAIR_RATE: "Repair rate is more than 1.5× the customer median — examine work conditions or product fit.",
   R3_LATE_CYCLES: "On-time cycle rate is below the customer average — review the pickup schedule.",
   R4_SERVICE_REQUESTS: "Service requests per 1,000 wearers are high — find the cause.",
+  DQ4: "This site's laundry reports less washed kg than its customers' rows add up to. Footprint uses laundry intensity per kg × customer kg; reconcile with the WWS Washed Kg report.",
 };
 
 export function SiteDrawer({ siteId, review, onClose, onOpenMetric, siteBaselineNote }: {
@@ -140,8 +141,8 @@ export function SiteDrawer({ siteId, review, onClose, onOpenMetric, siteBaseline
             <ClipboardList size={14} /> Mentioned in observations
           </h3>
           <ul className="space-y-2">
-            {obs.map((o) => (
-              <li key={o.title} className="rounded-lg border border-line p-3">
+            {obs.map((o, i) => (
+              <li key={o.id ?? i} className="rounded-lg border border-line p-3">
                 <div className="text-[13px] font-semibold text-ink">{o.title}</div>
                 <div className="mt-1 text-[12.5px] text-slate-600">{o.recommended_action}</div>
               </li>
