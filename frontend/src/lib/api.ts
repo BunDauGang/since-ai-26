@@ -25,7 +25,33 @@ export async function pingBackend(): Promise<boolean> {
   }
 }
 
-export async function fetchReview(req: ReviewRequest): Promise<Review> {
+/** An HTTP error from the API, carrying FastAPI's `detail` message. Network failures are plain Errors. */
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+async function apiError(res: Response, what: string): Promise<ApiError> {
+  let detail = "";
+  try {
+    const body = await res.json();
+    detail = typeof body?.detail === "string" ? body.detail : JSON.stringify(body?.detail ?? body);
+  } catch {
+    /* non-JSON body */
+  }
+  return new ApiError(res.status, detail || `${what} failed (HTTP ${res.status})`);
+}
+
+export interface FetchedReview {
+  review: Review;
+  /** "engine" = calculated from the Excel pack; "sample" = API served the bundled sample (no pack loaded). */
+  source: string;
+  /** Set when rules/observations failed; the review then has no observations. */
+  insightsError: string | null;
+}
+
+export async function fetchReview(req: ReviewRequest): Promise<FetchedReview> {
   const res = await withTimeout(
     (signal) =>
       fetch(`${API_URL}/api/review`, {
@@ -36,8 +62,12 @@ export async function fetchReview(req: ReviewRequest): Promise<Review> {
       }),
     30000,
   );
-  if (!res.ok) throw new Error(`Review request failed (${res.status})`);
-  return (await res.json()) as Review;
+  if (!res.ok) throw await apiError(res, "Review request");
+  return {
+    review: (await res.json()) as Review,
+    source: res.headers.get("X-Review-Source") ?? "engine",
+    insightsError: res.headers.get("X-Insights-Error"),
+  };
 }
 
 export async function interpretPrompt(prompt: string, industry: string): Promise<Priority | null> {
@@ -72,7 +102,7 @@ export async function exportReview(review: Review, format: "pptx" | "pdf"): Prom
       }),
     60000,
   );
-  if (!res.ok) throw new Error(`Export failed (${res.status})`);
+  if (!res.ok) throw await apiError(res, "Export");
   const blob = await res.blob();
   const name = `${review.meta.customer_name.replace(/\s+/g, "_")}_Value_Review_${review.meta.period.to.slice(0, 4)}.${format}`;
   triggerDownload(blob, name);

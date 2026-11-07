@@ -52,6 +52,9 @@ export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, s
     : [];
   const siteMax = Math.max(...siteRows.map((r) => r.val), 0);
   const referencing = review.observations.filter((o) => o.metric_ids.includes(metric.id));
+  const { rule, trace } = splitFormula(metric.formula);
+  const traceMismatch =
+    !!trace && ((trace.scenario && trace.scenario !== sensitivity) || (trace.baseline && trace.baseline !== review.meta.baseline_id));
 
   return (
     <Drawer
@@ -89,7 +92,19 @@ export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, s
       </div>
 
       <Section icon={FunctionSquare} title="Formula">
-        <pre className="whitespace-pre-wrap rounded-lg bg-navy-900 px-3.5 py-3 font-mono text-[12.5px] leading-relaxed text-blue-50">{metric.formula}</pre>
+        <pre className="whitespace-pre-wrap rounded-lg bg-navy-900 px-3.5 py-3 font-mono text-[12.5px] leading-relaxed text-blue-50">{rule}</pre>
+        {trace && (
+          <div className="mt-2 rounded-lg border border-navy/20 bg-navy-50 px-3.5 py-2.5">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-navy">With this review&apos;s numbers</div>
+            <div className="mt-1 font-mono text-[12.5px] leading-relaxed text-ink">{trace.expr}</div>
+            {(trace.scenario || trace.baseline) && (
+              <div className="mt-1 text-[11.5px] text-muted">
+                Computed by the engine for {trace.scenario ?? "?"} case{trace.baseline ? ` · ${trace.baseline}` : ""}
+                {traceMismatch && <span className="font-medium text-amber-700"> — differs from the case/baseline currently shown</span>}
+              </div>
+            )}
+          </div>
+        )}
         <p className="mt-2 text-[12.5px] text-slate-600">
           <Info size={12} className="mr-1 inline -translate-y-px text-navy" />
           {STATUS_EXPLAIN[metric.status] ?? metric.status}
@@ -165,6 +180,22 @@ export function CalcDrawer({ metric, review, sensitivity, onClose, onOpenSite, s
       )}
     </Drawer>
   );
+}
+
+/**
+ * The engine appends a worked example to each formula:
+ * "RULE | Live arithmetic (display rounded…): 502,074.7 kg * 9.5 … = 1,406,620.29; scenario=base; baseline=B_LOCAL"
+ */
+function splitFormula(formula: string): { rule: string; trace: { expr: string; scenario?: string; baseline?: string } | null } {
+  const i = formula.indexOf(" | Live arithmetic");
+  if (i < 0) return { rule: formula, trace: null };
+  let rest = formula.slice(i + 3);
+  const colon = rest.indexOf("): ");
+  rest = colon >= 0 ? rest.slice(colon + 3) : rest.replace(/^Live arithmetic:?\s*/, "");
+  const parts = rest.split(";").map((x) => x.trim());
+  const kv = (k: string) => parts.find((x) => x.startsWith(`${k}=`))?.slice(k.length + 1);
+  const expr = parts.filter((x) => !/^(scenario|baseline)=/.test(x)).join("; ");
+  return { rule: formula.slice(0, i), trace: { expr, scenario: kv("scenario"), baseline: kv("baseline") } };
 }
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {

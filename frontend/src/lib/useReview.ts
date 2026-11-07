@@ -40,7 +40,7 @@ const requestKey = (c: Controls) => [c.customerId, c.baselineId, c.sensitivity, 
 export function useReview() {
   const [controls, setControls] = useState<Controls>(DEFAULT_CONTROLS);
   const [mode, setMode] = useState<Mode>("checking");
-  const [live, setLive] = useState<{ key: string; review: Review } | null>(null);
+  const [live, setLive] = useState<{ key: string; review: Review; source: string; insightsError: string | null } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reqId = useRef(0);
@@ -67,7 +67,7 @@ export function useReview() {
     setError(null);
     const t = setTimeout(async () => {
       try {
-        const r = await fetchReview({
+        const { review: r, source, insightsError } = await fetchReview({
           customer_id: controls.customerId,
           period_from: controls.periodFrom,
           period_to: controls.periodTo,
@@ -76,13 +76,12 @@ export function useReview() {
           priority: controls.priority,
         });
         if (id !== reqId.current) return;
-        // The API silently falls back to the NorthStar sample when the engine fails, overwriting only
-        // meta.customer_id/period. Check the name too, so another customer's numbers are never shown.
+        // Defence in depth: the API now refuses to relabel its sample, but never show another customer's numbers.
         const expectedName = CUSTOMERS.find((c) => c.id === controls.customerId)?.name;
         if (r.meta?.customer_id !== controls.customerId || (expectedName && r.meta?.customer_name !== expectedName)) {
           throw new Error(`the engine could not calculate ${expectedName ?? controls.customerId} (API returned ${r.meta?.customer_name ?? "no customer"} data)`);
         }
-        setLive({ key, review: normalizeReview(r) });
+        setLive({ key, review: normalizeReview(r), source, insightsError });
       } catch (e) {
         if (id === reqId.current) setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -103,19 +102,22 @@ export function useReview() {
   const derived = useMemo(() => {
     const useLive = mode === "live" && liveForCustomer;
     const { review, siteLevelBaselineId } = useLive
-      ? { review: liveForCustomer.review, siteLevelBaselineId: liveForCustomer.review.meta.baseline_id }
+      ? {
+          review: liveForCustomer.review,
+          // The API's sample fallback rebases customer totals only; site/month rows stay on the sample baseline.
+          siteLevelBaselineId: liveForCustomer.source === "sample" ? SAMPLE_REVIEW.meta.baseline_id : liveForCustomer.review.meta.baseline_id,
+        }
       : rebaseReview(NORMALIZED_SAMPLE, controls.baselineId);
     const emphasized = emphasizedIds(review, controls.priority);
-    // Sent to /api/export. Observations keep the engine's order: backend/export only reuses supplied
-    // observations when they match its own rule order, so re-ranking them here would make the deck drop them.
-    const exportReview: Review = {
+    // One review for screen AND export: observations touching the active lens first. backend/export matches
+    // observations by their evidence (not position), so the deck keeps this order.
+    const display: Review = {
       ...review,
       meta: { ...review.meta, sensitivity: controls.sensitivity, priority: controls.priority },
       priority_view: { ...review.priority_view, priority: controls.priority, emphasized_metric_ids: emphasized },
+      observations: rankObservations(review.observations, emphasized),
     };
-    // Shown on screen: same data, observations touching the active lens first.
-    const display: Review = { ...exportReview, observations: rankObservations(review.observations, emphasized) };
-    return { review: display, exportReview, emphasized, siteLevelBaselineId };
+    return { review: display, emphasized, siteLevelBaselineId };
   }, [mode, liveForCustomer, controls.baselineId, controls.priority, controls.sensitivity]);
 
   const update = useCallback((patch: Partial<Controls>) => setControls((c) => ({ ...c, ...patch })), []);
@@ -135,6 +137,9 @@ export function useReview() {
     blocking,
     periodValid,
     canExport: !stale && periodValid,
+    /** "engine" | "sample" in live mode; null offline (bundled sample). */
+    liveSource: mode === "live" && liveForCustomer ? liveForCustomer.source : null,
+    insightsError: mode === "live" && liveForCustomer ? liveForCustomer.insightsError : null,
     customer,
     customerAvailable,
     ...derived,

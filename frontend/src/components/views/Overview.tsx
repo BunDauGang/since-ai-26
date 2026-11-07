@@ -39,7 +39,8 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
   // Spotlight chart: sites ranked by the priority's site metric.
   const sm = SITE_METRIC_META[p.siteMetric];
   const siteData = review.sites
-    .map((s) => ({ id: s.site_id, name: shortSiteName(s.site_name, review.meta.customer_name), value: s.metrics[p.siteMetric] ?? 0, flagged: isOutlier(s) }))
+    .filter((s) => s.metrics[p.siteMetric] != null) // missing data is not a zero
+    .map((s) => ({ id: s.site_id, name: shortSiteName(s.site_name, review.meta.customer_name), value: s.metrics[p.siteMetric]!, flagged: isOutlier(s) }))
     .sort((a, b) => (p.siteSort === "desc" ? b.value - a.value : a.value - b.value))
     .slice(0, 10);
   const ts = p.timeseries ? review.timeseries[p.timeseries] : undefined;

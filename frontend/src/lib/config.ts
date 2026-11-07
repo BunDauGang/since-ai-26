@@ -19,7 +19,7 @@ export interface PriorityDef {
   id: Priority;
   label: string;
   short: string;
-  /** KPI ids emphasized when the backend has not provided a priority_view for this priority. */
+  /** KPI ids emphasized offline. Mirrors PRIORITY_EMPHASIS in backend/insights/priority.py — keep in sync. */
   emphasized: string[];
   /** Site metric used for the spotlight chart. */
   siteMetric: SiteMetricKey;
@@ -48,7 +48,7 @@ export const PRIORITIES: PriorityDef[] = [
     id: "emissions",
     label: "Emissions",
     short: "CO₂e",
-    emphasized: ["co2e_saving_kg", "customer_co2e_kg", "avoided_product_co2e_kg", "energy_saving_kwh"],
+    emphasized: ["co2e_saving_kg", "customer_co2e_kg", "avoided_product_co2e_kg"],
     siteMetric: "co2e_saving_kg",
     siteMetricLabel: "CO₂e saving by site (kg)",
     siteSort: "desc",
@@ -60,7 +60,7 @@ export const PRIORITIES: PriorityDef[] = [
     id: "cost",
     label: "Cost",
     short: "Cost",
-    emphasized: ["idle_value_eur", "idle_pieces", "allocation_use_rate", "garments_allocated"],
+    emphasized: ["idle_value_eur", "idle_pieces", "allocation_use_rate", "replacements_postponed"],
     siteMetric: "idle_pieces",
     siteMetricLabel: "Idle allocated garments by site",
     siteSort: "desc",
@@ -71,7 +71,7 @@ export const PRIORITIES: PriorityDef[] = [
     id: "circularity",
     label: "Circularity",
     short: "Circularity",
-    emphasized: ["repairs_total", "replacements_postponed", "avoided_product_co2e_kg", "circular_waste_share"],
+    emphasized: ["repairs_total", "replacements_postponed", "circular_waste_share", "textile_waste_kg"],
     siteMetric: "repairs_total",
     siteMetricLabel: "Repairs by site",
     siteSort: "desc",
@@ -83,7 +83,7 @@ export const PRIORITIES: PriorityDef[] = [
     id: "service",
     label: "Service performance",
     short: "Service",
-    emphasized: ["on_time_rate", "median_cycle_hours", "service_requests", "wash_frequency"],
+    emphasized: ["on_time_rate", "median_cycle_hours", "service_requests", "allocation_use_rate"],
     siteMetric: "on_time_rate",
     siteMetricLabel: "On-time cycle rate by site (weakest first)",
     siteSort: "asc",
@@ -94,7 +94,7 @@ export const PRIORITIES: PriorityDef[] = [
     id: "improvement",
     label: "Next-year improvement",
     short: "Improve",
-    emphasized: ["allocation_use_rate", "repair_rate_per_1000", "idle_pieces", "on_time_rate"],
+    emphasized: ["allocation_use_rate", "water_saving_l", "repairs_total", "on_time_rate"],
     siteMetric: "allocation_use_rate",
     siteMetricLabel: "Allocation use rate by site (weakest first)",
     siteSort: "asc",

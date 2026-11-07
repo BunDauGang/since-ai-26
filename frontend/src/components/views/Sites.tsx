@@ -39,30 +39,40 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
     );
     return r.sort((a, b) => {
       if (sort.key === "site_name") return a.site_name.localeCompare(b.site_name) * sort.dir;
-      return ((a.metrics[sort.key] ?? 0) - (b.metrics[sort.key] ?? 0)) * sort.dir;
+      // A site without this metric (no activity/cycles in the period) is missing data, not a 0: always last.
+      const av = a.metrics[sort.key], bv = b.metrics[sort.key];
+      if (av == null || bv == null) return av == null ? (bv == null ? 0 : 1) : -1;
+      return (av - bv) * sort.dir;
     });
   }, [review.sites, country, type, flaggedOnly, sort]);
 
   const byCountry = countries.map((c) => {
     const ss = review.sites.filter((s) => s.country === c);
-    const sum = (k: SiteMetricKey) => ss.reduce((a, s) => a + (s.metrics[k] ?? 0), 0);
+    const sum = (k: SiteMetricKey, rows = ss) => rows.reduce((a, s) => a + (s.metrics[k] ?? 0), 0);
+    // Utilisation only over sites that report both inputs, so missing data is not read as idle stock.
+    const withAlloc = ss.filter((s) => s.metrics.garments_allocated != null && s.metrics.idle_pieces != null);
+    const allocated = sum("garments_allocated", withAlloc);
     return {
       country: c,
       sites: ss.length,
       flagged: ss.filter(isOutlier).length,
+      noData: ss.filter((s) => s.metrics.washed_kg == null).length,
       washed: sum("washed_kg"),
       wearers: sum("wearers_min_est"),
-      use: sum("garments_allocated") ? (sum("garments_allocated") - sum("idle_pieces")) / sum("garments_allocated") : NaN,
+      use: allocated ? (allocated - sum("idle_pieces", withAlloc)) / allocated : NaN,
     };
   });
 
   const medUse = median(review.sites.map((s) => s.metrics.allocation_use_rate ?? NaN));
   const medRepair = median(review.sites.map((s) => s.metrics.repair_rate_per_1000 ?? NaN));
-  const scatter = review.sites.map((s) => ({
+  // Plot only sites with both values; a missing rate must not appear as a 0% outlier.
+  const plotted = review.sites.filter((s) => s.metrics.allocation_use_rate != null && s.metrics.repair_rate_per_1000 != null);
+  const unplotted = review.sites.length - plotted.length;
+  const scatter = plotted.map((s) => ({
     id: s.site_id,
     name: s.site_name,
-    x: (s.metrics.allocation_use_rate ?? 0) * 100,
-    y: s.metrics.repair_rate_per_1000 ?? 0,
+    x: s.metrics.allocation_use_rate! * 100,
+    y: s.metrics.repair_rate_per_1000!,
     z: s.metrics.washed_kg ?? 0,
     flagged: isOutlier(s),
   }));
@@ -82,7 +92,8 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
                 {FLAG_COUNTRY[c.country] ?? ""} {c.country}
               </span>
               <span className="text-[12px] text-muted">
-                {c.sites} sites{c.flagged ? ` · ${c.flagged} flagged` : ""}
+                {c.sites} sites{c.flagged ? ` · ${c.flagged} outliers` : ""}
+                {c.noData ? ` · ${c.noData} without activity` : ""}
               </span>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-[12px] text-muted">
@@ -93,7 +104,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
                 <div className="text-[17px] font-semibold text-ink tnum">{compact(c.wearers)}</div>wearers (min est.)
               </div>
               <div>
-                <div className="text-[17px] font-semibold text-ink tnum">{pct(c.use)}</div>allocation use
+                <div className="text-[17px] font-semibold text-ink tnum">{Number.isFinite(c.use) ? pct(c.use) : "—"}</div>allocation use
               </div>
             </div>
           </button>
@@ -103,7 +114,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
       {/* Scatter: where are the outliers */}
       <div className="card p-4">
         <SectionTitle sub="Bubble size = washed kg. Healthy sites sit bottom-right (high use, few repairs). Red = outlier rule (R1, R2, R4). Click a bubble to drill down.">
-          Allocation use vs repair rate — {review.sites.length} sites
+          Allocation use vs repair rate — {plotted.length} sites{unplotted ? ` (${unplotted} without data not plotted)` : ""}
         </SectionTitle>
         <div className="h-80">
           <ResponsiveContainer>

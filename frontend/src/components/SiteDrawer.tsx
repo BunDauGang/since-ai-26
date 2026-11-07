@@ -74,12 +74,14 @@ export function SiteDrawer({ siteId, review, onClose, onOpenMetric, siteBaseline
 
       <div className="mt-4 grid grid-cols-3 gap-3">
         {(["washed_kg", "water_saving_l", "co2e_saving_kg"] as SiteMetricKey[]).map((k) => {
-          const val = site.metrics[k] ?? 0;
+          const val = site.metrics[k];
           return (
             <div key={k} className="rounded-xl bg-canvas p-3">
               <div className="text-[11.5px] text-muted">{SITE_METRIC_META[k].label}</div>
-              <div className="text-xl font-semibold text-ink tnum">{formatValue(val, SITE_METRIC_META[k].unit)}</div>
-              <div className="text-[11px] text-muted">{pct(val / total(k))} of customer · #{rank(k)} of {review.sites.length}</div>
+              <div className="text-xl font-semibold text-ink tnum">{val == null ? "—" : formatValue(val, SITE_METRIC_META[k].unit)}</div>
+              <div className="text-[11px] text-muted">
+                {val == null ? "No data in this period" : `${pct(val / total(k))} of customer · #${rank(k)} of ${review.sites.length}`}
+              </div>
             </div>
           );
         })}

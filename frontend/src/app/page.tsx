@@ -11,7 +11,7 @@ import { Methodology } from "@/components/views/Methodology";
 import { Observations } from "@/components/views/Observations";
 import { Overview } from "@/components/views/Overview";
 import { Sites } from "@/components/views/Sites";
-import { downloadJson, exportReview } from "@/lib/api";
+import { ApiError, downloadJson, exportReview } from "@/lib/api";
 import { isOutlier, priorityDef, type ViewId } from "@/lib/config";
 import { baselineName } from "@/lib/derive";
 import { useReview } from "@/lib/useReview";
@@ -67,13 +67,16 @@ export default function Page() {
     if (!r.canExport) return;
     setExporting(format);
     try {
-      await exportReview(r.exportReview, format);
+      await exportReview(review, format);
       setToast({ kind: "info", text: `${format.toUpperCase()} downloaded — built from the same review.json shown here.` });
-    } catch {
+    } catch (e) {
       setToast({
         kind: "error",
-        text: `Export service not reachable (${format.toUpperCase()} is rendered by backend/export via FastAPI). Start the API, or download the exact review.json behind this view.`,
-        action: { label: "Download review.json", run: () => downloadJson(r.exportReview) },
+        text:
+          e instanceof ApiError
+            ? `${format.toUpperCase()} export failed (HTTP ${e.status}): ${e.message}`
+            : `Export service not reachable (${format.toUpperCase()} is rendered by backend/export via FastAPI). Start the API, or download the exact review.json behind this view.`,
+        action: { label: "Download review.json", run: () => downloadJson(review) },
       });
     } finally {
       setExporting(null);
@@ -142,7 +145,7 @@ export default function Page() {
                 </button>
               )}
               <button
-                onClick={() => downloadJson(r.exportReview)}
+                onClick={() => downloadJson(review)}
                 disabled={!r.canExport}
                 className="inline-flex items-center gap-1 hover:text-navy disabled:opacity-40"
                 title="Download the exact review.json behind this view"
@@ -154,6 +157,16 @@ export default function Page() {
           {r.error && !r.blocking && (
             <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 text-[13px] text-red-700 ring-1 ring-red-200">
               Live engine error: {r.error}. The view below is from the previous settings and cannot be exported until a recalculation succeeds.
+            </div>
+          )}
+          {r.liveSource === "sample" && !r.blocking && (
+            <div className="mb-4 rounded-lg bg-amber-50 px-4 py-2.5 text-[13px] text-amber-800 ring-1 ring-amber-200">
+              The API has no Excel data pack loaded, so it served the bundled sample review. Put the pack in <code>data/</code> and restart the API for live calculations.
+            </div>
+          )}
+          {r.insightsError && !r.blocking && (
+            <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 text-[13px] text-red-700 ring-1 ring-red-200">
+              Observations could not be generated ({r.insightsError}). KPIs and sites are still calculated; the Observations view is empty.
             </div>
           )}
           {!r.periodValid && (

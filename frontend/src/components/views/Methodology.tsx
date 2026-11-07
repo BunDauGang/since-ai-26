@@ -97,7 +97,7 @@ export function Methodology({ review, sensitivity, onOpenMetric }: { review: Rev
                     {formatValue(m.value[sensitivity], m.unit)} <span className="text-muted">{unitLabel(m.unit)}</span>
                   </td>
                   <td className="px-3 py-2"><StatusBadge status={m.status} small /></td>
-                  <td className="max-w-xs px-3 py-2 font-mono text-[11px] text-slate-600">{m.formula}</td>
+                  <td className="max-w-xs px-3 py-2 font-mono text-[11px] text-slate-600">{m.formula.split(" | Live arithmetic")[0]}</td>
                   <td className="px-3 py-2 text-[11.5px] text-slate-600">{m.sources.join(", ")}</td>
                   <td className="px-3 py-2 font-mono text-[11px] text-navy">{m.assumptions.join(" ")}</td>
                   <td className="px-3 py-2"><ConfidenceDots confidence={m.confidence} /></td>
