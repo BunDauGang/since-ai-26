@@ -116,36 +116,46 @@ export function saveMeeting(customerId: string, m: MeetingState) {
 /** The block sent to /api/export (contract: optional review.meeting). */
 export function meetingBlock(r: Review, m: MeetingState): MeetingBlock {
   const rough = m.rough ? roughCalc(r, m.rough) : null;
+  const target_results = TARGETS.map((t) => {
+    const target = m.targets[t.id] ?? t.defaultTarget;
+    const actual = t.actual(r);
+    return { metric_id: t.id, label: t.label, target, actual, status: targetStatus(t, target, actual), unit: t.unit };
+  });
   return {
     persona: m.persona,
-    persona_label: personaDef(m.persona).role,
-    targets: TARGETS.map((t) => {
-      const target = m.targets[t.id] ?? t.defaultTarget;
-      const actual = t.actual(r);
-      return { metric_id: t.id, label: t.label, target, actual, status: targetStatus(t, target, actual), unit: t.unit };
-    }),
-    satisfaction: { score: m.satisfaction.score, scale: 10, comment: m.satisfaction.comment, source: "KAM input" },
-    rough_calc:
-      m.rough && rough
-        ? {
-            label: "ROUGH CALCULATION",
-            baseline_id: m.rough.baselineId,
+    targets: Object.fromEntries(target_results.map((t) => [t.metric_id, t.target])),
+    target_results,
+    satisfaction: { score: m.satisfaction.score, scale: 10, source: "KAM input", comment: m.satisfaction.comment },
+    ...(m.rough && rough
+      ? {
+          rough_calc: {
+            label: "ROUGH CALCULATION" as const,
             inputs: {
+              baseline_id: m.rough.baselineId,
               water_eur_per_m3: m.rough.waterEurPerM3,
               energy_eur_per_kwh: m.rough.energyEurPerKwh,
               carbon_eur_per_t: m.rough.carbonEurPerT,
               garment_eur: m.rough.garmentEur,
               repair_share: m.rough.repairShare,
             },
-            lines: rough.lines.map((l) => ({ label: l.label, eur_base: Math.round(l.eur.base) })),
-            total_eur: { low: Math.round(rough.total.low), base: Math.round(rough.total.base), high: Math.round(rough.total.high) },
-          }
-        : null,
-    agreed_actions: m.actions.filter((a) => a.agreed).map((a) => ({ text: a.text, owner: a.owner, due: a.due })),
+            result_eur: Math.round(rough.total.base),
+            range_eur: { low: Math.round(rough.total.low), base: Math.round(rough.total.base), high: Math.round(rough.total.high) },
+            lines: rough.lines.map((l) => ({ label: l.label, eur: Math.round(l.eur.base) })),
+          },
+        }
+      : {}),
+    agreed_actions: m.actions.filter((a) => a.agreed).map(actionText),
     open_topics: m.openTopics,
+    persona_label: personaDef(m.persona).role,
     next_meeting: m.nextMeeting,
     notes: m.notes,
   };
+}
+
+/** "Review allocation (owner: Customer, by 2026-03-01)". */
+export function actionText(a: { text: string; owner: string; due: string }): string {
+  const extra = [a.owner && `owner: ${a.owner}`, a.due && `by ${a.due}`].filter(Boolean).join(", ");
+  return extra ? `${a.text} (${extra})` : a.text;
 }
 
 const eur = (n: number) => `€${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n)}`;
@@ -161,7 +171,7 @@ export function meetingMarkdown(r: Review, m: MeetingState): string {
   lines.push("> Synthetic prototype data. Estimates are not audited and are not approved Lindström or customer claims.");
   lines.push("");
   lines.push("## Agreed KPIs");
-  for (const t of b.targets) {
+  for (const t of b.target_results) {
     const def = TARGETS.find((d) => d.id === t.metric_id)!;
     lines.push(`- ${t.label}: target ${def.dir === "min" ? "≥" : "≤"} ${formatTarget(def.unit, t.target)}, actual ${t.actual == null ? "n/a" : formatTarget(def.unit, t.actual)} (${t.status})`);
   }
@@ -171,12 +181,12 @@ export function meetingMarkdown(r: Review, m: MeetingState): string {
   if (b.rough_calc) {
     lines.push("");
     lines.push("## Rough calculation (KAM assumptions, not a quote)");
-    for (const l of b.rough_calc.lines) lines.push(`- ${l.label}: ${eur(l.eur_base)}`);
-    lines.push(`- Total: about ${eur(b.rough_calc.total_eur.base)} (range ${eur(b.rough_calc.total_eur.low)} to ${eur(b.rough_calc.total_eur.high)})`);
+    for (const l of b.rough_calc.lines) lines.push(`- ${l.label}: ${eur(l.eur)}`);
+    lines.push(`- Total: about ${eur(b.rough_calc.result_eur)} (range ${eur(b.rough_calc.range_eur.low)} to ${eur(b.rough_calc.range_eur.high)})`);
   }
   lines.push("");
   lines.push("## Agreed next steps");
-  if (b.agreed_actions.length) for (const a of b.agreed_actions) lines.push(`- ${a.text}${a.owner ? ` (owner: ${a.owner}` : ""}${a.owner && a.due ? `, by ${a.due})` : a.owner ? ")" : a.due ? ` (by ${a.due})` : ""}`);
+  if (b.agreed_actions.length) for (const a of b.agreed_actions) lines.push(`- ${a}`);
   else lines.push("- None recorded yet.");
   lines.push("");
   lines.push("## Open topics for the next meeting");

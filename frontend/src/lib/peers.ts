@@ -14,8 +14,10 @@ export interface PeerKpi {
   better: "higher" | "lower";
   unit: "ratio" | "hours" | "rate" | "per100";
   value: (s: Site) => number | undefined;
-  /** Customer-level metric id to read the network benchmark from (if any). */
+  /** Key in review.peer_benchmark.customer to read the network benchmark from (if any). */
   metricId?: string;
+  /** Multiply the engine's network value by this to match `value` (e.g. per wearer → per 100 wearers). */
+  networkScale?: number;
 }
 
 export const PEER_KPIS: PeerKpi[] = [
@@ -29,6 +31,8 @@ export const PEER_KPIS: PeerKpi[] = [
     better: "lower",
     unit: "per100",
     value: (s) => (s.metrics.service_requests != null && s.metrics.wearers_min_est ? (s.metrics.service_requests / s.metrics.wearers_min_est) * 100 : undefined),
+    metricId: "service_requests_per_wearer",
+    networkScale: 100,
   },
 ];
 
@@ -53,7 +57,8 @@ export interface PeerSummary {
   weakest: PeerRow;
   byCountry: { country: string; median: number; n: number }[];
   missing: number;
-  network?: { median: number; percentile?: number };
+  /** Anonymised network median of all customers and how many customers it covers. */
+  network?: { median: number; sampleSize?: number };
 }
 
 function quantile(sorted: number[], q: number): number {
@@ -63,7 +68,7 @@ function quantile(sorted: number[], q: number): number {
   return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
 }
 
-type NetworkBlock = Record<string, { network_median?: number; percentile?: number }>;
+type NetworkBlock = Record<string, { network_median?: number; sample_size?: number }>;
 
 export function peerSummary(review: Review, kpi: PeerKpi): PeerSummary | null {
   const rows = review.sites
@@ -91,6 +96,6 @@ export function peerSummary(review: Review, kpi: PeerKpi): PeerSummary | null {
     weakest: rows[rows.length - 1],
     byCountry,
     missing: review.sites.length - rows.length,
-    network: net?.network_median != null ? { median: net.network_median, percentile: net.percentile } : undefined,
+    network: net?.network_median != null ? { median: net.network_median * (kpi.networkScale ?? 1), sampleSize: net.sample_size } : undefined,
   };
 }

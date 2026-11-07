@@ -71,8 +71,15 @@ export function StepPeers({ review, onOpenSite }: { review: Review; onOpenSite: 
           <div className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-muted">
             {s.network ? (
               <>
-                Lindström network median (anonymised): <span className="font-semibold text-ink">{fmt(s.network.median)}</span>
-                {s.network.percentile != null && <> · you are at the {Math.round(s.network.percentile * 100)}th percentile</>}
+                Lindström network median (anonymised{s.network.sampleSize ? `, ${s.network.sampleSize} customers` : ""}):{" "}
+                <span className="font-semibold text-ink">{fmt(s.network.median)}</span>
+                {(() => {
+                  const yours = review.metrics.find((m) => m.id === s.kpi.metricId)?.value.base;
+                  if (yours == null) return null;
+                  const v = yours * (s.kpi.networkScale ?? 1);
+                  const better = s.kpi.better === "higher" ? v > s.network!.median : v < s.network!.median;
+                  return <> · yours {fmt(v)}, {v === s.network!.median ? "at" : better ? "better than" : "behind"} the network median</>;
+                })()}
               </>
             ) : (
               <>A Lindström network benchmark (other customers, anonymised) appears here once the engine provides it. Other customers are never named.</>

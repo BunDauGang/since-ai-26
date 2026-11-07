@@ -165,27 +165,33 @@ export interface Review {
   /** Optional (engine, Worker A): anonymised Lindström network benchmark. Absent until the engine provides it. */
   peer_benchmark?: {
     scope?: string;
-    customer?: Record<string, { network_median?: number; percentile?: number }>;
+    customer?: Record<string, { network_median?: number; percentile?: number; sample_size?: number }>;
     sites?: Record<string, Record<string, number>>;
   };
   /** Optional: what was agreed in the customer meeting. Sent by the dashboard to /api/export, never produced by the engine. */
   meeting?: MeetingBlock;
 }
 
+/** Shape follows contracts/review.schema.json (meeting); extra fields add detail without breaking it. */
 export interface MeetingBlock {
-  persona: string;
-  persona_label: string;
-  targets: { metric_id: string; label: string; target: number; actual: number | null; status: string; unit: string }[];
-  satisfaction: { score: number | null; scale: number; comment: string; source: "KAM input" };
-  rough_calc: {
+  persona: "ceo" | "cfo" | "operations" | "sustainability";
+  /** Agreed target per KPI id (KAM input). */
+  targets: Record<string, number>;
+  /** Extra: actual and met/close/missed per target. */
+  target_results: { metric_id: string; label: string; target: number; actual: number | null; status: string; unit: string }[];
+  satisfaction: { score: number | null; scale: number; source: "KAM input"; comment: string };
+  rough_calc?: {
     label: "ROUGH CALCULATION";
-    baseline_id: string;
-    inputs: Record<string, number>;
-    lines: { label: string; eur_base: number }[];
-    total_eur: { low: number; base: number; high: number };
-  } | null;
-  agreed_actions: { text: string; owner: string; due: string }[];
+    inputs: Record<string, number | string>;
+    result_eur: number;
+    /** Extra: low/base/high total and per-line values. */
+    range_eur: { low: number; base: number; high: number };
+    lines: { label: string; eur: number }[];
+  };
+  agreed_actions: string[];
   open_topics: string[];
+  /** Extra. */
+  persona_label: string;
   next_meeting: string;
   notes: string;
 }
