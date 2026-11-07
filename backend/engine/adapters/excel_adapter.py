@@ -23,7 +23,27 @@ class WorkbookTables(dict):
         self.diagnostics = []
 
 
+_CACHE: dict[tuple, "WorkbookTables"] = {}
+
+
 def load_tables(source_path: str | Path | None = None) -> dict[str, list[dict]]:
+    """Cached front door: parse the workbook once per (path, modification time, size).
+
+    Parsing takes ~0.8 s; the API calls this on every recalculation. Callers must treat the
+    returned tables as read-only (the engine copies rows before deriving values).
+    """
+    path = Path(source_path) if source_path is not None else DEFAULT_SOURCE
+    if not path.is_file():
+        raise FileNotFoundError(f"Excel data pack not found: {path}")
+    stat = path.stat()
+    key = (str(path.resolve()), stat.st_mtime_ns, stat.st_size)
+    if key not in _CACHE:
+        _CACHE.clear()  # keep only the current version of the pack
+        _CACHE[key] = _read_tables(path)
+    return _CACHE[key]
+
+
+def _read_tables(source_path: str | Path | None = None) -> dict[str, list[dict]]:
     """Read records without silently dropping incomplete or unmapped rows.
 
     Formula cells use the workbook's cached values. Missing caches remain None

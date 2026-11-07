@@ -9,7 +9,7 @@ from .impacts import allocate_rows, environmental, savings, ROUTES, environmenta
 from .kpis import operational, total, number, operational_traces
 from .sensitivity import TEAM_ASSUMPTIONS
 from .validate import validate_tables, row_impact, wearer_finding, unavailable_gap
-from backend.insights.priority import interpret_prompt
+from backend.insights.priority import PRIORITY_EMPHASIS, interpret_prompt
 
 
 # id, category, unit, status, formula, sources, assumptions
@@ -40,14 +40,7 @@ DEFINITIONS = [
     ("co2e_saving_kg", "handprint", "kgCO2e", "ALLOCATED_ESTIMATE", "SUM(customer_washed_kg) * (B.process_kgco2e_per_kg + B.delivery_kgco2e_per_kg) * baseline_factor - customer_co2e_kg", "Service_Activity|Laundry_Resources|Baselines", "A001|A003|T002"),
 ]
 
-PRIORITIES = {
-    "water": ["water_saving_l", "customer_water_l", "washed_kg", "co2e_saving_kg"],
-    "emissions": ["co2e_saving_kg", "customer_co2e_kg", "avoided_product_co2e_kg"],
-    "cost": ["idle_value_eur", "idle_pieces", "allocation_use_rate", "replacements_postponed"],
-    "circularity": ["repairs_total", "replacements_postponed", "circular_waste_share", "textile_waste_kg"],
-    "service": ["on_time_rate", "median_cycle_hours", "service_requests", "allocation_use_rate"],
-    "improvement": ["allocation_use_rate", "water_saving_l", "repairs_total", "on_time_rate"],
-}
+PRIORITIES = PRIORITY_EMPHASIS  # single shared map (backend/insights/priority.py)
 
 DATA_GAPS = [
     {"gap": gap, "impact": impact, "future_source": source} for gap, impact, source in (
@@ -86,6 +79,22 @@ def _group_by(rows, *fields):
     return groups
 
 
+_VALIDATION_CACHE: dict = {}
+
+
+def _validated(tables):
+    """Validate once per workbook version instead of on every API request (and log the warnings once).
+
+    The key covers the validator and the identity/size of every sheet list, so replacing a sheet or
+    patching the validator triggers a fresh run. Callers get copies of the findings.
+    """
+    key = (validate_tables, id(tables), tuple((name, id(rows), len(rows)) for name, rows in tables.items()))
+    if key not in _VALIDATION_CACHE:
+        _VALIDATION_CACHE.clear()
+        _VALIDATION_CACHE[key] = validate_tables(tables)
+    return _VALIDATION_CACHE[key]
+
+
 def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-12",
                  baseline_id="B_LOCAL", sensitivity="base", priority=None, source_path=None) -> dict:
     _month(period_from), _month(period_to)
@@ -96,8 +105,8 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
     if priority is not None and priority not in PRIORITIES:
         raise ValueError("Unknown priority")
     tables = load_tables(source_path)
-    quality = validate_tables(tables)
-    quality.extend(getattr(tables, 'diagnostics', []))
+    quality = [dict(f) for f in _validated(tables)]
+    quality.extend(dict(d) for d in getattr(tables, 'diagnostics', []))
     quality.extend(dict(check_id="PACK_DATA_STATUS", dataset=r["dataset"], severity="info", affected_rows=0,
                         message=f"{r['status']}: {r['note']}", treatment=f"Retain source evidence labels; confidence: {r['confidence']}")
                    for r in tables["Data_Quality"])

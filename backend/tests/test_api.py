@@ -1,9 +1,14 @@
 """Integration tests for the FastAPI connector server (`backend/api/main.py`)."""
+from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
 
+import backend.api.main as api
 from backend.api.main import app
 
 client = TestClient(app)
+needs_pack = pytest.mark.skipif(not api.DEFAULT_DATA_PATH.exists(), reason="Excel data pack not in data/")
 
 
 def test_health_and_customers():
@@ -57,6 +62,7 @@ def test_export_pptx_and_pdf():
         assert len(r.content) > 1000
 
 
+@needs_pack
 def test_multi_customer_and_prompt_interpretation():
     """Verify multi-customer / multi-industry scaling (CUST002 Manufacturing, CUST003 Healthcare) and /api/interpret."""
     for cid, expected_industry, expected_default_prio, expected_sites in (
@@ -88,3 +94,57 @@ def test_multi_customer_and_prompt_interpretation():
     assert interp.status_code == 200
     assert interp.json()["priority"] == "circularity"
 
+
+
+@needs_pack
+def test_invalid_input_is_a_client_error_not_a_sample():
+    bad_period = client.post("/api/review", json={"customer_id": "CUST002", "period_from": "2025-12", "period_to": "2025-01", "use_llm": False})
+    assert bad_period.status_code == 400
+    unknown = client.post("/api/review", json={"customer_id": "CUST999", "use_llm": False})
+    assert unknown.status_code == 400
+
+
+@needs_pack
+def test_get_review_uses_customer_default_priority():
+    r = client.get("/api/review", params={"customer_id": "CUST002"})
+    assert r.status_code == 200
+    assert r.json()["meta"]["priority"] == "cost"
+    assert r.headers["X-Review-Source"] == "engine"
+
+
+def test_sample_fallback_is_never_relabelled_as_another_customer(monkeypatch):
+    monkeypatch.setattr(api, "_ACTIVE_DATA_PATH", Path("/nonexistent/pack.xlsx"))
+    monkeypatch.setattr("backend.engine.adapters.excel_adapter.DEFAULT_SOURCE", Path("/nonexistent/pack.xlsx"))
+    api._REVIEW_CACHE.clear()
+    other = client.post("/api/review", json={"customer_id": "CUST002", "use_llm": False})
+    assert other.status_code == 503
+    own = client.post("/api/review", json={"customer_id": "CUST001", "baseline_id": "B_HOME", "use_llm": False})
+    assert own.status_code == 200
+    assert own.headers["X-Review-Source"] == "sample"
+    assert own.json()["meta"]["customer_name"] == "NorthStar Foods Group"
+    assert own.json()["meta"]["baseline_id"] == "B_HOME"
+
+
+def test_export_reports_bad_payload_and_cleans_temp_files(monkeypatch, tmp_path):
+    monkeypatch.setattr(api.tempfile, "tempdir", str(tmp_path))
+    review = client.post("/api/review", json={"customer_id": "CUST001", "use_llm": False}).json()
+    ok = client.post("/api/export?format=pptx", json=review)
+    assert ok.status_code == 200
+    assert not list(tmp_path.glob("lindstrom_export_*"))  # removed after sending
+    broken = dict(review, meta={k: v for k, v in review["meta"].items() if k != "priority"})
+    bad = client.post("/api/export?format=pdf", json=broken)
+    assert bad.status_code == 422
+    assert "priority" in bad.json()["detail"]
+    assert not list(tmp_path.glob("lindstrom_export_*"))
+
+
+def test_export_follows_reordered_dashboard_observations():
+    from backend.export.content import build_pages
+
+    review = client.post("/api/review", json={"customer_id": "CUST001", "priority": "water", "use_llm": False}).json()
+    obs = review["observations"]
+    assert len(obs) >= 2
+    review["observations"] = [dict(o, title="KAM " + "ABCDEFGH"[i] + " " + o["title"]) for i, o in enumerate(obs)][::-1]
+    text = str(build_pages(review))
+    assert all(f"KAM {'ABCDEFGH'[i]} " in text for i in range(len(obs)))
+    assert text.index("KAM " + "ABCDEFGH"[len(obs) - 1]) < text.index("KAM A")

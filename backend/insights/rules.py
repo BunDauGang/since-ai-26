@@ -94,3 +94,20 @@ def evaluate_rules(review: dict) -> list[dict]:
                 industry.index(rule) if rule in industry else 99,
                 priority.index(rule) if rule in priority else 99, rule)
     return enrich_facts(sorted(facts, key=rank), review)
+
+
+RULE_SITE_FLAGS = {'R1': 'R1_LOW_ALLOCATION_USE', 'R2': 'R2_HIGH_REPAIR_RATE',
+                   'R3': 'R3_LATE_CYCLES', 'R4': 'R4_SERVICE_REQUESTS'}
+
+
+def annotate_site_flags(review: dict, facts: list[dict] | None = None) -> list[dict]:
+    """Copy site-level rule findings (R1-R4) onto sites[].flags in place; returns the facts used."""
+    facts = evaluate_rules(review) if facts is None else facts
+    sites = {s['site_id']: s for s in review.get('sites', [])}
+    for fact in facts:
+        flag = RULE_SITE_FLAGS.get(fact.get('rule_id'))
+        for site_id in fact.get('site_ids', []) if flag else []:
+            site = sites.get(site_id)
+            if site is not None and flag not in site.setdefault('flags', []):
+                site['flags'].append(flag)
+    return facts

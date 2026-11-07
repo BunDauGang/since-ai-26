@@ -25,11 +25,23 @@ def build_pages(review):
     def tokens(o):
         return re.findall(r'\d+(?:[,.]\d+)*', ' '.join(o.get(k, '') for k in
                           ('title', 'observation', 'recommended_action', 'steering_question')))
-    if len(supplied) == len(observations) and all(
-        all(isinstance(a.get(k), str) for k in ('id', 'title', 'observation', 'recommended_action', 'steering_question', 'owner', 'status', 'confidence'))
-        and a.get('metric_ids') == b['metric_ids'] and a.get('site_ids') == b['site_ids']
-        and tokens(a) == tokens(b) for a, b in zip(supplied, observations)
-    ):
+    # Match by evidence (metric_ids + site_ids), not position: the dashboard re-orders observations for the
+    # active priority lens, and the deck should follow that order. Wording may be edited; numbers may not.
+    required = ('id', 'title', 'observation', 'recommended_action', 'steering_question', 'owner', 'status', 'confidence')
+    def key(o):
+        return (tuple(o.get('metric_ids') or []), tuple(o.get('site_ids') or []))
+    current = {}
+    for o in observations:
+        current.setdefault(key(o), []).append(o)
+    def accepted(a):
+        if not all(isinstance(a.get(k), str) for k in required):
+            return False
+        candidates = current.get(key(a), [])
+        match = next((b for b in candidates if tokens(a) == tokens(b)), None)
+        if match is not None:
+            candidates.remove(match)  # each current finding can back one supplied observation
+        return match is not None
+    if len(supplied) == len(observations) and all(accepted(a) for a in supplied):
         observations = supplied
     pages = []
     def page(title, blocks):

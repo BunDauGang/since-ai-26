@@ -17,19 +17,11 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def build_sample(source_path=None):
     from backend.insights.generate import generate_observations
-    from backend.insights.rules import evaluate_rules
+    from backend.insights.rules import annotate_site_flags
     import jsonschema
 
     review = build_review(source_path=source_path)
-    flag_map = {"R1": "R1_LOW_ALLOCATION_USE", "R2": "R2_HIGH_REPAIR_RATE",
-                "R3": "R3_LATE_CYCLES", "R4": "R4_SERVICE_REQUESTS"}
-    sites = {site["site_id"]: site for site in review["sites"]}
-    for fact in evaluate_rules(review):
-        flag = flag_map.get(fact.get("rule_id"))
-        if flag:
-            for site_id in fact.get("site_ids", []):
-                if site_id in sites and flag not in sites[site_id]["flags"]:
-                    sites[site_id]["flags"].append(flag)
+    annotate_site_flags(review)
     review["observations"] = generate_observations(review, use_llm=False)
     schema = json.loads((ROOT / "contracts/review.schema.json").read_text(encoding="utf-8"))
     jsonschema.validate(review, schema)

@@ -5,13 +5,16 @@ Connects:
 - Worker B (`backend.insights.generate`, `backend.export`) -> Generates observations & PPTX/PDF
 - Worker C (`frontend/`) -> Interactive web dashboard
 
-Includes automatic fallbacks to `contracts/sample_review.json` so the API works
-standalone even before Worker A or Worker B merge their branches.
+Falls back to `contracts/sample_review.json` only when the Excel data pack is missing AND the
+request is for the sample's own customer/period; such responses carry `X-Review-Source: sample`.
+Every other failure is reported as an HTTP error instead of showing another customer's numbers.
 """
 from __future__ import annotations
 
 import copy
 import json
+import logging
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Literal
@@ -20,6 +23,14 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
+from starlette.background import BackgroundTask
+
+from backend.engine.build_review import build_review
+from backend.insights.generate import generate_observations
+from backend.insights.priority import PRIORITY_EMPHASIS, interpret_prompt
+from backend.insights.rules import annotate_site_flags
+
+LOG = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 SAMPLE_REVIEW_PATH = ROOT_DIR / "contracts" / "sample_review.json"
@@ -37,26 +48,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Let the dashboard read where a review came from and why an export failed.
+    expose_headers=["X-Review-Source", "X-Insights-Error", "Content-Disposition"],
 )
-
-PRIORITY_EMPHASIS: dict[str, list[str]] = {
-    "water": ["water_saving_l", "customer_water_l", "washed_kg", "co2e_saving_kg", "on_time_rate"],
-    "emissions": ["co2e_saving_kg", "avoided_product_co2e_kg", "customer_co2e_kg", "energy_saving_kwh"],
-    "cost": ["allocation_use_rate", "idle_pieces", "idle_value_eur", "garments_allocated", "replacements_postponed"],
-    "circularity": ["repairs_total", "replacements_postponed", "avoided_product_co2e_kg", "circular_waste_share", "textile_waste_kg"],
-    "service": ["on_time_rate", "median_cycle_hours", "service_requests", "allocation_use_rate", "wash_frequency"],
-    "improvement": ["allocation_use_rate", "idle_pieces", "repair_rate_per_1000", "water_saving_l", "service_requests"],
-}
-
-KEYWORD_PRIORITY_MAP: list[tuple[list[str], str]] = [
-    (["water", "litre", "liter", "fresh water", "moisture"], "water"),
-    (["co2", "carbon", "emission", "ghg", "scope 3", "climate", "energy", "kwh"], "emissions"),
-    (["cost", "price", "budget", "idle", "unused", "allocation", "utilization", "euro", "eur", "tco"], "cost"),
-    (["circular", "repair", "waste", "recycl", "reuse", "lifetime", "replacement"], "circularity"),
-    (["service", "delivery", "on-time", "late", "turnaround", "cycle", "hygiene", "request"], "service"),
-    (["improve", "next year", "optimize", "action", "recommend", "potential", "outlier"], "improvement"),
-]
-
 
 CUSTOMER_META: dict[str, dict[str, str | int]] = {
     "CUST001": {
@@ -89,7 +83,7 @@ CUSTOMER_META: dict[str, dict[str, str | int]] = {
 }
 
 _ACTIVE_DATA_PATH: Path = DEFAULT_DATA_PATH
-_REVIEW_CACHE: dict[tuple[str, str, str, str, str, str, bool], dict] = {}
+_REVIEW_CACHE: dict[tuple, dict] = {}
 
 
 class ReviewRequest(BaseModel):
@@ -122,88 +116,56 @@ def _load_sample_review() -> dict:
     return json.loads(SAMPLE_REVIEW_PATH.read_text(encoding="utf-8"))
 
 
-def _fallback_interpret_prompt(prompt: str, industry: str = "Food & Beverage") -> str:
-    text = (prompt or "").lower()
-    for keywords, prio in KEYWORD_PRIORITY_MAP:
-        if any(k in text for k in keywords):
-            return prio
-    if "manufacturing" in industry.lower():
-        return "cost"
-    if "health" in industry.lower():
-        return "service"
-    return "water"
+def _sample_fallback(req: ReviewRequest, resolved_priority: str) -> dict:
+    """Serve the bundled sample only for its own customer and period; never relabel it."""
+    review = _load_sample_review()
+    meta = review["meta"]
+    if req.customer_id != meta["customer_id"] or (req.period_from, req.period_to) != (meta["period"]["from"], meta["period"]["to"]):
+        raise HTTPException(
+            status_code=503,
+            detail=(f"The Excel data pack is not available to the API, so {req.customer_id} {req.period_from}..{req.period_to} "
+                    f"cannot be calculated. Only the bundled sample ({meta['customer_id']}, {meta['period']['from']}..{meta['period']['to']}) is available."),
+        )
+    meta.update(sensitivity=req.sensitivity, priority=resolved_priority)
+    review["priority_view"]["priority"] = resolved_priority
+    review["priority_view"]["emphasized_metric_ids"] = [
+        m for m in PRIORITY_EMPHASIS.get(resolved_priority, []) if m in {x["id"] for x in review["metrics"]}]
+    match = next((b for b in review.get("baseline_comparison", []) if b["baseline_id"] == req.baseline_id), None)
+    if match and match["baseline_id"] != meta["baseline_id"]:
+        # Customer-level handprint totals exist for every baseline; site/month detail stays on the sample baseline.
+        meta.update(baseline_id=match["baseline_id"], baseline_name=match["name"])
+        for metric in review["metrics"]:
+            if metric["id"] in ("water_saving_l", "energy_saving_kwh", "co2e_saving_kg"):
+                metric["value"] = match[metric["id"]]
+    return review
 
 
-def _apply_dynamic_overrides(review: dict, req: ReviewRequest, resolved_priority: str) -> dict:
-    """Adjust priority, baseline, and sensitivity on the fallback sample so UI switches work immediately."""
-    out = copy.deepcopy(review)
-    cmeta = CUSTOMER_META.get(req.customer_id, CUSTOMER_META["CUST001"])
-    out["meta"]["customer_id"] = req.customer_id
-    out["meta"]["customer_name"] = cmeta["customer_name"]
-    out["meta"]["industry"] = cmeta["industry"]
-    out["meta"]["segment"] = cmeta["segment"]
-    out["meta"]["hq_country"] = cmeta["hq_country"]
-    out["meta"]["period"] = {"from": req.period_from, "to": req.period_to}
-    out["meta"]["baseline_id"] = req.baseline_id
-    out["meta"]["sensitivity"] = req.sensitivity
-    out["meta"]["priority"] = resolved_priority
-
-    # Update priority_view emphasis
-    out["priority_view"]["priority"] = resolved_priority
-    out["priority_view"]["emphasized_metric_ids"] = PRIORITY_EMPHASIS.get(
-        resolved_priority, PRIORITY_EMPHASIS["water"]
-    )
-
-    # Update handprint metrics if user switches baseline_id
-    matching_baseline = next(
-        (b for b in out.get("baseline_comparison", []) if b["baseline_id"] == req.baseline_id),
-        None,
-    )
-    if matching_baseline:
-        out["meta"]["baseline_name"] = matching_baseline["name"]
-        for m in out.get("metrics", []):
-            if m["id"] in ("water_saving_l", "energy_saving_kwh", "co2e_saving_kg"):
-                m["value"] = matching_baseline[m["id"]]
-                m["label"] = f"{m['id'].replace('_saving_l', ' saving').replace('_saving_kwh', ' saving').replace('_saving_kg', ' saving').replace('_', ' ').capitalize()} vs {matching_baseline['name'].lower()}"
-
-    expected_sites = int(cmeta.get("sites_count", len(out.get("sites", []))))
-    if len(out.get("sites", [])) > expected_sites:
-        out["sites"] = out["sites"][:expected_sites]
-    return out
+def _pack_version() -> tuple:
+    try:
+        stat = _ACTIVE_DATA_PATH.stat()
+        return (stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        return ("missing",)
 
 
-def _compute_full_review(req: ReviewRequest) -> dict:
-    # Step 1: Resolve priority using the customer's actual industry context
+def _compute_full_review(req: ReviewRequest) -> tuple[dict, dict[str, str]]:
+    """Returns (review, response headers)."""
+    # Step 1: resolve priority with the customer's own industry
     industry = _customer_industry(req.customer_id)
     resolved_priority = req.priority
     if req.prompt and not resolved_priority:
-        try:
-            from backend.insights.generate import interpret_prompt  # type: ignore
-
-            resolved_priority = interpret_prompt(req.prompt, industry)
-        except Exception:
-            resolved_priority = _fallback_interpret_prompt(req.prompt, industry)
+        resolved_priority = interpret_prompt(req.prompt, industry)
     if not resolved_priority:
         resolved_priority = _customer_default_priority(req.customer_id)
 
-    cache_key = (
-        req.customer_id,
-        req.period_from,
-        req.period_to,
-        req.baseline_id,
-        req.sensitivity,
-        resolved_priority,
-        req.use_llm,
-    )
+    cache_key = (req.customer_id, req.period_from, req.period_to, req.baseline_id,
+                 req.sensitivity, resolved_priority, req.use_llm, _pack_version())
     if cache_key in _REVIEW_CACHE:
-        return copy.deepcopy(_REVIEW_CACHE[cache_key])
+        return copy.deepcopy(_REVIEW_CACHE[cache_key]), {"X-Review-Source": "engine"}
 
-    # Step 2: Run Worker A's calculation engine if available; else use sample_review.json
-    review: dict | None = None
+    # Step 2: deterministic engine (Worker A)
+    source = "engine"
     try:
-        from backend.engine.build_review import build_review  # type: ignore
-
-        source = str(_ACTIVE_DATA_PATH) if _ACTIVE_DATA_PATH.exists() else None
         review = build_review(
             customer_id=req.customer_id,
             period_from=req.period_from,
@@ -211,39 +173,31 @@ def _compute_full_review(req: ReviewRequest) -> dict:
             baseline_id=req.baseline_id,
             sensitivity=req.sensitivity,
             priority=resolved_priority,
-            source_path=source,
+            source_path=str(_ACTIVE_DATA_PATH) if _ACTIVE_DATA_PATH.exists() else None,
         )
-    except Exception:
-        review = _apply_dynamic_overrides(_load_sample_review(), req, resolved_priority)
+    except FileNotFoundError:
+        review, source = _sample_fallback(req, resolved_priority), "sample"
+    except ValueError as exc:  # invalid period, unknown customer, no activity in period, ...
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        LOG.exception("Engine failed for %s", req.customer_id)
+        raise HTTPException(status_code=500, detail=f"Calculation engine error: {exc}") from exc
 
-    # Step 3: Run Worker B's rules & observations generator if available
+    headers = {"X-Review-Source": source}
+    if source == "sample":
+        return review, headers  # sample already carries its observations and flags
+
+    # Step 3: rules -> site flags + observations (Worker B). Failure is logged and signalled, never cached.
     try:
-        from backend.insights.generate import generate_observations  # type: ignore
-        from backend.insights.rules import evaluate_rules  # type: ignore
-
-        rule_flag_map = {
-            "R1": "R1_LOW_ALLOCATION_USE",
-            "R2": "R2_HIGH_REPAIR_RATE",
-            "R3": "R3_LATE_CYCLES",
-            "R4": "R4_SERVICE_REQUESTS",
-        }
-        facts = evaluate_rules(review)
-        site_map = {s["site_id"]: s for s in review.get("sites", [])}
-        for fact in facts:
-            flag_code = rule_flag_map.get(fact.get("rule_id", ""))
-            if flag_code:
-                for sid in fact.get("site_ids", []):
-                    if sid in site_map and flag_code not in site_map[sid]["flags"]:
-                        site_map[sid]["flags"].append(flag_code)
-
-        obs = generate_observations(review, use_llm=req.use_llm)
-        if obs:
-            review["observations"] = obs
-    except Exception:
-        pass
+        annotate_site_flags(review)
+        review["observations"] = generate_observations(review, use_llm=req.use_llm)
+    except Exception as exc:
+        LOG.exception("Insights failed for %s", req.customer_id)
+        headers["X-Insights-Error"] = f"{type(exc).__name__}: {exc}"[:200].replace("\n", " ")
+        return review, headers
 
     _REVIEW_CACHE[cache_key] = copy.deepcopy(review)
-    return review
+    return review, headers
 
 
 @app.get("/api/health")
@@ -278,24 +232,19 @@ def list_customers() -> dict:
 
 @app.post("/api/interpret")
 def interpret_user_prompt(req: InterpretRequest) -> dict:
-    try:
-        from backend.insights.generate import interpret_prompt  # type: ignore
-
-        priority = interpret_prompt(req.prompt, req.industry)
-    except Exception:
-        priority = _fallback_interpret_prompt(req.prompt, req.industry)
+    priority = interpret_prompt(req.prompt, req.industry)
     return {
         "prompt": req.prompt,
         "industry": req.industry,
         "priority": priority,
-        "emphasized_metric_ids": PRIORITY_EMPHASIS.get(priority, PRIORITY_EMPHASIS["water"]),
+        "emphasized_metric_ids": PRIORITY_EMPHASIS[priority],
     }
 
 
 @app.post("/api/review")
 def generate_customer_review(req: ReviewRequest) -> JSONResponse:
-    review = _compute_full_review(req)
-    return JSONResponse(content=review)
+    review, headers = _compute_full_review(req)
+    return JSONResponse(content=review, headers=headers)
 
 
 @app.get("/api/review")
@@ -303,7 +252,7 @@ def get_default_customer_review(
     customer_id: str = "CUST001",
     baseline_id: Literal["B_LOCAL", "B_HOME", "B_INHOUSE"] = "B_LOCAL",
     sensitivity: Literal["low", "base", "high"] = "base",
-    priority: Literal["water", "emissions", "cost", "circularity", "service", "improvement"] = "water",
+    priority: Literal["water", "emissions", "cost", "circularity", "service", "improvement"] | None = None,
 ) -> JSONResponse:
     req = ReviewRequest(
         customer_id=customer_id,
@@ -311,7 +260,14 @@ def get_default_customer_review(
         sensitivity=sensitivity,
         priority=priority,
     )
-    return JSONResponse(content=_compute_full_review(req))
+    review, headers = _compute_full_review(req)
+    return JSONResponse(content=review, headers=headers)
+
+
+EXPORT_MEDIA = {
+    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "pdf": "application/pdf",
+}
 
 
 @app.post("/api/export")
@@ -322,40 +278,27 @@ def export_customer_review(
     if "meta" in payload and "metrics" in payload:
         review = payload
     else:
-        req = ReviewRequest(**payload)
-        review = _compute_full_review(req)
-    tmp_dir = Path(tempfile.mkdtemp(prefix="lindstrom_export_"))
-    cid = review.get("meta", {}).get("customer_id", "CUST001")
-
-    if format == "pptx":
-        out_file = tmp_dir / f"Lindstrom_Value_Review_{cid}.pptx"
-        try:
-            from backend.export.pptx_export import export_pptx  # type: ignore
-
-            export_pptx(review, str(out_file))
-        except Exception as exc:
-            raise HTTPException(
-                status_code=501,
-                detail=f"PPTX exporter module (backend/export/pptx_export.py) not merged yet: {exc}",
-            ) from exc
-        return FileResponse(
-            path=str(out_file),
-            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            filename=out_file.name,
-        )
-
-    out_file = tmp_dir / f"Lindstrom_Value_Review_{cid}.pdf"
+        review, _ = _compute_full_review(ReviewRequest(**payload))
     try:
-        from backend.export.pdf_export import export_pdf  # type: ignore
+        if format == "pptx":
+            from backend.export.pptx_export import export_pptx as exporter
+        else:
+            from backend.export.pdf_export import export_pdf as exporter
+    except ImportError as exc:  # genuinely missing dependency (python-pptx / reportlab)
+        raise HTTPException(status_code=501, detail=f"{format.upper()} exporter unavailable: {exc}") from exc
 
-        export_pdf(review, str(out_file))
+    tmp_dir = Path(tempfile.mkdtemp(prefix="lindstrom_export_"))
+    cid = str(review.get("meta", {}).get("customer_id", "review"))
+    out_file = tmp_dir / f"Lindstrom_Value_Review_{cid}.{format}"
+    try:
+        exporter(review, str(out_file))
+    except (KeyError, ValueError, TypeError, IndexError) as exc:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        raise HTTPException(status_code=422, detail=f"Review cannot be exported as {format.upper()}: {type(exc).__name__}: {exc}") from exc
     except Exception as exc:
-        raise HTTPException(
-            status_code=501,
-            detail=f"PDF exporter module (backend/export/pdf_export.py) not merged yet: {exc}",
-        ) from exc
-    return FileResponse(
-        path=str(out_file),
-        media_type="application/pdf",
-        filename=out_file.name,
-    )
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        LOG.exception("%s export failed", format)
+        raise HTTPException(status_code=500, detail=f"{format.upper()} export failed: {type(exc).__name__}: {exc}") from exc
+    # Delete the temp folder once the file has been sent.
+    return FileResponse(path=str(out_file), media_type=EXPORT_MEDIA[format], filename=out_file.name,
+                        background=BackgroundTask(shutil.rmtree, tmp_dir, ignore_errors=True))
