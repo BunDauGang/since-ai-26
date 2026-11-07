@@ -15,6 +15,7 @@ const READY: Record<PrepAnswer["readiness"], { label: string; cls: string }> = {
   ready: { label: "Answer ready", cls: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
   partial: { label: "Answer with caveats", cls: "bg-amber-50 text-amber-800 ring-amber-200" },
   needs_input: { label: "Ask the customer", cls: "bg-slate-100 text-slate-700 ring-slate-200" },
+  help: { label: "How to ask", cls: "bg-navy-50 text-navy ring-blue-200" },
 };
 
 /**
@@ -73,7 +74,8 @@ export function MeetingPrepAI({ review, meeting, comparison, onAudience, onOpenM
     if (!q) return;
     setAskBusy(true);
     const base = freeRequestTemplate(ctx, q);
-    const res = live ? await aiPrep(ctx, [{ id: "free", text: q }], [base]) : null;
+    const matched = base.readiness !== "help";
+    const res = live && matched ? await aiPrep(ctx, [{ id: "free", text: q }], [base]) : null;
     setAsked((list) => [res?.answers[0] ?? base, ...list]);
     setRequest("");
     setAskBusy(false);

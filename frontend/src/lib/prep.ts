@@ -26,7 +26,7 @@ export interface PrepPoint {
 export interface PrepAnswer {
   questionId: string;
   question: string;
-  readiness: "ready" | "partial" | "needs_input";
+  readiness: "ready" | "partial" | "needs_input" | "help";
   answer: string;
   points: PrepPoint[];
   /** What the data cannot answer yet, or what to ask the customer. */
@@ -250,7 +250,26 @@ export function freeRequestTemplate(whole: PrepContext, request: string): PrepAn
       gap: objection.needs,
     };
   }
-  const base = all[hit ? hit[1] : 0];
+  if (!hit) {
+    // Greetings and questions the review cannot answer get an honest reply, never an unrelated answer.
+    const greeting = /^\s*(hi|hello|hey|hej|moi|xin chào|chào|good (morning|afternoon|evening)|thanks?|thank you|ok(ay)?)\b[\s!.?]*$/i.test(request);
+    return {
+      questionId: "free",
+      question: request,
+      readiness: "help",
+      answer: greeting
+        ? `Hi! I prepare meetings from ${whole.review.meta.customer_name}'s review data, so I can only answer questions about it. Try one of these:`
+        : "I could not match that to anything in this review. I only answer from the review's evidence, so I won't guess. Try asking about:",
+      points: [
+        { text: "Results since the last meeting: \"What has improved since the last steering committee?\"" },
+        { text: "Risks and issues: \"What are the biggest risks for the Swedish sites?\"" },
+        { text: "Value and savings: \"Where is the strongest cost or sustainability opportunity?\"" },
+        { text: "Decisions: \"What decisions and owners do we need today?\"" },
+        { text: "Customer challenges: \"Are we paying for idle stock?\" or \"Are these figures audited?\"" },
+      ],
+    };
+  }
+  const base = all[hit[1]];
   return { ...base, questionId: "free", question: request, answer: scopeNote + base.answer };
 }
 
