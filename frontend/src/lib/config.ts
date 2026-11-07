@@ -133,7 +133,7 @@ export const SUGGESTED_PROMPTS: { prompt: string; who: string; priority: Priorit
   { who: "Customer", prompt: "How can we improve our performance next year?", priority: "improvement", view: "observations" },
 ];
 
-export type ViewId = "overview" | "sites" | "baselines" | "observations" | "methodology";
+export type ViewId = "meeting" | "overview" | "sites" | "baselines" | "observations" | "methodology";
 
 /** Who the screen is for. "customer" previews the future eLindström decision-maker module. */
 export type Audience = "kam" | "customer";

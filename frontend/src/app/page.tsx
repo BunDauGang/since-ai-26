@@ -3,6 +3,8 @@
 import { AlertTriangle, Braces, Loader2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { CalcDrawer } from "@/components/CalcDrawer";
+import { MeetingMode } from "@/components/meeting/MeetingMode";
+import { StoryAssistant } from "@/components/meeting/StoryAssistant";
 import { ControlBar } from "@/components/ControlBar";
 import { MobileNav, Sidebar } from "@/components/Sidebar";
 import { SiteDrawer } from "@/components/SiteDrawer";
@@ -15,11 +17,15 @@ import { ObjectionPrep } from "@/components/ObjectionPrep";
 import { SafeToSay } from "@/components/SafeToSay";
 import { WhatIfSimulator } from "@/components/WhatIfSimulator";
 import { ApiError, downloadJson, exportReview } from "@/lib/api";
-import { isOutlier, KAM_ONLY_METRICS, priorityDef, type Audience, type SiteScope, type ViewId } from "@/lib/config";
+import { CUSTOMERS, isOutlier, KAM_ONLY_METRICS, priorityDef, type Audience, type SiteScope, type ViewId } from "@/lib/config";
 import { baselineName } from "@/lib/derive";
+import { emptyMeeting, loadMeeting, meetingBlock, saveMeeting, type MeetingState } from "@/lib/meeting";
+import { personaPriority, type Persona } from "@/lib/personas";
+import type { Priority } from "@/lib/types";
 import { useReview } from "@/lib/useReview";
 
 const TITLES: Record<ViewId, string> = {
+  meeting: "Customer meeting",
   overview: "Executive value overview",
   sites: "Multi-site consolidation & drill-down",
   baselines: "Baseline comparison & circularity",
@@ -46,11 +52,32 @@ export default function Page() {
       }
     : r.review;
   const emphasized = customerView ? r.emphasized.filter((id) => !KAM_ONLY_METRICS.includes(id)) : r.emphasized;
-  const [view, setViewState] = useState<ViewId>("overview");
+  const [view, setViewState] = useState<ViewId>("meeting");
   const [metricId, setMetricId] = useState<string | null>(null);
   const [siteId, setSiteId] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"pptx" | "pdf" | null>(null);
   const [scope, setScope] = useState<SiteScope | null>(null);
+  // One meeting per customer, remembered in this browser only. `owner` says which customer the state
+  // belongs to, so switching customers never saves one customer's meeting under another's id.
+  const customerId = controls.customerId;
+  const [meetingState, setMeetingState] = useState<{ owner: string | null; m: MeetingState }>(() => ({ owner: null, m: emptyMeeting() }));
+  const meeting = meetingState.m;
+  useEffect(() => {
+    setMeetingState({ owner: customerId, m: loadMeeting(customerId) ?? emptyMeeting() });
+  }, [customerId]);
+  useEffect(() => {
+    if (meetingState.owner === customerId) saveMeeting(customerId, meetingState.m);
+  }, [meetingState, customerId]);
+  const patchMeeting = useCallback((patch: Partial<MeetingState>) => setMeetingState((s) => ({ ...s, m: { ...s.m, ...patch } })), []);
+  const update = r.update;
+  const onPersona = useCallback(
+    (p: Persona) => {
+      patchMeeting({ persona: p });
+      const def = CUSTOMERS.find((c) => c.id === customerId)?.defaultPriority ?? ("water" as Priority);
+      update({ priority: personaPriority(p, def) });
+    },
+    [customerId, update, patchMeeting],
+  );
   const [toast, setToast] = useState<{ kind: "error" | "info"; text: string; action?: { label: string; run: () => void } } | null>(null);
 
   // Keep the active view in the URL hash so a demo can deep-link (#sites, #methodology…).
@@ -85,7 +112,7 @@ export default function Page() {
     if (!r.canExport) return;
     setExporting(format);
     try {
-      await exportReview(review, format);
+      await exportReview({ ...review, meeting: meetingBlock(review, meeting) }, format);
       setToast({ kind: "info", text: `${format.toUpperCase()} downloaded — built from the same review.json shown here.` });
     } catch (e) {
       setToast({
@@ -152,6 +179,7 @@ export default function Page() {
           sites={review.sites}
           scope={scope}
           onScope={setScope}
+          compact={view === "meeting"}
           exportBlockedReason={!r.periodValid ? "Fix the reporting period first" : "Waiting for the engine to finish recalculating"}
         />
         <MobileNav view={view} onView={setView} />
@@ -235,6 +263,20 @@ export default function Page() {
           ) : (
           <div className={`transition-opacity ${r.stale && r.loading ? "opacity-60" : ""}`}>
 
+          {view === "meeting" && (
+            <MeetingMode
+              review={review}
+              meeting={meeting}
+              onMeeting={patchMeeting}
+              onPersona={onPersona}
+              onOpenMetric={openMetric}
+              onOpenSite={openSite}
+              onExport={onExport}
+              exporting={exporting}
+              canExport={r.canExport}
+              customerView={customerView}
+            />
+          )}
           {view === "overview" && (
             <Overview
               review={review}
@@ -260,6 +302,7 @@ export default function Page() {
           )}
           {view === "observations" && (
             <div className="space-y-6">
+              {!customerView && <StoryAssistant review={review} defaultPersona={meeting.persona} rough={meeting.rough} onOpenMetric={openMetric} />}
               <SafeToSay review={review} onOpenMetric={openMetric} audience={audience} />
               {!customerView && <ObjectionPrep review={review} onOpenMetric={openMetric} />}
               <WhatIfSimulator review={review} onOpenSite={openSite} />

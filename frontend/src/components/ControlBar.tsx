@@ -10,7 +10,7 @@ import { Segmented } from "./ui";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => `2025-${String(i + 1).padStart(2, "0")}`);
 
-export function ControlBar({ controls, update, mode, industry, customerAvailable, onView, onExport, exporting, canExport, exportBlockedReason, sites, scope, onScope }: {
+export function ControlBar({ controls, update, mode, industry, customerAvailable, onView, onExport, exporting, canExport, exportBlockedReason, sites, scope, onScope, compact }: {
   sites: { country: string; site_type: string }[];
   scope: SiteScope | null;
   onScope: (s: SiteScope | null) => void;
@@ -24,6 +24,8 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
   exporting: "pptx" | "pdf" | null;
   canExport: boolean;
   exportBlockedReason?: string;
+  /** Meeting mode: setup row only; the persona picker replaces the lens and prompt rows. */
+  compact?: boolean;
 }) {
   const [draft, setDraft] = useState(controls.prompt);
   const [interp, setInterp] = useState<{ text: string; priority: Priority; secondary: Priority[]; source: "interpret API" | "keywords" | "industry default" } | null>(null);
@@ -66,7 +68,7 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
   return (
     <div className="no-print border-b border-line bg-white">
       {/* Row 1: setup */}
-      <div className="flex flex-wrap items-end gap-x-5 gap-y-3 px-4 pt-4 lg:px-8">
+      <div className={`flex flex-wrap items-end gap-x-5 gap-y-3 px-4 pt-4 lg:px-8 ${compact ? "pb-4" : ""}`}>
         <Field label="Customer">
           <select
             aria-label="Customer"
@@ -133,6 +135,8 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
         </div>
       </div>
 
+      {!compact && (
+      <>
       {/* Row 2: priority lens + prompt */}
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line bg-canvas/60 px-4 py-3 lg:px-8">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">Priority lens</span>
@@ -221,6 +225,8 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
           </>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

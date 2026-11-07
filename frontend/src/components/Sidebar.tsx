@@ -1,10 +1,11 @@
 "use client";
 
-import { BarChart3, ClipboardList, FlaskConical, LayoutDashboard, MapPin, RefreshCw, Scale } from "lucide-react";
+import { BarChart3, ClipboardList, FlaskConical, LayoutDashboard, MapPin, Presentation, RefreshCw, Scale } from "lucide-react";
 import type { ViewId } from "@/lib/config";
 import type { Mode } from "@/lib/useReview";
 
 const NAV: { id: ViewId; label: string; icon: React.ElementType }[] = [
+  { id: "meeting", label: "Customer meeting", icon: Presentation },
   { id: "overview", label: "Executive overview", icon: LayoutDashboard },
   { id: "sites", label: "Sites & drill-down", icon: MapPin },
   { id: "baselines", label: "Baseline & circularity", icon: Scale },
@@ -36,10 +37,11 @@ export function Sidebar({ view, onView, customerName, industry, counts, mode, on
         {NAV.map(({ id, label, icon: Icon }) => {
           const active = view === id;
           return (
+            <div key={id}>
+            {id === "overview" && <div className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wider text-muted">Deep dive &amp; preparation</div>}
             <button
-              key={id}
               onClick={() => onView(id)}
-              className={`relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13.5px] transition ${
+              className={`relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13.5px] transition ${
                 active ? "bg-navy-50 font-semibold text-navy" : "text-slate-600 hover:bg-canvas hover:text-ink"
               }`}
             >
@@ -50,6 +52,7 @@ export function Sidebar({ view, onView, customerName, industry, counts, mode, on
                 <span className={`rounded-full px-1.5 text-[11px] tnum ${active ? "bg-white text-navy" : "bg-canvas text-muted"}`}>{counts[id]}</span>
               )}
             </button>
+            </div>
           );
         })}
       </nav>

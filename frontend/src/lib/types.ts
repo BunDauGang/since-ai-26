@@ -162,6 +162,32 @@ export interface Review {
   data_quality: DataQualityItem[];
   assumptions: Assumption[];
   data_gaps: DataGap[];
+  /** Optional (engine, Worker A): anonymised Lindström network benchmark. Absent until the engine provides it. */
+  peer_benchmark?: {
+    scope?: string;
+    customer?: Record<string, { network_median?: number; percentile?: number }>;
+    sites?: Record<string, Record<string, number>>;
+  };
+  /** Optional: what was agreed in the customer meeting. Sent by the dashboard to /api/export, never produced by the engine. */
+  meeting?: MeetingBlock;
+}
+
+export interface MeetingBlock {
+  persona: string;
+  persona_label: string;
+  targets: { metric_id: string; label: string; target: number; actual: number | null; status: string; unit: string }[];
+  satisfaction: { score: number | null; scale: number; comment: string; source: "KAM input" };
+  rough_calc: {
+    label: "ROUGH CALCULATION";
+    baseline_id: string;
+    inputs: Record<string, number>;
+    lines: { label: string; eur_base: number }[];
+    total_eur: { low: number; base: number; high: number };
+  } | null;
+  agreed_actions: { text: string; owner: string; due: string }[];
+  open_topics: string[];
+  next_meeting: string;
+  notes: string;
 }
 
 export interface ReviewRequest {
