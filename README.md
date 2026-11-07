@@ -1,146 +1,82 @@
-# Lindström — Customer Value & Sustainability Review Generator
+# Lindström — Customer Value & Sustainability Review Studio
 
-> **Since AI Hackathon 2026** · Challenge Partner: **Lindström Group**
-
-## 1. What We Are Building (In One Sentence)
-
-A web application where a Lindström Key Account Manager selects a multi-site customer and their priority (`Water`, `Emissions`, `Cost`, `Circularity`, `Service performance`, or `Next-year improvement`), explores an interactive dashboard with transparent, auditable calculations and site drill-down, and exports a customer-ready **PowerPoint (`.pptx`) / PDF** review deck for the annual steering-committee meeting.
+> **Since AI Hackathon 2026** · Challenge Partner: **Lindström Group**  
+> **Important Notice:** All customer, site, operational, baseline, and factor figures in this repository are **100% synthetic and illustrative** unless explicitly marked `PUBLIC_REFERENCE`. Outputs must not be presented as audited sustainability disclosures or verified Lindström/customer claims.
 
 ---
 
-## Innovative Ideas and Future Improvements
+## 1. Overview
 
-Our core product is an AI-powered web application for Lindström's Key Account Managers (KAMs). PowerPoint/PDF reviews are outputs of that application. The goal is to demonstrate customer value, strengthen relationships and retention, improve operations, and identify potential service and revenue opportunities.
+An end-to-end B2B customer review platform and 1-click executive deck generator designed for Lindström Key Account Managers (KAMs) and enterprise customers. 
 
-**Status:** All five ideas below are proposals, in priority order. They are not implemented features. They build on the existing review workflow: deterministic calculations, evidence-linked observations, priority views, and report exports. The current prototype uses synthetic data; future business or environmental benefits require appropriate evidence.
-
-### 1. Customer Value Improvement Journey — From Insights to Business Impact
-
-**Problem:** Customer reviews can identify issues without helping Lindström decide what to tackle first, which team should investigate, or whether an action worked. KAMs must then spend time prioritizing recommendations and coordinating departments manually.
-
-**Proposed solution:** Combine Next Best Action and Improvement Tracking into an internal customer improvement plan. After generating a review, the platform would:
-
-1. Identify improvement opportunities from customer data.
-2. Rank actions by potential business impact, implementation effort, customer priorities, and confidence in the supporting data.
-3. Explain the ranking, including why one action comes before another and what evidence is missing.
-4. Suggest a responsible function, such as logistics, service operations, or account management.
-5. Let the KAM confirm the recommendation, assign an owner, set a deadline, and track progress.
-6. Link each action to its original insight, supporting KPI, and measurable business objective.
-7. Compare the KPI before and after implementation when new data becomes available, accounting for changes in reporting periods, activity, and assumptions. A change alone would not prove that the action caused it.
-
-**Simple example:** A factory has unusually low garment utilization. The platform suggests reviewing garment allocation and explains that the action may reduce unnecessary inventory and improve resource efficiency. It proposes service operations for investigation, subject to the KAM's confirmation. The KAM checks staffing and garment-availability needs, approves the action, assigns an owner, and tracks progress. With updated data, the platform compares utilization before and after the allocation change without assuming a financial saving.
-
-**Users and access:** This would be an internal Lindström tool, primarily for KAMs. Customers would receive reviews, discuss proposed improvements, and approve relevant service changes without needing access to internal action tracking. Customer confidentiality and role-based permissions would govern which accounts, evidence, and actions each employee can see.
-
-Every action would originate from a customer insight and remain connected to a business objective. The scope would stay focused on customer-value improvement rather than general-purpose task management.
-
-**Business value for Lindström:** Less time spent analyzing and prioritizing issues; clearer coordination with internal teams; opportunities to improve service quality and response times; and a continuous-improvement record that supports trust, customer retention, and long-term customer value. Service optimization could reveal potential revenue opportunities over time, but revenue growth would not be guaranteed.
-
-**Implementation feasibility:** Start with transparent scoring rules over existing observations and KPIs, with the KAM confirming effort estimates, priority, and team suggestions. Add persistent action records, ownership, deadlines, permissions, and a history of comparable review snapshots. Approved operational data and repeated measurements would be needed to assess outcomes; the synthetic prototype can demonstrate the workflow, not establish business impact.
-
-> **From Data → To Decisions → To Measurable Business Impact.**
-
-### 2. Customer Objection Simulator — AI Meeting Preparation
-
-**Problem:** KAMs need time to prepare for difficult questions about sustainability claims, costs, service performance, calculation methods, and data reliability.
-
-**Proposed solution:** Use the customer review to generate likely meeting questions and draft responses grounded in its metrics, assumptions, and limitations. Responses would link back to evidence and explicitly flag questions the data cannot answer.
-
-**Simple example:** For “How reliable is this water-saving estimate?”, show the selected baseline, allocation method, low/base/high range, and missing production evidence instead of offering an unsupported assurance.
-
-**Business value for Lindström:** Reduce preparation time, improve KAM confidence, and support transparent conversations that strengthen customer trust, relationships, and retention.
-
-**Implementation feasibility:** Build on the existing structured review and optional narrative-generation integration. Start with question templates and evidence retrieval, retain an offline fallback, and require KAM review before using answers with customers. AI would explain supplied numbers rather than calculate or invent them.
-
-### 3. Data Trust Passport — Transparent and Explainable Metrics
-
-**Problem:** KAMs and customers need to understand why a KPI or recommendation deserves confidence without reconstructing its evidence manually.
-
-**Proposed solution:** Extend the existing “Show the Calculation” concept into a consistent evidence summary for important KPIs and recommendations. Include source data, calculation method, assumptions, comparison baseline, uncertainty range, limitations, and evidence status. Recommendations would link to the same KPI explanations rather than duplicate them.
-
-**Simple example:** A repair-handprint recommendation would show its repair count, replacement-factor assumption, synthetic product footprint, and uncertainty before it is discussed with a customer.
-
-**Business value for Lindström:** Improve credibility, reduce time spent explaining calculations, support transparent sustainability communication, and strengthen long-term customer trust.
-
-**Implementation feasibility:** Reuse the provenance fields already carried by `review.json`. Add recommendation-to-evidence links and a consistent presentation of missing or outdated sources. Approved production sources would be required before using prototype estimates as customer claims.
-
-### 4. What-if Scenario Simulator — Explore Business Decisions
-
-**Problem:** A historical review does not show how a possible service change might affect supported indicators.
-
-**Proposed solution:** Let KAMs explore hypothetical garment-allocation changes or sustainability baselines using explicit assumptions and deterministic calculations. Display scenarios separately from observed results, retaining synthetic and estimated labels where applicable.
-
-**Simple example:** Explore a lower allocation level while holding other inputs constant. Show the resulting allocation-use ratio and illustrative stock value, while explaining that garment availability, costs, and service effects need additional evidence.
-
-**Business value for Lindström:** Support better customer discussions, demonstrate proactive service optimization, and identify potential opportunities to improve customer value and retention. Do not promise cost savings or service improvements without sufficient data.
-
-**Implementation feasibility:** Extend existing baseline and sensitivity calculations with clearly bounded scenario inputs. Start with indicators whose relationships are supported by the data; add pricing, service-capacity, or other models only when suitable evidence is available. A scenario would be an exploration, not a prediction or a measured outcome.
-
-### 5. Peer Benchmarking — Learn from Comparable Sites
-
-**Problem:** A site's repair rate or garment utilization can be hard to interpret without a suitable comparison group.
-
-**Proposed solution:** Compare similar sites or customer groups only when enough comparable data exists. Explain how peers were selected, including factors such as industry, site type, product mix, reporting period, and service conditions.
-
-**Simple example:** Compare garment utilization at factories with similar products and operating conditions to identify sites worth discussing with operations teams, without treating a difference as proof of poor performance.
-
-**Business value for Lindström:** Identify best practices, support operational improvements, and develop stronger recommendations that reinforce long-term customer relationships and retention.
-
-**Implementation feasibility:** The current synthetic dataset cannot establish reliable industry-wide benchmarks. A future pilot would require sufficient historical data, consistent metric definitions, appropriate permissions, minimum comparison-group sizes, and privacy safeguards that prevent disclosure of another customer's confidential performance.
+The platform transforms multi-site laundry, RFID scan, repair, and environmental data into a **proof-first, stakeholder-adaptive review experience**:
+- **Dynamic Priority & Prompt Personalization:** Switch between 6 stakeholder lenses (*Water*, *Emissions*, *Cost & Allocation*, *Repairs & Circularity*, *Service & Hygiene*, *Next-Year Improvement*) or query in plain language (e.g., *"How are our Swedish production plants doing on water?"*) to filter both KPIs and site scope.
+- **"Show the Calculation" & Sensitivity Bands:** Every metric carries an explicit provenance status (`MEASURED`, `CALCULATED`, `ALLOCATED_ESTIMATE`, `ESTIMATE`, `SYNTHETIC`), a **Low / Base / High sensitivity range** ($\pm 20\%$ baseline intensity band; $0.5\text{–}1.0$ repair replacement factor), and a step-by-step live arithmetic drawer verified (`✓`) in the browser against the Python calculation engine.
+- **Meeting Prep, 2026 What-If Simulator & Objection Handling:** Includes conservative Low-case talking points, a strict *"Never Say"* compliance list, an interactive **Customer Objection Simulator**, and a **2026 What-If Action Simulator** for locker allocation right-sizing (`R1`) and plant repair-rate reduction (`R2`). Toggle to **Customer View** to preview a customer-facing decision-maker module in **eLindström**.
+- **1-Click 9-Slide PowerPoint & PDF Export:** Generates a Lindström-branded 9-slide `.pptx` or `.pdf` steering-committee deck directly from the active `review.json` contract, embedding the full source contract and formulas in the slide notes/attachments.
 
 ---
 
-## 2. 10-Minute Reading Order for Teammates
+## 2. Quick Index of Required Deliverables (For Judges)
 
-0. **[`docs/TEAM_STUDY_GUIDE.md`](./docs/TEAM_STUDY_GUIDE.md)** — **START HERE FOR TOMORROW'S MEETING:** Plain-English walkthrough of what each person's code actually does, which 3 files to open, your 3-minute script to explain your part to the team, and the exact judge Q&A answers for your seat.
-1. **[`docs/PROJECT_OVERVIEW.md`](./docs/PROJECT_OVERVIEW.md)** — Plain-English summary, the 7-step demo flow, and how the parts connect.
-2. **[`docs/WORKSTREAMS.md`](./docs/WORKSTREAMS.md)** — **Who builds what**, folder ownership, and the **copy-paste prompt brief** for your tool (Codex / Claude Code / Antigravity).
-3. **[`docs/IMPLEMENTATION_GUIDE.md`](./docs/IMPLEMENTATION_GUIDE.md)** — Verified formulas, rules `R1–R6`, dashboard screens, 9-slide export layout, and data-quality flags.
-4. **[`contracts/sample_review.json`](./contracts/sample_review.json)** — Ready-to-use sample output for `CUST001` (`NorthStar Foods Group`, 24 sites) so everyone can build in parallel immediately.
-5. **[`docs/CHALLENGE_BRIEF.md`](./docs/CHALLENGE_BRIEF.md)** — Official judging criteria (with % weights) and required deliverables.
-
----
-
-## 3. Team Division & Strict Folder Ownership
-
-To avoid Git merge conflicts, each seat owns separate folders and works on their own branch:
-
-| Seat | Tool | Branch | Owned Folders | Mission |
-| :--- | :--- | :--- | :--- | :--- |
-| **Lead** | Antigravity | `main` / `feat/api` | `contracts/`, `backend/api/`, `docs/` | Shared `review.json` contract, FastAPI integration server, methodology & data-readiness notes, pitch |
-| **Worker A** | Codex | `feat/engine` | `backend/engine/`, `backend/tests/test_engine.py`, `scripts/` | Excel adapter, data-quality checks (`DQ1–DQ4`), operational KPIs, footprint/handprint, low/base/high ranges |
-| **Worker B** | Codex | `feat/insights-export` | `backend/insights/`, `backend/export/`, `backend/tests/test_insights.py`, `backend/tests/test_export.py` | Rules `R1–R6` + Gemini LLM observation generator (with offline fallback) + 9-slide PPTX/PDF exporter |
-| **Worker C** | Claude Code | `feat/frontend` | `frontend/` | Next.js interactive dashboard: setup controls, KPI cards with *"Show the Calculation"* drawer, priority switcher, 24-site drill-down, export buttons |
+| Deliverable | Location | Description |
+| :--- | :--- | :--- |
+| **D1. Interactive Dashboard Prototype** | [`frontend/`](./frontend/) & [`backend/`](./backend/) | Next.js 15 + FastAPI application supporting `CUST001` (24 sites), `CUST002` (6 sites), and `CUST003` (4 sites), with full offline fallback via [`contracts/sample_review.json`](./contracts/sample_review.json). |
+| **D2. Customer-Ready PPTX & PDF Decks** | `deliverables/` *(in submission `.zip`)* & `/api/export` | Pre-exported 9-slide `.pptx` and `.pdf` reviews for *NorthStar Foods Group* (`Water` and `Cost` lenses), plus live 1-click export in the dashboard (`backend/export/`). |
+| **D3. Priority & Prompt Personalization** | [`frontend/src/components/ControlBar.tsx`](./frontend/src/components/ControlBar.tsx) & [`backend/insights/generate.py`](./backend/insights/generate.py) | 6 priority lenses, industry-ranked emphasis (`Food & Beverage`, `Manufacturing`, `Healthcare`), and natural-language prompt routing with site-scope filtering. |
+| **D4. Rule- & AI-Backed Observations** | [`backend/insights/rules.py`](./backend/insights/rules.py) & [`actions.py`](./backend/insights/actions.py) | Deterministic rules (`R1–R6`) with quantified Q1 2026 planning scenarios, assigned owners, steering-committee questions, and a strict numeric anti-hallucination guard (`llm.py`). |
+| **D5. Final Pitch & Demo Script** | [`docs/PITCH_SCRIPT.md`](./docs/PITCH_SCRIPT.md) | 3-minute stage flow, verified numbers checklist, and judge Q&A defense table. |
+| **D6. Methodology Note** | [`docs/METHODOLOGY.md`](./docs/METHODOLOGY.md) | Baselines (`B_LOCAL`, `B_HOME`, `B_INHOUSE`), verified footprint/handprint formulas, Low/Base/High sensitivity parameters, `DQ4` (`L003` Malmö volume reconciliation), and `DQ5` (wearer deduplication). |
+| **D7. Data-Readiness & Production Note** | [`docs/DATA_READINESS.md`](./docs/DATA_READINESS.md) | Field-level mapping to Lindström production systems (*Tableau*, *WWS Washed Kg*, *eLindström*, *Repairs Table*, *ERP*) and prioritized `P1–P3` data-gap remediation roadmap. |
+| **D8. Shared Data Contract** | [`contracts/review.schema.json`](./contracts/review.schema.json) | JSON Schema contract decoupling the calculation engine, insights generator, dashboard UI, and slide exporter. |
 
 ---
 
-## 4. Data Setup (Local Only)
-
-The synthetic Excel data pack is excluded from Git via `.gitignore`.
-Drop `Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx` into [`data/`](./data/) when running the Python calculation engine locally.
-**Frontend (`Worker C`) and Insights/Exporter (`Worker B`) do not need the Excel file to start** — they can build and test directly against [`contracts/sample_review.json`](./contracts/sample_review.json).
-
----
-
-## 5. Run It Locally
+## 3. Run Instructions (Local Setup)
 
 **Requirements:** Python 3.11+ and Node.js 20+.
 
 ```bash
-# 1. Backend: engine + insights + export behind FastAPI (http://localhost:8000)
+# 1. Start the FastAPI Backend (http://localhost:8000)
 python -m venv .venv
-source .venv/bin/activate            # Windows: .venv\Scripts\activate
+source .venv/bin/activate            # Windows PowerShell: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn backend.api.main:app --port 8000
+python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 
-# 2. Frontend dashboard (http://localhost:3000), in a second terminal
+# 2. Start the Next.js Frontend Dashboard (http://localhost:3000) in a second terminal
 cd frontend
 npm install
 npm run dev
 ```
 
-- With the Excel pack in `data/`, the API calculates live reviews for CUST001–CUST003. Without it, the API serves `contracts/sample_review.json`.
-- The dashboard also runs **without the backend**, using its bundled copy of `contracts/sample_review.json`. The sidebar shows which data source is active. Set `NEXT_PUBLIC_API_URL` in `frontend/.env.local` if the API is not on `localhost:8000`.
-- **Tests:** `python -m pytest backend/tests`
-- **Regenerate the shared sample** after engine changes: `python scripts/build_review.py --source data/Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx --out contracts/sample_review.json`, then `cd frontend && npm run sync-contract`.
-- **Export from the command line:** `python -m backend.export --help`
+### Data Pack & Offline Resilience
+- **Live Engine Mode:** Place `Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx` inside [`data/`](./data/) (excluded from public Git via `.gitignore`). The API calculates live reviews across all customers (`CUST001–CUST003`), periods, baselines, and sensitivities, caching parsed workbooks in memory.
+- **Zero-Config Sample / Offline Mode:** If the `.xlsx` file is absent or the backend is not running, both the API and the Next.js dashboard seamlessly serve the pre-computed [`contracts/sample_review.json`](./contracts/sample_review.json) (`CUST001`, full year 2025) and display an explicit data-source indicator.
+- **Run Automated Test Suite (177 Tests):**
+  ```bash
+  python -m pytest backend/tests
+  ```
+- **Regenerate Shared Sample JSON:**
+  ```bash
+  python scripts/build_review.py --source data/Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx --out contracts/sample_review.json
+  cd frontend && npm run sync-contract
+  ```
+- **CLI Deck Exporter:**
+  ```bash
+  python -m backend.export --help
+  ```
+
+---
+
+## 4. Architecture & Implemented Innovations vs. Future Roadmap
+
+### Implemented in This Prototype
+1. **Deterministic Calculation & Data-Quality Engine (`backend/engine/`):** Reproduces all 1,248 reference rows in `Customer_Impacts` and executes automated `DQ1–DQ5` checks on every load—surfacing the `L003` Malmö laundry volume discrepancy (`DQ4`) and multi-product wearer double counting (`DQ5`) directly in context on affected sites and KPI cards.
+2. **Data Trust Passport ("Show the Calculation" — `CalcDrawer.tsx` & `calc.ts`):** Replays each KPI formula in the browser with the customer's actual numbers, verifies agreement with the engine, and provides everyday equivalencies.
+3. **2026 What-If Scenario Simulator (`WhatIfSimulator.tsx` & `whatif.ts`):** Interactive sliders allowing KAMs and customers to explore locker allocation right-sizing at `R1`-flagged sites and repair-rate convergence at `R2`-flagged sites with explicit assumption labels.
+4. **KAM Safe-to-Say & Customer Objection Simulator (`SafeToSay.tsx` & `ObjectionPrep.tsx`):** Generates conservative Low-case talking points, a *"Never Say"* compliance guard, and evidence-backed responses to tough customer questions on water methodology, cost claims, `L003` reconciliation, and repair handprints.
+
+### Proposed Future Production Extensions (Phase 2 Roadmap in eLindström)
+1. **Closed-Loop Action Tracking & Before/After Verification:** Extend the current Q1 2026 planning scenarios (`backend/insights/actions.py`) into persistent action records with assigned department owners, deadlines, and longitudinal before/after KPI comparison across review periods.
+2. **Privacy-Safe Peer Benchmarking:** Once connected to multi-account production data in eLindström, enable anonymized benchmarking across comparable site types, industries, and garment mixes with minimum cohort-size and confidentiality safeguards.
+3. **Direct Production Adapters (`backend/engine/adapters/`):** Swap `excel_adapter.py` for direct connectors to *Tableau Allocated Pieces & Washing %*, *WWS Washed Kg*, *Internal Repairs Table*, and *eLindström* unique wearer counts (`COUNT(DISTINCT wearer_id)`).
