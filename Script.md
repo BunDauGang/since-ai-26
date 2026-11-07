@@ -77,7 +77,7 @@ Each scene has **SAY** (read aloud, about 430 words, under 3 minutes) and **DO**
 ## Scene 6: Decisions, commitments and the deck (2:20–2:50)
 
 **SAY:**
-"Finally, decisions. Laura brings back last meeting's commitments: one is overdue, so it goes straight to the steering committee for a new owner or date. She ticks today's agreed action, adds an owner, and downloads the customer deck: the meeting story, the agreed KPIs, the rough calculation and the next steps. In Customer view, her internal prep tools disappear, so she can share her screen safely."
+"Finally, decisions. Laura brings back last meeting's commitments: one is overdue, so it goes straight to the steering committee for a new owner or date. She ticks today's agreed action with its owner and downloads the customer deck: the meeting story, the agreed KPIs, the rough calculation and the next steps. In Customer view, her internal prep tools disappear, so she can share her screen safely."
 
 **DO:**
 1. Click step **6 (Next steps)**, then **Load an example previous meeting (demo)**. A red box shows "Needs a steering decision: 1 overdue commitment".
