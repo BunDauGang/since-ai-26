@@ -3,16 +3,6 @@ import re
 from backend.insights.generate import generate_observations
 
 FOOTER = 'Synthetic, illustrative data. Not audited. Not an approved Lindström claim.'
-PRIORITIES = {
-    'water': ['water_saving_l', 'customer_water_l', 'washed_kg'],
-    'emissions': ['co2e_saving_kg', 'customer_co2e_kg', 'energy_saving_kwh'],
-    'cost': ['idle_value_eur', 'idle_pieces', 'allocation_use_rate'],
-    'circularity': ['repairs_total', 'replacements_postponed', 'avoided_product_co2e_kg'],
-    'service': ['on_time_rate', 'median_cycle_hours', 'service_requests'],
-    'improvement': ['allocation_use_rate', 'on_time_rate', 'circular_waste_share'],
-}
-
-
 def fmt(value):
     if isinstance(value, (int, float)):
         return f'{value:,.2f}'.rstrip('0').rstrip('.') if isinstance(value, float) else f'{value:,}'
@@ -59,7 +49,15 @@ def build_pages(review):
          'Full source review and provenance: PowerPoint methodology notes / PDF review.json attachment.')])
     page('Executive summary', blocks(['delivery_sites', 'wearers_min_est', 'washed_kg', 'repairs_total', 'water_saving_l', 'co2e_saving_kg']))
     priority = meta['priority']
-    page(f'Priority spotlight | {priority.title()}', blocks(PRIORITIES.get(priority, [])) + [
+    # The API/engine contract is the source of truth for dashboard and export.
+    emphasized = list(dict.fromkeys(review.get('priority_view', {}).get('emphasized_metric_ids', [])))
+    spotlight = blocks(emphasized)
+    unavailable = [i for i in emphasized if i not in metrics]
+    if unavailable:
+        spotlight.append(('Unavailable spotlight indicators', ', '.join(unavailable) + '\nNo value supplied; see data gaps.'))
+    if not emphasized:
+        spotlight.append(('Priority indicators', 'No emphasized metric IDs supplied in priority_view.'))
+    page(f'Priority spotlight | {priority.title()}', spotlight + [
         ('Industry context', '\n'.join(review.get('priority_view', {}).get('industry_rules', [])) +
          ('\nIllustrative capital value only; no demonstrated cost saving.' if priority == 'cost' else '\nIndustry context guides emphasis; it is not compliance advice.'))])
     baseline_blocks = []
@@ -87,10 +85,22 @@ def build_pages(review):
         site_blocks.append((country + ' | lowest / highest on-time rate', '\n\n'.join(text) + '\nSynthetic site inputs; rates calculated.'))
     page('Multi-site performance', site_blocks + [('Read the outliers', 'Site selection uses on-time rate within each country. Rates are fractions of one.\n'
          'Source: review.sites; service-cycle and allocation data.\nInvestigate causes before attributing responsibility.')])
+    breakdown_lines = []
+    for metric_id, key, dimension, label in [
+        ('repairs_total', 'by_repair_type', 'repair_type', 'Repair types'),
+        ('textile_waste_kg', 'by_route', 'route', 'Waste routes'),
+    ]:
+        metric = metrics.get(metric_id, {})
+        entries = metric.get('breakdown', {}).get(key)
+        if not entries:
+            breakdown_lines.append(label + ': not supplied in this review.')
+            continue
+        breakdown_lines.append(label + ' (' + metric.get('unit', '') + '): ' +
+                               '; '.join(str(row[dimension]) + ': ' + fmt(row['value']) for row in entries))
+        breakdown_lines.append(metric['status'] + ' | Confidence: ' + metric['confidence'])
+    breakdown_lines.append('Repair effects are estimates; no avoided purchase is established. Circular share covers reuse + recycling.')
     page('Circularity & repair handprint', blocks(['repairs_total', 'replacements_postponed', 'avoided_product_co2e_kg', 'textile_waste_kg', 'circular_waste_share']) + [
-        ('Breakdown availability', 'Repair types and individual waste routes are not supplied by the current shared contract.\n'
-         'The aggregate circular share covers reuse + recycling.\nRepair effects are estimates; no avoided purchase is established.\n'
-         'Request contract-backed breakdowns from the data engine; never infer them from totals.')])
+        ('Repair types & waste routes', '\n'.join(breakdown_lines))])
     page('Observations & recommended next actions', [(o['title'], o['observation'] + '\nAction: ' + o['recommended_action'] +
          '\nOwner: ' + o['owner'] + '\nReferences: ' + ', '.join(o['metric_ids'] + o['site_ids']) + '\n' + o['status']) for o in observations])
     page('Steering-committee discussion', [(o['title'], o['steering_question'] + '\nDecision owner: ' + o['owner']) for o in observations])
