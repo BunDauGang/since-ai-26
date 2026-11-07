@@ -102,6 +102,20 @@ class InterpretRequest(BaseModel):
     industry: str = "Food & Beverage"
 
 
+class StoryRequest(BaseModel):
+    customer_id: str = "CUST001"
+    period_from: str = "2025-01"
+    period_to: str = "2025-12"
+    baseline_id: Literal["B_LOCAL", "B_HOME", "B_INHOUSE"] = "B_LOCAL"
+    sensitivity: Literal["low", "base", "high"] = "base"
+    persona: str = "ceo"
+    goal: str = ""
+    minutes: int = 15
+    use_llm: bool = True
+    review: dict | None = None
+
+
+
 def _customer_industry(customer_id: str) -> str:
     return str(CUSTOMER_META.get(customer_id, CUSTOMER_META["CUST001"])["industry"])
 
@@ -264,6 +278,414 @@ def get_default_customer_review(
     return JSONResponse(content=review, headers=headers)
 
 
+PERSONA_PRIORITY_MAP: dict[str, Literal["water", "emissions", "cost", "circularity", "service", "improvement"]] = {
+    "ceo": "service",
+    "cfo": "cost",
+    "operations": "service",
+    "sustainability": "emissions",
+}
+
+
+def _metric_lookup(review: dict) -> dict[str, dict]:
+    return {m["id"]: m for m in review.get("metrics", []) if isinstance(m, dict) and "id" in m}
+
+
+def _val(metrics: dict[str, dict], metric_id: str, case: str = "base") -> float | None:
+    m = metrics.get(metric_id)
+    if not m:
+        return None
+    v = m.get("value")
+    if isinstance(v, dict):
+        raw = v.get(case, v.get("base"))
+        return float(raw) if isinstance(raw, (int, float)) else None
+    return float(v) if isinstance(v, (int, float)) else None
+
+
+def _fmt_int(value: float | None) -> str:
+    return f"{round(value):,}" if isinstance(value, (int, float)) else "unavailable"
+
+
+def _fmt_pct(value: float | None) -> str:
+    return f"{value * 100:.1f}%" if isinstance(value, (int, float)) else "unavailable"
+
+
+def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int, use_llm: bool) -> dict:
+    p = persona.strip().lower() if isinstance(persona, str) else "ceo"
+    if p not in ("ceo", "cfo", "operations", "sustainability"):
+        p = "ceo"
+
+    meta = review.get("meta", {})
+    customer_id = str(meta.get("customer_id", "CUST001"))
+    customer_name = str(meta.get("customer_name", "Customer"))
+    baseline_name = str(meta.get("baseline_name") or "the typical alternative")
+    metrics = _metric_lookup(review)
+
+    sites_n = _fmt_int(_val(metrics, "delivery_sites"))
+    wearers_n = _fmt_int(_val(metrics, "wearers_min_est"))
+    garments_n = _fmt_int(_val(metrics, "garments_allocated"))
+    on_time_s = _fmt_pct(_val(metrics, "on_time_rate"))
+    cycle_h = _fmt_int(_val(metrics, "median_cycle_hours"))
+    requests_n = _fmt_int(_val(metrics, "service_requests"))
+    repairs_n = _fmt_int(_val(metrics, "repairs_total"))
+    repair_rate_v = _val(metrics, "repair_rate_per_1000")
+    repair_rate_s = f"{repair_rate_v:.1f}" if repair_rate_v is not None else "unavailable"
+    postponed_n = _fmt_int(_val(metrics, "replacements_postponed"))
+    use_rate_s = _fmt_pct(_val(metrics, "allocation_use_rate"))
+    idle_n = _fmt_int(_val(metrics, "idle_pieces"))
+
+    co2_base = _val(metrics, "co2e_saving_kg", "base")
+    co2_low = _val(metrics, "co2e_saving_kg", "low")
+    co2_high = _val(metrics, "co2e_saving_kg", "high")
+    co2_t_base = f"{co2_base / 1000:,.0f} t" if co2_base is not None else "unavailable"
+    co2_t_range = (
+        f"{co2_low / 1000:,.0f}–{co2_high / 1000:,.0f} t"
+        if co2_low is not None and co2_high is not None
+        else co2_t_base
+    )
+
+    water_base = _val(metrics, "water_saving_l", "base")
+    water_low = _val(metrics, "water_saving_l", "low")
+    water_high = _val(metrics, "water_saving_l", "high")
+    water_m_base = f"{water_base / 1_000_000:.1f} million L" if water_base is not None else "unavailable"
+    water_range = (
+        f"{round(water_low):,}–{round(water_high):,} L"
+        if water_low is not None and water_high is not None
+        else water_m_base
+    )
+
+    goal_clean = goal.strip()
+    goal_clause = f" focused on {goal_clean}" if goal_clean else ""
+
+    templates: dict[str, dict] = {
+        "ceo": {
+            "opening": (
+                f"In our {minutes}-minute partnership review for {customer_name}{goal_clause}, "
+                f"we look at the big picture across {sites_n} delivery sites, at least {wearers_n} wearers, "
+                f"and {garments_n} allocated garments."
+            ),
+            "points": [
+                {
+                    "id": "ceo_scale_reliability",
+                    "title": f"{on_time_s} on-time delivery across {sites_n} sites",
+                    "headline": f"{on_time_s} on-time delivery across {sites_n} sites",
+                    "text": (
+                        f"Service continuity remained at {on_time_s} on-time across {sites_n} sites "
+                        f"with a median turnaround of {cycle_h} hours, keeping daily operations running smoothly."
+                    ),
+                    "detail": (
+                        f"Service continuity remained at {on_time_s} on-time across {sites_n} sites "
+                        f"with a median turnaround of {cycle_h} hours, keeping daily operations running smoothly."
+                    ),
+                    "metric_ids": ["delivery_sites", "wearers_min_est", "on_time_rate"],
+                    "status": "CALCULATED",
+                },
+                {
+                    "id": "ceo_climate_handprint",
+                    "title": f"~{co2_t_base} CO₂e and ~{water_m_base} water avoided vs {baseline_name}",
+                    "headline": f"~{co2_t_base} CO₂e and ~{water_m_base} water avoided vs {baseline_name}",
+                    "text": (
+                        f"Compared with {baseline_name}, circular textile rental avoided an estimated "
+                        f"{co2_t_base} CO₂e (range {co2_t_range}) and {water_m_base} of water ({water_range})."
+                    ),
+                    "detail": (
+                        f"Compared with {baseline_name}, circular textile rental avoided an estimated "
+                        f"{co2_t_base} CO₂e (range {co2_t_range}) and {water_m_base} of water ({water_range})."
+                    ),
+                    "metric_ids": ["co2e_saving_kg", "water_saving_l"],
+                    "status": "ALLOCATED_ESTIMATE",
+                },
+                {
+                    "id": "ceo_circularity_next_step",
+                    "title": f"{repairs_n} repairs completed; {use_rate_s} active stock utilisation",
+                    "headline": f"{repairs_n} repairs completed; {use_rate_s} active stock utilisation",
+                    "text": (
+                        f"Systematic repair extended garment life {repairs_n} times, while {idle_n} idle pieces "
+                        f"out of {garments_n} offer a practical right-sizing opportunity for the next quarter."
+                    ),
+                    "detail": (
+                        f"Systematic repair extended garment life {repairs_n} times, while {idle_n} idle pieces "
+                        f"out of {garments_n} offer a practical right-sizing opportunity for the next quarter."
+                    ),
+                    "metric_ids": ["repairs_total", "allocation_use_rate", "idle_pieces"],
+                    "status": "CALCULATED",
+                },
+            ],
+            "ask": (
+                f"Agree on the Q1 allocation review for the lowest-utilisation sites and confirm our target SLA "
+                f"benchmarks for the next steering review."
+            ),
+        },
+        "cfo": {
+            "opening": (
+                f"In this {minutes}-minute financial and commercial review for {customer_name}{goal_clause}, "
+                f"we focus on garment lifespan extension, stock efficiency across {garments_n} allocated pieces, "
+                f"and how circular service compares against {baseline_name}."
+            ),
+            "points": [
+                {
+                    "id": "cfo_repairs_postponing_purchases",
+                    "title": f"{repairs_n} repairs postponing ~{postponed_n} replacement events",
+                    "headline": f"{repairs_n} repairs postponing ~{postponed_n} replacement events",
+                    "text": (
+                        f"Unlike a typical local laundry with no systematic repair program, {repairs_n} recorded repairs "
+                        f"({repair_rate_s} per 1,000 washes) postponed an estimated {postponed_n} garment replacements."
+                    ),
+                    "detail": (
+                        f"Unlike a typical local laundry with no systematic repair program, {repairs_n} recorded repairs "
+                        f"({repair_rate_s} per 1,000 washes) postponed an estimated {postponed_n} garment replacements."
+                    ),
+                    "metric_ids": ["repairs_total", "replacements_postponed", "repair_rate_per_1000"],
+                    "status": "ESTIMATE",
+                },
+                {
+                    "id": "cfo_stock_rightsizing",
+                    "title": f"{use_rate_s} allocation use ({idle_n} garments not seen in circulation)",
+                    "headline": f"{use_rate_s} allocation use ({idle_n} garments not seen in circulation)",
+                    "text": (
+                        f"Of {garments_n} allocated garments, {idle_n} were not scanned in the latest reporting month. "
+                        f"Reclaiming even half of the excess buffer tightens active circulation without adding risk."
+                    ),
+                    "detail": (
+                        f"Of {garments_n} allocated garments, {idle_n} were not scanned in the latest reporting month. "
+                        f"Reclaiming even half of the excess buffer tightens active circulation without adding risk."
+                    ),
+                    "metric_ids": ["allocation_use_rate", "idle_pieces", "garments_allocated"],
+                    "status": "CALCULATED",
+                },
+                {
+                    "id": "cfo_resource_efficiency",
+                    "title": f"Estimated ~{water_m_base} water & ~{co2_t_base} CO₂e avoided vs {baseline_name}",
+                    "headline": f"Estimated ~{water_m_base} water & ~{co2_t_base} CO₂e avoided vs {baseline_name}",
+                    "text": (
+                        f"Industrial load consolidation reduced water by {water_range} and emissions by {co2_t_range} "
+                        f"versus {baseline_name}—use the Rough Calculator to test your own unit-cost assumptions."
+                    ),
+                    "detail": (
+                        f"Industrial load consolidation reduced water by {water_range} and emissions by {co2_t_range} "
+                        f"versus {baseline_name}—use the Rough Calculator to test your own unit-cost assumptions."
+                    ),
+                    "metric_ids": ["water_saving_l", "energy_saving_kwh", "co2e_saving_kg"],
+                    "status": "ALLOCATED_ESTIMATE",
+                },
+            ],
+            "ask": (
+                f"Sponsor a joint locker-stock audit at the lowest-utilisation sites to right-size idle buffer "
+                f"and validate rough unit-cost assumptions with your procurement team."
+            ),
+        },
+        "operations": {
+            "opening": (
+                f"In this {minutes}-minute operational review for {customer_name}{goal_clause}, "
+                f"we cover delivery performance, turnaround time, and site-by-site garment wear across {sites_n} sites."
+            ),
+            "points": [
+                {
+                    "id": "ops_cycle_and_sla",
+                    "title": f"{on_time_s} on-time cycles with {cycle_h} h median turnaround",
+                    "headline": f"{on_time_s} on-time cycles with {cycle_h} h median turnaround",
+                    "text": (
+                        f"Across {sites_n} sites, on-time delivery reached {on_time_s} with a median cycle time "
+                        f"of {cycle_h} hours and {requests_n} logged service requests over the period."
+                    ),
+                    "detail": (
+                        f"Across {sites_n} sites, on-time delivery reached {on_time_s} with a median cycle time "
+                        f"of {cycle_h} hours and {requests_n} logged service requests over the period."
+                    ),
+                    "metric_ids": ["on_time_rate", "median_cycle_hours", "service_requests"],
+                    "status": "CALCULATED",
+                },
+                {
+                    "id": "ops_repair_intensity",
+                    "title": f"{repairs_n} repairs ({repair_rate_s} per 1,000 washed pieces)",
+                    "headline": f"{repairs_n} repairs ({repair_rate_s} per 1,000 washed pieces)",
+                    "text": (
+                        f"Repair intensity averaged {repair_rate_s} repairs per 1,000 washes. "
+                        f"Inspecting high-wear task zones at above-median sites reduces repeat damage."
+                    ),
+                    "detail": (
+                        f"Repair intensity averaged {repair_rate_s} repairs per 1,000 washes. "
+                        f"Inspecting high-wear task zones at above-median sites reduces repeat damage."
+                    ),
+                    "metric_ids": ["repairs_total", "repair_rate_per_1000"],
+                    "status": "CALCULATED",
+                },
+                {
+                    "id": "ops_locker_utilisation",
+                    "title": f"{use_rate_s} active scan rate ({idle_n} idle pieces in lockers)",
+                    "headline": f"{use_rate_s} active scan rate ({idle_n} idle pieces in lockers)",
+                    "text": (
+                        f"Scanning shows {use_rate_s} of allocated garments actively rotating, leaving {idle_n} pieces "
+                        f"unscanned in the latest month that can be rebalanced across active shifts."
+                    ),
+                    "detail": (
+                        f"Scanning shows {use_rate_s} of allocated garments actively rotating, leaving {idle_n} pieces "
+                        f"unscanned in the latest month that can be rebalanced across active shifts."
+                    ),
+                    "metric_ids": ["allocation_use_rate", "idle_pieces"],
+                    "status": "CALCULATED",
+                },
+            ],
+            "ask": (
+                f"Schedule a 30-minute walk-through with site supervisors at the lowest-utilisation and highest-repair "
+                f"plants to rebalance locker stock and check abrasion points."
+            ),
+        },
+        "sustainability": {
+            "opening": (
+                f"In this {minutes}-minute sustainability & circularity review for {customer_name}{goal_clause}, "
+                f"we present transparent footprint and handprint ranges across {sites_n} sites with full methodology boundaries."
+            ),
+            "points": [
+                {
+                    "id": "esg_handprint_ranges",
+                    "title": f"Estimated ~{co2_t_base} CO₂e ({co2_t_range}) and ~{water_m_base} water saved",
+                    "headline": f"Estimated ~{co2_t_base} CO₂e ({co2_t_range}) and ~{water_m_base} water saved",
+                    "text": (
+                        f"Against {baseline_name}, estimated handprint savings are {co2_t_base} CO₂e "
+                        f"(sensitivity range {co2_t_range}) and {water_m_base} water ({water_range}), "
+                        f"always presented as model estimates with low/base/high bounds."
+                    ),
+                    "detail": (
+                        f"Against {baseline_name}, estimated handprint savings are {co2_t_base} CO₂e "
+                        f"(sensitivity range {co2_t_range}) and {water_m_base} water ({water_range}), "
+                        f"always presented as model estimates with low/base/high bounds."
+                    ),
+                    "metric_ids": ["co2e_saving_kg", "water_saving_l", "energy_saving_kwh"],
+                    "status": "ALLOCATED_ESTIMATE",
+                },
+                {
+                    "id": "esg_circular_lifetime",
+                    "title": f"{repairs_n} repairs extending garment life (~{postponed_n} replacements postponed)",
+                    "headline": f"{repairs_n} repairs extending garment life (~{postponed_n} replacements postponed)",
+                    "text": (
+                        f"Keeping textiles in use through {repairs_n} repairs postponed an estimated {postponed_n} "
+                        f"new garment replacements and improved circular material retention."
+                    ),
+                    "detail": (
+                        f"Keeping textiles in use through {repairs_n} repairs postponed an estimated {postponed_n} "
+                        f"new garment replacements and improved circular material retention."
+                    ),
+                    "metric_ids": ["repairs_total", "replacements_postponed", "avoided_product_co2e_kg", "circular_waste_share"],
+                    "status": "ESTIMATE",
+                },
+                {
+                    "id": "esg_governance_guardrails",
+                    "title": "Audit-ready transparency: measured operations vs. allocated estimates",
+                    "headline": "Audit-ready transparency: measured operations vs. allocated estimates",
+                    "text": (
+                        "Every figure separates measured operational records from laundry-allocated footprints "
+                        "and synthetic product factors—safe for internal steering without overclaiming."
+                    ),
+                    "detail": (
+                        "Every figure separates measured operational records from laundry-allocated footprints "
+                        "and synthetic product factors—safe for internal steering without overclaiming."
+                    ),
+                    "metric_ids": ["customer_co2e_kg", "customer_water_l", "textile_waste_kg"],
+                    "status": "ALLOCATED_ESTIMATE",
+                },
+            ],
+            "ask": (
+                "Align on the conservative (low-case) handprint range for internal sustainability steering "
+                "and prioritize right-sizing + repair-reduction actions for 2026."
+            ),
+        },
+    }
+
+    chosen = copy.deepcopy(templates[p])
+    likely_objections = [
+        {
+            "id": "obj_alternative_cost",
+            "question": f"Why shouldn't we switch to {baseline_name} if unit wash prices look lower on paper?",
+            "answer": (
+                f"{baseline_name.capitalize()} has 0 systematic repairs in the baseline model, whereas Lindström completed "
+                f"{repairs_n} repairs (postponing ~{postponed_n} replacement purchases), delivered {on_time_s} on time, "
+                f"and avoided an estimated {water_m_base} of water and {co2_t_base} CO₂e."
+            ),
+            "readiness": "caveat",
+            "metric_ids": ["repairs_total", "replacements_postponed", "on_time_rate", "water_saving_l", "co2e_saving_kg"],
+            "needs": "Contract invoice pricing and customer replacement purchase prices (use Rough Calculator for KAM assumptions).",
+        },
+        {
+            "id": "obj_idle_garments",
+            "question": f"Why are {idle_n} of our {garments_n} allocated garments not showing up in active scans ({use_rate_s} use rate)?",
+            "answer": (
+                f"In the latest month, {use_rate_s} of allocated stock rotated through scanning, leaving {idle_n} pieces "
+                f"in site lockers or seasonal buffer. Reclaiming 50% of the gap to target is our top Q1 right-sizing action."
+            ),
+            "readiness": "evidence",
+            "metric_ids": ["allocation_use_rate", "idle_pieces", "garments_allocated"],
+            "needs": None,
+        },
+        {
+            "id": "obj_csrd_verified",
+            "question": "Can we publish the water and CO₂e savings directly in our audited external sustainability report?",
+            "answer": (
+                f"Not as audited claims. The ~{co2_t_base} CO₂e ({co2_t_range}) and ~{water_m_base} water ({water_range}) "
+                f"savings are model estimates based on laundry-level mass allocation and synthetic baseline factors. "
+                f"Use the conservative low-case range for internal steering."
+            ),
+            "readiness": "caveat",
+            "metric_ids": ["co2e_saving_kg", "water_saving_l", "customer_co2e_kg"],
+            "needs": "Approved Lindström LCA product footprints and verified site-level utility metering.",
+        },
+    ]
+
+    result = {
+        "customer_id": customer_id,
+        "customer_name": customer_name,
+        "persona": p,
+        "goal": goal_clean,
+        "minutes": minutes,
+        "opening": chosen["opening"],
+        "points": chosen["points"],
+        "likely_objections": likely_objections,
+        "objections": likely_objections,
+        "ask": chosen["ask"],
+        "source": "template",
+    }
+
+    if use_llm:
+        try:
+            from backend.insights import llm as llm_module
+            for fn_name in ("story_talk_track", "polish_story", "generate_story"):
+                fn = getattr(llm_module, fn_name, None)
+                if callable(fn):
+                    polished = fn(review=review, persona=p, goal=goal_clean, minutes=minutes, fallback=result)
+                    if isinstance(polished, dict) and "opening" in polished and "points" in polished:
+                        return polished
+        except Exception:
+            LOG.warning("Story LLM wording unavailable; falling back to deterministic template")
+
+    return result
+
+
+@app.post("/api/story")
+def generate_story_talk_track(req: StoryRequest) -> dict:
+    p = req.persona.strip().lower() if isinstance(req.persona, str) else "ceo"
+    default_prio = PERSONA_PRIORITY_MAP.get(p, "service")
+    if isinstance(req.review, dict) and "meta" in req.review and "metrics" in req.review:
+        review = req.review
+    else:
+        review, _ = _compute_full_review(
+            ReviewRequest(
+                customer_id=req.customer_id,
+                period_from=req.period_from,
+                period_to=req.period_to,
+                baseline_id=req.baseline_id,
+                sensitivity=req.sensitivity,
+                priority=default_prio,
+                use_llm=False,
+            )
+        )
+    return _build_story_talk_track(
+        review=review,
+        persona=p,
+        goal=req.goal,
+        minutes=req.minutes,
+        use_llm=req.use_llm,
+    )
+
+
 EXPORT_MEDIA = {
     "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "pdf": "application/pdf",
@@ -275,10 +697,17 @@ def export_customer_review(
     payload: dict,
     format: Literal["pptx", "pdf"] = Query(default="pptx"),
 ) -> FileResponse:
+    meeting_block = payload.get("meeting") if isinstance(payload.get("meeting"), dict) else None
     if "meta" in payload and "metrics" in payload:
-        review = payload
+        review = copy.deepcopy(payload)
+    elif isinstance(payload.get("review"), dict) and "meta" in payload["review"] and "metrics" in payload["review"]:
+        review = copy.deepcopy(payload["review"])
     else:
-        review, _ = _compute_full_review(ReviewRequest(**payload))
+        valid_keys = set(ReviewRequest.model_fields.keys())
+        req_kwargs = {k: v for k, v in payload.items() if k in valid_keys}
+        review, _ = _compute_full_review(ReviewRequest(**req_kwargs))
+    if meeting_block is not None:
+        review["meeting"] = copy.deepcopy(meeting_block)
     try:
         if format == "pptx":
             from backend.export.pptx_export import export_pptx as exporter

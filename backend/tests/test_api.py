@@ -148,3 +148,55 @@ def test_export_follows_reordered_dashboard_observations():
     text = str(build_pages(review))
     assert all(f"KAM {'ABCDEFGH'[i]} " in text for i in range(len(obs)))
     assert text.index("KAM " + "ABCDEFGH"[len(obs) - 1]) < text.index("KAM A")
+
+
+def test_story_endpoint_personas():
+    for persona, expected_snippet in (
+        ("ceo", "98.3%"),
+        ("cfo", "15,233"),
+        ("operations", "82"),
+        ("sustainability", "255 t"),
+    ):
+        r = client.post(
+            "/api/story",
+            json={
+                "customer_id": "CUST001",
+                "persona": persona,
+                "goal": "Prepare for 15-min review",
+                "minutes": 15,
+                "use_llm": False,
+            },
+        )
+        assert r.status_code == 200
+        data = r.json()
+        assert data["persona"] == persona
+        assert data["minutes"] == 15
+        assert len(data["points"]) == 3
+        assert all("metric_ids" in pt and len(pt["metric_ids"]) >= 1 for pt in data["points"])
+        assert len(data["likely_objections"]) >= 2
+        assert data["ask"]
+        combined_text = data["opening"] + " " + " ".join(pt["text"] for pt in data["points"])
+        assert expected_snippet in combined_text
+
+
+def test_export_accepts_optional_meeting_block():
+    meeting = {
+        "persona": "cfo",
+        "targets": {"on_time_rate": 0.98},
+        "satisfaction": {"score": 8, "scale": 10, "source": "KAM input"},
+        "rough_calc": {"inputs": {"garment_cost_eur": 42}, "result_eur": 30700, "label": "ROUGH CALCULATION"},
+        "agreed_actions": ["Review allocation at Kotka and Helsinki"],
+        "open_topics": ["Repair causes at high-rate sites"],
+    }
+    for fmt in ("pptx", "pdf"):
+        r = client.post(
+            f"/api/export?format={fmt}",
+            json={
+                "customer_id": "CUST001",
+                "use_llm": False,
+                "meeting": meeting,
+            },
+        )
+        assert r.status_code == 200
+        assert len(r.content) > 1000
+
