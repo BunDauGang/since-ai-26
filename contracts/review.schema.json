@@ -235,7 +235,8 @@
             "type": "object",
             "properties": {
               "network_median": { "type": "number" },
-              "percentile": { "type": "number" }
+              "percentile": { "type": "number" },
+              "sample_size": { "type": "integer", "minimum": 1 }
             }
           }
         },
@@ -244,6 +245,19 @@
           "additionalProperties": {
             "type": "object",
             "additionalProperties": { "type": "number" }
+          }
+        },
+        "methodology": {
+          "type": "object",
+          "properties": {
+            "period": { "type": "object" },
+            "weighting": { "type": "string" },
+            "percentile": { "type": "string" },
+            "preferred_direction": {
+              "type": "object",
+              "additionalProperties": { "type": "string", "enum": ["higher", "lower"] }
+            },
+            "limitations": { "type": "string" }
           }
         }
       }

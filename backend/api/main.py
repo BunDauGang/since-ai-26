@@ -319,21 +319,23 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
     customer_name = str(meta.get("customer_name", "Customer"))
     baseline_name = str(meta.get("baseline_name") or "the typical alternative")
     metrics = _metric_lookup(review)
+    # Follow the review's own sensitivity case (low/base/high), like the dashboard does.
+    case = meta.get("sensitivity") if meta.get("sensitivity") in ("low", "base", "high") else "base"
 
-    sites_n = _fmt_int(_val(metrics, "delivery_sites"))
-    wearers_n = _fmt_int(_val(metrics, "wearers_min_est"))
-    garments_n = _fmt_int(_val(metrics, "garments_allocated"))
-    on_time_s = _fmt_pct(_val(metrics, "on_time_rate"))
-    cycle_h = _fmt_int(_val(metrics, "median_cycle_hours"))
-    requests_n = _fmt_int(_val(metrics, "service_requests"))
-    repairs_n = _fmt_int(_val(metrics, "repairs_total"))
-    repair_rate_v = _val(metrics, "repair_rate_per_1000")
+    sites_n = _fmt_int(_val(metrics, "delivery_sites", case))
+    wearers_n = _fmt_int(_val(metrics, "wearers_min_est", case))
+    garments_n = _fmt_int(_val(metrics, "garments_allocated", case))
+    on_time_s = _fmt_pct(_val(metrics, "on_time_rate", case))
+    cycle_h = _fmt_int(_val(metrics, "median_cycle_hours", case))
+    requests_n = _fmt_int(_val(metrics, "service_requests", case))
+    repairs_n = _fmt_int(_val(metrics, "repairs_total", case))
+    repair_rate_v = _val(metrics, "repair_rate_per_1000", case)
     repair_rate_s = f"{repair_rate_v:.1f}" if repair_rate_v is not None else "unavailable"
-    postponed_n = _fmt_int(_val(metrics, "replacements_postponed"))
-    use_rate_s = _fmt_pct(_val(metrics, "allocation_use_rate"))
-    idle_n = _fmt_int(_val(metrics, "idle_pieces"))
+    postponed_n = _fmt_int(_val(metrics, "replacements_postponed", case))
+    use_rate_s = _fmt_pct(_val(metrics, "allocation_use_rate", case))
+    idle_n = _fmt_int(_val(metrics, "idle_pieces", case))
 
-    co2_base = _val(metrics, "co2e_saving_kg", "base")
+    co2_base = _val(metrics, "co2e_saving_kg", case)
     co2_low = _val(metrics, "co2e_saving_kg", "low")
     co2_high = _val(metrics, "co2e_saving_kg", "high")
     co2_t_base = f"{co2_base / 1000:,.0f} t" if co2_base is not None else "unavailable"
@@ -343,12 +345,14 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
         else co2_t_base
     )
 
-    water_base = _val(metrics, "water_saving_l", "base")
+    water_base = _val(metrics, "water_saving_l", case)
     water_low = _val(metrics, "water_saving_l", "low")
     water_high = _val(metrics, "water_saving_l", "high")
     water_m_base = f"{water_base / 1_000_000:.1f} million L" if water_base is not None else "unavailable"
+    co2_approx = f"~{co2_t_base}" if co2_base is not None else "an unavailable amount of"
+    water_approx = f"~{water_m_base}" if water_base is not None else "an unavailable amount of"
     water_range = (
-        f"{round(water_low):,}–{round(water_high):,} L"
+        f"{water_low / 1_000_000:.1f}–{water_high / 1_000_000:.1f} million L"
         if water_low is not None and water_high is not None
         else water_m_base
     )
@@ -381,8 +385,8 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
                 },
                 {
                     "id": "ceo_climate_handprint",
-                    "title": f"~{co2_t_base} CO₂e and ~{water_m_base} water avoided vs {baseline_name}",
-                    "headline": f"~{co2_t_base} CO₂e and ~{water_m_base} water avoided vs {baseline_name}",
+                    "title": f"{co2_approx} CO₂e and {water_approx} water avoided vs {baseline_name}",
+                    "headline": f"{co2_approx} CO₂e and {water_approx} water avoided vs {baseline_name}",
                     "text": (
                         f"Compared with {baseline_name}, circular textile rental avoided an estimated "
                         f"{co2_t_base} CO₂e (range {co2_t_range}) and {water_m_base} of water ({water_range})."
@@ -427,11 +431,11 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
                     "title": f"{repairs_n} repairs postponing ~{postponed_n} replacement events",
                     "headline": f"{repairs_n} repairs postponing ~{postponed_n} replacement events",
                     "text": (
-                        f"Unlike a typical local laundry with no systematic repair program, {repairs_n} recorded repairs "
+                        f"Compared with {baseline_name.lower()}, which the model assumes has no repair service, {repairs_n} recorded repairs "
                         f"({repair_rate_s} per 1,000 washes) postponed an estimated {postponed_n} garment replacements."
                     ),
                     "detail": (
-                        f"Unlike a typical local laundry with no systematic repair program, {repairs_n} recorded repairs "
+                        f"Compared with {baseline_name.lower()}, which the model assumes has no repair service, {repairs_n} recorded repairs "
                         f"({repair_rate_s} per 1,000 washes) postponed an estimated {postponed_n} garment replacements."
                     ),
                     "metric_ids": ["repairs_total", "replacements_postponed", "repair_rate_per_1000"],
@@ -454,8 +458,8 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
                 },
                 {
                     "id": "cfo_resource_efficiency",
-                    "title": f"Estimated ~{water_m_base} water & ~{co2_t_base} CO₂e avoided vs {baseline_name}",
-                    "headline": f"Estimated ~{water_m_base} water & ~{co2_t_base} CO₂e avoided vs {baseline_name}",
+                    "title": f"Estimated {water_approx} water & {co2_approx} CO₂e avoided vs {baseline_name}",
+                    "headline": f"Estimated {water_approx} water & {co2_approx} CO₂e avoided vs {baseline_name}",
                     "text": (
                         f"Industrial load consolidation reduced water by {water_range} and emissions by {co2_t_range} "
                         f"versus {baseline_name}—use the Rough Calculator to test your own unit-cost assumptions."
@@ -538,8 +542,8 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
             "points": [
                 {
                     "id": "esg_handprint_ranges",
-                    "title": f"Estimated ~{co2_t_base} CO₂e ({co2_t_range}) and ~{water_m_base} water saved",
-                    "headline": f"Estimated ~{co2_t_base} CO₂e ({co2_t_range}) and ~{water_m_base} water saved",
+                    "title": f"Estimated {co2_approx} CO₂e ({co2_t_range}) and {water_approx} water saved",
+                    "headline": f"Estimated {co2_approx} CO₂e ({co2_t_range}) and {water_approx} water saved",
                     "text": (
                         f"Against {baseline_name}, estimated handprint savings are {co2_t_base} CO₂e "
                         f"(sensitivity range {co2_t_range}) and {water_m_base} water ({water_range}), "
@@ -570,14 +574,14 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
                 },
                 {
                     "id": "esg_governance_guardrails",
-                    "title": "Audit-ready transparency: measured operations vs. allocated estimates",
-                    "headline": "Audit-ready transparency: measured operations vs. allocated estimates",
+                    "title": "Transparent evidence: calculated operations vs. allocated estimates",
+                    "headline": "Transparent evidence: calculated operations vs. allocated estimates",
                     "text": (
-                        "Every figure separates measured operational records from laundry-allocated footprints "
+                        "Every figure carries its evidence status, keeping calculated operational records apart from laundry-allocated footprints "
                         "and synthetic product factors—safe for internal steering without overclaiming."
                     ),
                     "detail": (
-                        "Every figure separates measured operational records from laundry-allocated footprints "
+                        "Every figure carries its evidence status, keeping calculated operational records apart from laundry-allocated footprints "
                         "and synthetic product factors—safe for internal steering without overclaiming."
                     ),
                     "metric_ids": ["customer_co2e_kg", "customer_water_l", "textile_waste_kg"],
@@ -597,7 +601,7 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
             "id": "obj_alternative_cost",
             "question": f"Why shouldn't we switch to {baseline_name} if unit wash prices look lower on paper?",
             "answer": (
-                f"{baseline_name.capitalize()} has 0 systematic repairs in the baseline model, whereas Lindström completed "
+                f"{baseline_name[:1].upper() + baseline_name[1:]} is modelled without a repair service, whereas Lindström completed "
                 f"{repairs_n} repairs (postponing ~{postponed_n} replacement purchases), delivered {on_time_s} on time, "
                 f"and avoided an estimated {water_m_base} of water and {co2_t_base} CO₂e."
             ),
@@ -610,23 +614,23 @@ def _build_story_talk_track(review: dict, persona: str, goal: str, minutes: int,
             "question": f"Why are {idle_n} of our {garments_n} allocated garments not showing up in active scans ({use_rate_s} use rate)?",
             "answer": (
                 f"In the latest month, {use_rate_s} of allocated stock rotated through scanning, leaving {idle_n} pieces "
-                f"in site lockers or seasonal buffer. Reclaiming 50% of the gap to target is our top Q1 right-sizing action."
+                f"in site lockers or seasonal buffer. Part of that is a deliberate shift and size buffer, so it is a joint review scope, not proven waste."
             ),
-            "readiness": "evidence",
+            "readiness": "caveat",
             "metric_ids": ["allocation_use_rate", "idle_pieces", "garments_allocated"],
-            "needs": None,
+            "needs": "Locker counts and buffer rules per site, confirmed with the site teams.",
         },
         {
             "id": "obj_csrd_verified",
             "question": "Can we publish the water and CO₂e savings directly in our audited external sustainability report?",
             "answer": (
-                f"Not as audited claims. The ~{co2_t_base} CO₂e ({co2_t_range}) and ~{water_m_base} water ({water_range}) "
+                f"Not as audited claims. The {co2_approx} CO₂e ({co2_t_range}) and {water_approx} water ({water_range}) "
                 f"savings are model estimates based on laundry-level mass allocation and synthetic baseline factors. "
                 f"Use the conservative low-case range for internal steering."
             ),
             "readiness": "caveat",
             "metric_ids": ["co2e_saving_kg", "water_saving_l", "customer_co2e_kg"],
-            "needs": "Approved Lindström LCA product footprints and verified site-level utility metering.",
+            "needs": "Approved Lindström LCA product footprints and metered site-level utility data.",
         },
     ]
 
