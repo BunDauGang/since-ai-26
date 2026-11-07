@@ -92,3 +92,10 @@ Run `python -m pytest backend/tests` with dependencies installed as described in
 Coverage includes every persona, the six-step order, backwards compatibility,
 customer-source filtering, optional peers, valid zero inputs, long-note retention,
 layout bounds, and both file formats through the existing API.
+
+The current frontend meeting payload is also covered: allocation and repair-rate
+KAM targets, derived requests per 100 estimated wearers, satisfaction comments,
+rough-calculation components/ranges, `next_meeting` and customer-shared `notes`.
+The latter two are explicitly shared meeting fields; arbitrary internal note
+keys remain excluded. Target comparison directions are explicit for known KPIs;
+an unknown target never receives an invented pass/fail judgement.

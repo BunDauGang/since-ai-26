@@ -490,3 +490,32 @@ def test_peer_fallback_rank_matches_engine_and_zero_inputs_are_valid(meeting_rev
     packet = prepare_export_review(meeting_review)
     assert packet['meeting']['rough_calc']['label'] == 'ROUGH CALCULATION'
     assert packet['meeting']['satisfaction']['source'] == 'KAM input'
+
+
+def test_frontend_contract_targets_range_components_and_notes(meeting_review, tmp_path):
+    # Matches frontend/src/lib/meeting.ts without editing frontend or the schema.
+    meeting_review['meeting'].update(
+        targets={'on_time_rate': .98, 'median_cycle_hours': 96, 'allocation_use_rate': .85,
+                 'repair_rate_per_1000': 20, 'requests_per_100_wearers': 6},
+        next_meeting='2026-12-01', notes='Customer-shared note: confirm a comparable follow-up period.')
+    meeting_review['meeting']['satisfaction']['comment'] = 'Example KAM-entered comment, not a survey.'
+    meeting_review['meeting']['rough_calc'] = {
+        'inputs': {'baseline_id': 'B_HOME', 'water_eur_per_m3': 4}, 'result_eur': 1200,
+        'range_eur': {'low': 900, 'base': 1200, 'high': 1500},
+        'lines': [{'label': 'Fresh water not used', 'eur': 1200}], 'label': 'ROUGH CALCULATION'}
+    import jsonschema
+    jsonschema.validate(meeting_review, json.loads((ROOT / 'contracts/review.schema.json').read_text()))
+    agreement = str(section(meeting_review, 'Agreement & KPIs'))
+    for text in ('98.0%', '96 hours', '85.0%', '20 repairs/1000 washed pieces', '6 requests/100 estimated wearers', 'KAM-entered comment'):
+        assert text in agreement
+    rough = str(section(meeting_review, 'Rough calculation'))
+    assert 'Scenario alternative: Home washing' in rough
+    assert '€900 / €1,200 / €1,500' in rough
+    assert 'Assumed component — Fresh water not used: €1,200' in rough
+    from backend.export.meeting import prepare_export_review
+    packet = prepare_export_review(meeting_review)
+    assert packet['meeting']['notes'] == meeting_review['meeting']['notes']
+    pdf = PdfReader(export_pdf(meeting_review, str(tmp_path / 'frontend-payload.pdf')))
+    text = '\n'.join(p.extract_text() for p in pdf.pages)
+    assert '2026-12-01' in text and 'Customer-shared note' in text
+    assert json.loads(pdf.attachments['review.json'][0])['meeting']['notes'] == packet['meeting']['notes']

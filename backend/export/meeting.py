@@ -38,7 +38,7 @@ def prepare_export_review(review):
     packet = clean(deepcopy(review)) if 'meeting' in review else deepcopy(review)
     if 'meeting' in packet:
         packet['meeting'] = {k: v for k, v in packet['meeting'].items()
-                             if k in ('persona', 'targets', 'satisfaction', 'rough_calc', 'agreed_actions', 'open_topics')}
+                             if k in ('persona', 'targets', 'satisfaction', 'rough_calc', 'agreed_actions', 'open_topics', 'next_meeting', 'notes')}
         if isinstance(packet['meeting'].get('rough_calc'), dict):
             packet['meeting']['rough_calc']['label'] = 'ROUGH CALCULATION'
         if isinstance(packet['meeting'].get('satisfaction'), dict):
@@ -70,27 +70,43 @@ def agreement_blocks(review):
     targets = mapping(meeting.get('targets'))
     metrics = {m['id']: m for m in review['metrics']}
     blocks = []
-    for key in ('on_time_rate', 'median_cycle_hours', 'service_requests'):
+    keys = ['on_time_rate', 'median_cycle_hours',
+            'requests_per_100_wearers' if 'requests_per_100_wearers' in targets else 'service_requests']
+    keys.extend(key for key in targets if key not in keys)
+    higher_is_better = {'on_time_rate', 'allocation_use_rate'}
+    lower_is_better = {'median_cycle_hours', 'service_requests', 'repair_rate_per_1000', 'requests_per_100_wearers'}
+    for key in keys:
         metric = metrics.get(key)
         actual = metric['value']['base'] if metric else None
-        unit = metric['unit'] if metric else ('ratio' if key == 'on_time_rate' else '')
+        unit = metric['unit'] if metric else ('ratio' if key in higher_is_better else '')
+        label = metric['label'] if metric else key.replace('_', ' ').title()
+        evidence = f"{metric['status'] if metric else 'DATA GAP'} | source: review.metrics.{key}"
+        if key == 'requests_per_100_wearers':
+            requests = mapping(metrics.get('service_requests')).get('value', {}).get('base')
+            wearers = mapping(metrics.get('wearers_min_est')).get('value', {}).get('base')
+            actual = requests / wearers * 100 if numeric(requests) and numeric(wearers) and wearers > 0 else None
+            unit, label = 'requests/100 estimated wearers', 'Service requests per 100 estimated wearers'
+            evidence = 'CALCULATED: service_requests / wearers_min_est × 100; not unique people or a monthly-normalised rate.'
         target = targets.get(key)
-        valid_target = numeric(target) and target >= 0 and (key != 'on_time_rate' or target <= 1)
+        valid_target = numeric(target) and target >= 0 and (unit != 'ratio' or target <= 1)
         comparison = ''
         if valid_target and numeric(actual):
-            met = actual >= target if key == 'on_time_rate' else actual <= target
-            comparison = '\nAt/within proposed target.' if met else '\nDiscuss the gap; investigate causes before changing service.'
-        blocks.append((metric['label'] if metric else key.replace('_', ' ').title(),
-            f'Actual: {display(actual, unit)} (base case)\n'
-            f"{metric['status'] if metric else 'DATA GAP'} | source: review.metrics.{key}\n"
+            if key in higher_is_better or key in lower_is_better:
+                met = actual >= target if key in higher_is_better else actual <= target
+                comparison = '\nAt/within proposed target.' if met else '\nDiscuss the gap; investigate causes before changing service.'
+            else:
+                comparison = '\nTarget direction not supplied; no target judgement is inferred.'
+        blocks.append((label, f'Actual: {display(actual, unit)} (base case)\n{evidence}\n'
             + (f'KAM input target: {display(target, unit)}' if valid_target else 'KAM input target: not supplied or invalid; no SLA is inferred.')
             + comparison))
     sat = mapping(meeting.get('satisfaction'))
     score, scale = sat.get('score'), sat.get('scale')
     valid_score = numeric(score) and numeric(scale) and scale > 0 and 0 <= score <= scale
-    blocks.append(('Customer satisfaction',
-                   f'{fmt(score)} / {fmt(scale)} | KAM input, not measured satisfaction data.' if valid_score
-                   else 'DATA GAP: no customer satisfaction dataset is supplied. The KAM may record a meeting score with its scale.'))
+    satisfaction = (f'{fmt(score)} / {fmt(scale)} | KAM input, not measured satisfaction data.' if valid_score
+                    else 'DATA GAP: no customer satisfaction dataset is supplied. The KAM may record a meeting score with its scale.')
+    if isinstance(sat.get('comment'), str) and sat['comment'].strip():
+        satisfaction += '\nKAM comment: ' + sat['comment'].strip()
+    blocks.append(('Customer satisfaction', satisfaction))
     return blocks
 
 
@@ -149,9 +165,18 @@ def rough_blocks(review):
             lines.append(f'{key}: {fmt(value)} | KAM assumption')
         elif isinstance(value, str):
             lines.append(f'{key}: {value} | KAM assumption')
+    lines.insert(0, 'Scenario alternative: ' + baseline_name(inputs.get('baseline_id', review['meta']['baseline_id']))) if inputs else None
     result = rough.get('result_eur')
     result_text = (f'€{fmt(result)} | supplied KAM scenario estimate' if lines and numeric(result) else
                    'Not calculated: enter prices and assumptions in Meeting mode. No financial result is inferred.')
+    if lines and isinstance(rough.get('range_eur'), dict):
+        ranges = rough['range_eur']
+        if all(numeric(ranges.get(k)) for k in ('low', 'base', 'high')):
+            result_text += f"\nSupplied rough range: €{fmt(ranges['low'])} / €{fmt(ranges['base'])} / €{fmt(ranges['high'])} (Low / Base / High)"
+    if lines and isinstance(rough.get('lines'), list):
+        for component in rough['lines']:
+            if isinstance(component, dict) and isinstance(component.get('label'), str) and numeric(component.get('eur')):
+                result_text += f"\nAssumed component — {component['label']}: €{fmt(component['eur'])}"
     alternatives = []
     for b in review.get('baseline_comparison', []):
         water, energy = mapping(b.get('water_saving_l')), mapping(b.get('energy_saving_kwh'))
@@ -170,10 +195,14 @@ def next_steps_blocks(meeting):
         rows = meeting.get(key)
         selected = [x for x in rows if isinstance(x, str) and x.strip()] if isinstance(rows, list) else []
         return '\n'.join('• ' + x for x in selected) if selected else empty
-    return [('Agreed actions | KAM meeting record', recorded('agreed_actions', 'No actions recorded yet; confirm an owner and follow-up date together.')),
+    blocks = [('Agreed actions | KAM meeting record', recorded('agreed_actions', 'No actions recorded yet; confirm an owner and follow-up date together.')),
             ('Open topics | continue the conversation', recorded('open_topics', 'No open topics recorded.')),
             ('Confirm before sharing', 'These are KAM-entered meeting notes, not automatically completed tasks. '
              'Confirm customer agreement, ownership and timing. Share only customer-approved notes.')]
+    for field, title in [('next_meeting', 'Next meeting | KAM input'), ('notes', 'Customer-shared meeting notes | KAM input')]:
+        if isinstance(meeting.get(field), str) and meeting[field].strip():
+            blocks.append((title, meeting[field].strip()))
+    return blocks
 
 
 def build_meeting_pages(review, details):
