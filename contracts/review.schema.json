@@ -132,6 +132,7 @@
           "product_id": { "type": "string" },
           "product_name": { "type": "string" },
           "product_group": { "type": "string" },
+          "synthetic_purchase_cost_eur": { "type": "number" },
           "metrics": { "type": "object" }
         }
       }
@@ -222,6 +223,66 @@
       "items": {
         "type": "object",
         "required": ["gap", "impact", "future_source"]
+      }
+    },
+    "peer_benchmark": {
+      "type": "object",
+      "properties": {
+        "scope": { "type": "string" },
+        "customer": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "network_median": { "type": "number" },
+              "percentile": { "type": "number" }
+            }
+          }
+        },
+        "sites": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": { "type": "number" }
+          }
+        }
+      }
+    },
+    "meeting": {
+      "type": "object",
+      "properties": {
+        "persona": {
+          "type": "string",
+          "enum": ["ceo", "cfo", "operations", "sustainability"]
+        },
+        "targets": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "satisfaction": {
+          "type": "object",
+          "properties": {
+            "score": { "type": ["number", "null"] },
+            "scale": { "type": "number" },
+            "source": { "type": "string" }
+          }
+        },
+        "rough_calc": {
+          "type": "object",
+          "properties": {
+            "inputs": { "type": "object" },
+            "result_eur": { "type": "number" },
+            "label": { "type": "string" }
+          }
+        },
+        "agreed_actions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "open_topics": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
       }
     }
   }
