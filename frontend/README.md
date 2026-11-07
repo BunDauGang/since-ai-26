@@ -1,7 +1,7 @@
 # `frontend/` — Interactive Dashboard (Worker C / Claude Code)
 
 Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Recharts · Lucide.
-Specs: [`docs/WORKSTREAMS.md`](../docs/WORKSTREAMS.md) §4.3 and [`docs/IMPLEMENTATION_GUIDE.md`](../docs/IMPLEMENTATION_GUIDE.md) §5 & §8.1.
+Overview and architecture: the root [`README.md`](../README.md). Data contract: [`contracts/review.schema.json`](../contracts/review.schema.json).
 
 ## Run
 
