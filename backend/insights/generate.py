@@ -1,6 +1,7 @@
 """Public API for rule-backed executive observations and priority interpretation."""
 import re
 from .rules import evaluate_rules, INDUSTRY_RULES
+from .actions import action_text
 
 COPY = {
     'R1': ('Lowest-use sites warrant an allocation review; unscanned stock is not proof of waste.', 'Review locker buffers and shift requirements before rebalancing garments.', 'Customer', 'Where can we pilot an allocation review while maintaining garment availability?'),
@@ -46,6 +47,9 @@ def render_fact(fact, index):
         # Retain exact source messages without turning known inconsistent registry prose into computed claims.
         observation += ' Sources to resolve: ' + '; '.join(g['gap'] for g in fact.get('data_gaps', [])) + '.'
         observation += ' Checks: ' + ', '.join(q['check_id'] for q in fact.get('data_quality', [])) + '.'
+    observation += ' Why it matters: ' + fact['industry_relevance']
+    action = action_text(fact)
+    question = 'Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? ' + question
     return dict(id=f'OBS{index}', title=fact['title'], observation=observation,
                 recommended_action=action, owner=owner, steering_question=question,
                 metric_ids=fact['metric_ids'], site_ids=fact['site_ids'],
@@ -81,3 +85,7 @@ def interpret_prompt(text: str, industry: str) -> str:
         return min(matches)[1]
     first = INDUSTRY_RULES.get(industry, ['R6'])[0]
     return {'R3': 'service', 'R1': 'cost'}.get(first, 'improvement')
+
+
+# Compatibility name requested by integration callers; retain interpret_prompt too.
+interpret_priority = interpret_prompt
