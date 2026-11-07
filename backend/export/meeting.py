@@ -148,7 +148,7 @@ def peer_blocks(review):
         percentile = supplied if numeric(supplied) and 0 <= supplied <= 1 else fallback_rank
         rows.append(f"{site['site_name']}: use {pct(rate)}; within-customer percentile {percentile * 100:.1f}%")
     blocks.append(('Sites to discuss', '\n'.join(rows) if rows else 'Site allocation data unavailable.'))
-    blocks.append(('Interpret the comparison', 'Percentiles show position, not performance quality. Compare product mix, site type and period before drawing conclusions. '
+    blocks.append(('Interpret the comparison', 'Synthetic demonstration only: a small-cohort median can equal an individual customer value. This is not a privacy guarantee for real data; production needs a minimum cohort policy and disclosure controls. Percentiles show position, not performance quality. Compare product mix, site type and period before drawing conclusions. '
                    'Site ranks use zero-based midrank / (n-1), singleton 0.5, when no supplied percentile exists. High repair activity is not automatically poor service.'))
     return blocks
 

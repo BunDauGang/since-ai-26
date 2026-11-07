@@ -86,10 +86,9 @@ That hook is provided and tested through `/api/story` with `use_llm=True`; it
 works offline too when no key exists. It builds a grounded template rather than
 trusting the adapter's supplied fallback.
 
-**Lead handoff:** use `generate_story(...)` for both endpoint modes to share the
-same safe offline template. The existing API's explicit `use_llm=False` branch
-still uses its own older template (outside Worker B ownership), including claims
-such as zero systematic repairs at the alternative and assumed purchase avoidance.
-Those claims are not supported by the shared review and should be replaced by
-the helper above. No API code was changed in this branch. The endpoint's default
-`use_llm=True` already discovers the guarded hook without requiring a Gemini key.
+**Integration note:** the explicit `use_llm=False` API path uses the Lead's own
+updated template, while the default path discovers the guarded hook above and
+works offline when no key is set. Both are covered by backend tests. The shared
+`generate_story(...)` helper remains available to unify these paths in a later
+cleanup; no claim is made that duplicate payload fields or recalculation work
+has been removed.
