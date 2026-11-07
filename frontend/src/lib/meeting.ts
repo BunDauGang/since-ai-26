@@ -67,8 +67,32 @@ export interface MeetingAction {
   source: "observation" | "kam";
 }
 
+/** An action agreed in an earlier meeting, brought back with its status (steering question 3). */
+export interface PreviousAction {
+  id: string;
+  text: string;
+  owner: string;
+  due: string;
+  status: "open" | "in_progress" | "done";
+}
+
+export const PRIORITY_CHOICES = ["Cost", "Water", "Emissions", "Circularity", "Service reliability", "Garment availability", "Hygiene & safety"];
+
+/** Overdue = not done and the due date has passed. */
+export function isOverdue(a: PreviousAction, today = new Date().toISOString().slice(0, 10)): boolean {
+  return a.status !== "done" && !!a.due && a.due < today;
+}
+
 export interface MeetingState {
   persona: Persona;
+  /** Free-text role when the audience is not one of the four personas, e.g. "Head of Procurement". */
+  audienceLabel: string;
+  /** The customer's ranked priorities for the next 6–12 months (steering question 2), plus a free-text note. */
+  priorities: string[];
+  priorityNote: string;
+  /** Month of the last steering committee (YYYY-MM): "since last meeting" compares before vs after it. */
+  lastSteerCo: string;
+  previousActions: PreviousAction[];
   targets: Record<string, number>;
   satisfaction: { score: number | null; comment: string };
   rough: RoughInputs | null;
@@ -81,6 +105,11 @@ export interface MeetingState {
 export function emptyMeeting(persona: Persona = "ceo"): MeetingState {
   return {
     persona,
+    audienceLabel: "",
+    priorities: [],
+    priorityNote: "",
+    lastSteerCo: "",
+    previousActions: [],
     targets: Object.fromEntries(TARGETS.map((t) => [t.id, t.defaultTarget])),
     satisfaction: { score: null, comment: "" },
     rough: null,
@@ -144,11 +173,24 @@ export function meetingBlock(r: Review, m: MeetingState): MeetingBlock {
           },
         }
       : {}),
-    agreed_actions: m.actions.filter((a) => a.agreed).map(actionText),
+    agreed_actions: [
+      ...m.actions.filter((a) => a.agreed).map(actionText),
+      // Commitments from the last meeting that are still open travel with the new agreement.
+      ...m.previousActions
+        .filter((a) => a.status !== "done")
+        .map((a) => `${actionText(a)} [carried over from last meeting: ${isOverdue(a) ? "overdue" : a.status === "in_progress" ? "in progress" : "open"}]`),
+    ],
     open_topics: m.openTopics,
-    persona_label: personaDef(m.persona).role,
+    persona_label: m.audienceLabel.trim() || personaDef(m.persona).role,
     next_meeting: m.nextMeeting,
-    notes: m.notes,
+    notes: [
+      m.priorities.length || m.priorityNote.trim()
+        ? `Customer priorities for the next 6–12 months: ${m.priorities.map((p, i) => `${i + 1}. ${p}`).join("; ")}${m.priorityNote.trim() ? `${m.priorities.length ? ". " : ""}${m.priorityNote.trim()}` : ""}`
+        : "",
+      m.notes.trim(),
+    ]
+      .filter(Boolean)
+      .join("\n"),
   };
 }
 
@@ -170,6 +212,17 @@ export function meetingMarkdown(r: Review, m: MeetingState): string {
   lines.push("");
   lines.push("> Synthetic prototype data. Estimates are not audited and are not approved Lindström or customer claims.");
   lines.push("");
+  if (m.priorities.length || m.priorityNote.trim()) {
+    lines.push("## Customer priorities for the next 6–12 months");
+    m.priorities.forEach((p, i) => lines.push(`${i + 1}. ${p}`));
+    if (m.priorityNote.trim()) lines.push(m.priorityNote.trim());
+    lines.push("");
+  }
+  if (m.previousActions.length) {
+    lines.push("## Actions from the last meeting");
+    for (const a of m.previousActions) lines.push(`- ${actionText(a)}: ${a.status === "done" ? "done" : isOverdue(a) ? "OVERDUE" : a.status === "in_progress" ? "in progress" : "open"}`);
+    lines.push("");
+  }
   lines.push("## Agreed KPIs");
   for (const t of b.target_results) {
     const def = TARGETS.find((d) => d.id === t.metric_id)!;
@@ -193,6 +246,6 @@ export function meetingMarkdown(r: Review, m: MeetingState): string {
   if (b.open_topics.length) for (const t of b.open_topics) lines.push(`- ${t}`);
   else lines.push("- None recorded.");
   if (b.next_meeting) lines.push("", `Next meeting: ${b.next_meeting}`);
-  if (b.notes.trim()) lines.push("", "## Notes", b.notes.trim());
+  if (m.notes.trim()) lines.push("", "## Notes", m.notes.trim());
   return lines.join("\n") + "\n";
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckCircle2, CircleAlert, CircleDashed, MessageSquareHeart, XCircle } from "lucide-react";
-import { formatTarget, TARGETS, targetStatus, type MeetingState, type TargetStatus } from "@/lib/meeting";
+import { CheckCircle2, CircleAlert, CircleDashed, ListOrdered, MessageSquareHeart, XCircle } from "lucide-react";
+import { formatTarget, PRIORITY_CHOICES, TARGETS, targetStatus, type MeetingState, type TargetStatus } from "@/lib/meeting";
 import type { Review } from "@/lib/types";
 import { NumberInput, StepHeader } from "./parts";
 
@@ -131,6 +131,40 @@ export function StepAgreement({ review, meeting, onChange, onOpenMetric }: {
           </label>
         </section>
       </div>
+
+      <section className="card mt-4 p-5" aria-label="Customer priorities">
+        <h3 className="flex items-center gap-2 text-[15px] font-semibold text-ink">
+          <ListOrdered size={16} className="text-navy" /> Your priorities for the next 6–12 months
+        </h3>
+        <p className="mt-1 text-[12.5px] text-muted">Ask the customer to pick and rank up to three. They shape the story, the steering-committee prep and the summary you take home.</p>
+        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Priorities">
+          {PRIORITY_CHOICES.map((p) => {
+            const rank = meeting.priorities.indexOf(p);
+            const on = rank >= 0;
+            const full = meeting.priorities.length >= 3 && !on;
+            return (
+              <button
+                key={p}
+                disabled={full}
+                aria-pressed={on}
+                onClick={() => onChange({ priorities: on ? meeting.priorities.filter((x) => x !== p) : [...meeting.priorities, p] })}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium ring-1 ring-inset transition disabled:opacity-40 ${
+                  on ? "bg-navy text-white ring-navy" : "bg-white text-slate-700 ring-line hover:bg-navy-50"
+                }`}
+              >
+                {on && <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10.5px] font-bold text-navy">{rank + 1}</span>}
+                {p}
+              </button>
+            );
+          })}
+        </div>
+        <input
+          value={meeting.priorityNote}
+          onChange={(e) => onChange({ priorityNote: e.target.value })}
+          placeholder="Anything else, in the customer's words (e.g. 'new site in Tampere opens in Q3')"
+          className="mt-3 h-9 w-full rounded-lg border border-line px-2.5 text-[13px] outline-none focus:border-navy/50"
+        />
+      </section>
     </div>
   );
 }

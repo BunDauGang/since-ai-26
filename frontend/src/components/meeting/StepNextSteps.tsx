@@ -1,9 +1,9 @@
 "use client";
 
-import { Check, Copy, Download, FileText, Loader2, Plus, Presentation, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, Copy, Download, FileText, History, Loader2, Plus, Presentation, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { buildObjections } from "@/lib/objections";
-import { meetingMarkdown, type MeetingAction, type MeetingState } from "@/lib/meeting";
+import { isOverdue, meetingMarkdown, type MeetingAction, type MeetingState, type PreviousAction } from "@/lib/meeting";
 import { splitAction } from "@/lib/story";
 import type { Review } from "@/lib/types";
 import { StepHeader } from "./parts";
@@ -48,6 +48,35 @@ export function StepNextSteps({ review, meeting, onChange, onExport, exporting, 
   };
 
   const agreed = actions.filter((a) => a.agreed).length;
+  const overdue = meeting.previousActions.filter((a) => isOverdue(a));
+  const setPrev = (id: string, patch: Partial<PreviousAction>) =>
+    onChange({ previousActions: meeting.previousActions.map((a) => (a.id === id ? { ...a, ...patch } : a)) });
+
+  // Close this meeting: today's agreed actions become next meeting's commitments; done ones are dropped.
+  function closeMeeting() {
+    if (!window.confirm("Close this meeting? Agreed actions move to 'From our last meeting' for the next one, and today's ticks are cleared.")) return;
+    const carried: PreviousAction[] = [
+      ...meeting.previousActions.filter((a) => a.status !== "done"),
+      ...meeting.actions.filter((a) => a.agreed).map((a) => ({ id: `prev:${a.id}`, text: a.text, owner: a.owner, due: a.due, status: "open" as const })),
+    ];
+    onChange({ previousActions: carried, actions: [], satisfaction: { score: null, comment: "" }, nextMeeting: "" });
+  }
+
+  // Demo only: an example of last meeting's commitments, built from this review's observations.
+  function loadExample() {
+    const day = (offset: number) => new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
+    const statuses: PreviousAction["status"][] = ["done", "open", "in_progress"];
+    const dues = [day(-60), day(-14), day(30)];
+    onChange({
+      previousActions: review.observations.slice(0, 3).map((o, i) => ({
+        id: `example:${o.id ?? i}`,
+        text: o.title,
+        owner: o.owner,
+        due: dues[i],
+        status: statuses[i],
+      })),
+    });
+  }
   const md = meetingMarkdown(review, meeting);
 
   function downloadMd() {
@@ -79,9 +108,63 @@ export function StepNextSteps({ review, meeting, onChange, onExport, exporting, 
         title={agreed ? `${agreed} action${agreed === 1 ? "" : "s"} agreed, ${meeting.openTopics.length} open topic${meeting.openTopics.length === 1 ? "" : "s"}` : "What do we agree to do next?"}
         sub="Tick what was agreed, add your own actions, and park what we didn't finish. The customer takes all of it home in the summary."
       />
+      <section className="card mb-4 p-5" aria-label="From our last meeting">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-[15px] font-semibold text-ink">
+            <History size={16} className="text-navy" /> From our last meeting
+          </h3>
+          {meeting.previousActions.length === 0 && (
+            <button onClick={loadExample} className="text-[12px] font-medium text-navy hover:underline">
+              Load an example previous meeting (demo)
+            </button>
+          )}
+        </div>
+        {meeting.previousActions.length === 0 ? (
+          <p className="mt-2 text-[12.5px] text-muted">No commitments recorded yet. When you close this meeting, today&apos;s agreed actions appear here next time with their status.</p>
+        ) : (
+          <>
+            {overdue.length > 0 && (
+              <div className="mt-3 rounded-lg bg-red-50 px-3 py-2.5 ring-1 ring-inset ring-red-200">
+                <div className="flex items-center gap-1.5 text-[13px] font-semibold text-red-800">
+                  <AlertTriangle size={14} /> Needs a steering decision: {overdue.length} overdue commitment{overdue.length === 1 ? "" : "s"}
+                </div>
+                <p className="mt-0.5 text-[12px] text-red-700">Agree a new owner or a new date, or drop it on purpose.</p>
+              </div>
+            )}
+            <ul className="mt-3 space-y-2">
+              {meeting.previousActions.map((a) => {
+                const late = isOverdue(a);
+                return (
+                  <li key={a.id} className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 ${late ? "border-red-200 bg-red-50/40" : "border-line"}`}>
+                    <div className="min-w-0">
+                      <div className={`text-[13.5px] font-medium ${a.status === "done" ? "text-muted line-through" : "text-ink"}`}>{a.text}</div>
+                      <div className="text-[11.5px] text-muted">
+                        {a.owner ? `Owner: ${a.owner}` : "No owner"} · {a.due ? `due ${a.due}` : "no date"}
+                        {late && <span className="ml-1 font-semibold text-red-700">· overdue</span>}
+                      </div>
+                    </div>
+                    <div className="inline-flex rounded-md bg-canvas p-0.5 ring-1 ring-inset ring-line" role="group" aria-label={`Status of ${a.text}`}>
+                      {(["open", "in_progress", "done"] as const).map((st) => (
+                        <button
+                          key={st}
+                          onClick={() => setPrev(a.id, { status: st })}
+                          className={`rounded px-2 py-1 text-[11.5px] font-medium ${a.status === st ? "bg-white text-navy shadow-sm ring-1 ring-line" : "text-muted hover:text-ink"}`}
+                        >
+                          {st === "open" ? "Open" : st === "in_progress" ? "In progress" : "Done"}
+                        </button>
+                      ))}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+      </section>
+
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         <section className="card p-5">
-          <h3 className="text-[15px] font-semibold text-ink">Actions</h3>
+          <h3 className="text-[15px] font-semibold text-ink">Today&apos;s actions</h3>
           <ul className="mt-3 space-y-2">
             {actions.map((a) => {
               const why = a.source === "observation" ? splitAction(review.observations.find((o, i) => `obs:${o.id ?? i}` === a.id)?.recommended_action ?? "").action : "";
@@ -224,6 +307,9 @@ export function StepNextSteps({ review, meeting, onChange, onExport, exporting, 
                   <FileText size={14} /> Summary (.md)
                 </button>
               </div>
+              <button onClick={closeMeeting} className="inline-flex items-center justify-center gap-1 text-[12.5px] font-medium text-slate-600 hover:underline">
+                <RotateCcw size={13} /> Close this meeting and prepare the next
+              </button>
               <button onClick={copy} className="inline-flex items-center justify-center gap-1 text-[12.5px] font-medium text-navy hover:underline">
                 {copied ? <Check size={13} /> : <Copy size={13} />} {copied ? "Copied" : "Copy summary for a follow-up email"}
               </button>

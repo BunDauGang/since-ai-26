@@ -4,9 +4,18 @@ import { ArrowRight, Handshake, Quote } from "lucide-react";
 import { equivalents } from "@/lib/calc";
 import { personaDef, personaStory, type Persona } from "@/lib/personas";
 import type { Review } from "@/lib/types";
+import type { Comparison } from "@/lib/comparison";
 import { BigStat, StepHeader } from "./parts";
+import { SinceLastMeeting } from "./SinceLastMeeting";
 
-export function StepSummary({ review, persona, onOpenMetric }: { review: Review; persona: Persona; onOpenMetric: (id: string) => void }) {
+export function StepSummary({ review, persona, onOpenMetric, comparison, onLastSteerCo, audienceLabel }: {
+  review: Review;
+  persona: Persona;
+  onOpenMetric: (id: string) => void;
+  comparison: Comparison;
+  onLastSteerCo: (month: string) => void;
+  audienceLabel: string;
+}) {
   const p = personaDef(persona);
   const story = personaStory(review, persona);
   const stats = p.stats.map((id) => review.metrics.find((m) => m.id === id)).filter((m): m is NonNullable<typeof m> => !!m);
@@ -14,7 +23,7 @@ export function StepSummary({ review, persona, onOpenMetric }: { review: Review;
 
   return (
     <div>
-      <StepHeader kicker={`Executive summary · for the ${p.role.toLowerCase()}`} title={story.headline} sub={story.opening} />
+      <StepHeader kicker={`Executive summary · for the ${(audienceLabel.trim() || p.role).toLowerCase()}`} title={story.headline} sub={story.opening} />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((m, i) => (
@@ -26,6 +35,8 @@ export function StepSummary({ review, persona, onOpenMetric }: { review: Review;
           In everyday terms: {everyday.text.replace(/^≈\s*/, "about ")} (illustrative public reference, not a Lindström claim).
         </p>
       )}
+
+      <SinceLastMeeting review={review} comparison={comparison} onLastSteerCo={onLastSteerCo} onOpenMetric={onOpenMetric} />
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <section className="card p-5 sm:p-6">

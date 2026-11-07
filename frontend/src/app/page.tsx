@@ -4,7 +4,9 @@ import { AlertTriangle, Braces, Loader2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { CalcDrawer } from "@/components/CalcDrawer";
 import { MeetingMode } from "@/components/meeting/MeetingMode";
-import { StoryAssistant } from "@/components/meeting/StoryAssistant";
+import { MeetingPrepAI } from "@/components/meeting/MeetingPrepAI";
+import { matchAudience } from "@/lib/audience";
+import { useComparison } from "@/lib/comparison";
 import { ControlBar } from "@/components/ControlBar";
 import { MobileNav, Sidebar } from "@/components/Sidebar";
 import { SiteDrawer } from "@/components/SiteDrawer";
@@ -72,12 +74,31 @@ export default function Page() {
   const update = r.update;
   const onPersona = useCallback(
     (p: Persona) => {
-      patchMeeting({ persona: p });
+      patchMeeting({ persona: p, audienceLabel: "" });
       const def = CUSTOMERS.find((c) => c.id === customerId)?.defaultPriority ?? ("water" as Priority);
       update({ priority: personaPriority(p, def) });
     },
     [customerId, update, patchMeeting],
   );
+  // Any audience: a typed role picks the closest story (and its lens), keeping the role as the label.
+  const onAudience = useCallback(
+    (label: string) => {
+      const hit = matchAudience(label);
+      if (!hit) return;
+      onPersona(hit.persona);
+      patchMeeting({ audienceLabel: label });
+    },
+    [onPersona, patchMeeting],
+  );
+  const comparison = useComparison({
+    review,
+    live: r.mode === "live" && r.liveSource === "engine",
+    customerId: controls.customerId,
+    baselineId: controls.baselineId,
+    sensitivity: controls.sensitivity,
+    priority: controls.priority,
+    lastSteerCo: meeting.lastSteerCo,
+  });
   const [toast, setToast] = useState<{ kind: "error" | "info"; text: string; action?: { label: string; run: () => void } } | null>(null);
 
   // Keep the active view in the URL hash so a demo can deep-link (#sites, #methodology…).
@@ -273,6 +294,9 @@ export default function Page() {
               meeting={meeting}
               onMeeting={patchMeeting}
               onPersona={onPersona}
+              onAudience={onAudience}
+              comparison={comparison}
+              live={r.mode === "live"}
               onOpenMetric={openMetric}
               onOpenSite={openSite}
               onExport={onExport}
@@ -306,7 +330,17 @@ export default function Page() {
           )}
           {view === "observations" && (
             <div className="space-y-6">
-              {!customerView && <StoryAssistant review={review} defaultPersona={meeting.persona} rough={meeting.rough} onOpenMetric={openMetric} />}
+              {!customerView && (
+                <MeetingPrepAI
+                  review={review}
+                  meeting={meeting}
+                  comparison={comparison}
+                  onAudience={onAudience}
+                  onOpenMetric={openMetric}
+                  onOpenSite={openSite}
+                  live={r.mode === "live"}
+                />
+              )}
               <SafeToSay review={review} onOpenMetric={openMetric} audience={audience} />
               {!customerView && <ObjectionPrep review={review} onOpenMetric={openMetric} />}
               <WhatIfSimulator review={review} onOpenSite={openSite} />
