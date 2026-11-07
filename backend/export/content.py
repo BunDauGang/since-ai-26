@@ -44,6 +44,7 @@ def build_pages(review):
          'Full source review and provenance: PowerPoint methodology notes / PDF review.json attachment.')])
     page('Executive summary', blocks(['delivery_sites', 'wearers_min_est', 'washed_kg', 'repairs_total', 'water_saving_l', 'co2e_saving_kg']))
     priority = meta['priority']
+    # Shared contract is authoritative for both dashboard and deck.
     emphasized = list(dict.fromkeys(review.get('priority_view', {}).get('emphasized_metric_ids', [])))
     spotlight = blocks(emphasized)
     unavailable = [i for i in emphasized if i not in metrics]
