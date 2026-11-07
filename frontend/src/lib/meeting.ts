@@ -120,7 +120,8 @@ export function emptyMeeting(persona: Persona = "ceo"): MeetingState {
   };
 }
 
-const KEY = (customerId: string) => `lindstrom-meeting-v1:${customerId}`;
+// v2: the rough calculation is only stored once prices are agreed (v1 stored suggested prices automatically).
+const KEY = (customerId: string) => `lindstrom-meeting-v2:${customerId}`;
 
 export function loadMeeting(customerId: string): MeetingState | null {
   try {

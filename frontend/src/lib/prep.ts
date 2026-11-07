@@ -5,7 +5,7 @@ import { full, pct } from "./format";
 import { formatTarget, isOverdue, TARGETS, targetStatus, type MeetingState } from "./meeting";
 import { buildObjections } from "./objections";
 import { sayValue } from "./personas";
-import { defaultRoughInputs, roughCalc } from "./roughcalc";
+import { roughCalc } from "./roughcalc";
 import type { Review } from "./types";
 import { simulate } from "./whatif";
 
@@ -168,8 +168,12 @@ function q4(c: PrepContext): PrepAnswer {
   if (w.available.repair) {
     points.push({ text: `Operations: closing half the gap to the median repair rate at ${w.repairSites.length} sites avoids about ${full(w.avoidedRepairs, 0)} repairs a year (what-if, illustrative).`, metricIds: ["repair_rate_per_1000"] });
   }
-  const rough = roughCalc(r, meeting.rough ?? defaultRoughInputs(r));
-  points.push({ text: `Cost: at the prices agreed in step 5, the service is worth roughly €${full(rough.total.base, 0)} a year against ${rough.baselineName.toLowerCase()} (rough calculation, not a quote).`, metricIds: ["water_saving_l"] });
+  if (meeting.rough) {
+    const rough = roughCalc(r, meeting.rough);
+    points.push({ text: `Cost: at the prices agreed in step 5, the service is worth roughly €${full(rough.total.base, 0)} a year against ${rough.baselineName.toLowerCase()} (rough calculation, not a quote).`, metricIds: ["water_saving_l"] });
+  } else {
+    points.push({ text: "Cost: agree water, energy and garment prices with the customer in step 5 to put a rough euro value on the service (not a quote).", metricIds: ["water_saving_l"] });
+  }
   const co2 = m(r, "co2e_saving_kg");
   const circ = m(r, "circular_waste_share");
   if (co2) points.push({ text: `Sustainability: about ${sayValue(co2)} less than ${r.meta.baseline_name.toLowerCase()} (range ${sayValue(co2, co2.value.low)} to ${sayValue(co2, co2.value.high)})${circ ? `, and ${sayValue(circ)} of textile waste recycled or reused` : ""}.`, metricIds: ["co2e_saving_kg", ...(circ ? ["circular_waste_share"] : [])] });

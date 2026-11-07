@@ -6,7 +6,7 @@ import { neverSay } from "@/lib/claims";
 import { full } from "@/lib/format";
 import { buildObjections } from "@/lib/objections";
 import { PERSONAS, personaDef, personaStory, type Persona, type StoryPoint } from "@/lib/personas";
-import { defaultRoughInputs, roughCalc, type RoughInputs } from "@/lib/roughcalc";
+import { roughCalc, type RoughInputs } from "@/lib/roughcalc";
 import type { Review } from "@/lib/types";
 import { Segmented } from "../ui";
 
@@ -33,17 +33,19 @@ const PERSONA_QUESTIONS: Record<Persona, string[]> = {
 
 type Angle = { title: string; points: StoryPoint[] };
 
-function goalAngle(review: Review, goal: string, rough: RoughInputs): Angle | null {
+function goalAngle(review: Review, goal: string, rough: RoughInputs | null): Angle | null {
   const g = goal.toLowerCase();
   const m = (id: string) => review.metrics.find((x) => x.id === id);
   if (/(cheap|competit|price|local laundry|alternative|worth|value for money|cost)/.test(g)) {
-    const res = roughCalc(review, rough);
+    const res = rough ? roughCalc(review, rough) : null;
     const repairs = m("repairs_total");
     return {
       title: "Value vs the alternative",
       points: [
         {
-          text: `At prices we agree on at the table, the service is worth roughly €${full(res.total.base, 0)} a year in water, energy and avoided garment purchases compared with ${res.baselineName.toLowerCase()} (rough calculation, step 5).`,
+          text: res
+            ? `At the prices agreed at the table, the service is worth roughly €${full(res.total.base, 0)} a year in water, energy and avoided garment purchases compared with ${res.baselineName.toLowerCase()} (rough calculation, step 5).`
+            : `Agree water, energy and garment prices with them in step 5; only then put a rough euro value on the service compared with ${review.meta.baseline_name.toLowerCase()}.`,
           metricIds: ["water_saving_l", "energy_saving_kwh"],
         },
         ...(repairs
@@ -95,7 +97,7 @@ export function StoryAssistant({ review, defaultPersona, rough, onOpenMetric }: 
 
   const track = useMemo(() => {
     const story = personaStory(review, persona);
-    const angle = goalAngle(review, goal, rough ?? defaultRoughInputs(review));
+    const angle = goalAngle(review, goal, rough);
     const objections = buildObjections(review);
     const questions = PERSONA_QUESTIONS[persona].map((id) => objections.find((o) => o.id === id)).filter((o): o is NonNullable<typeof o> => !!o);
     const avoid = neverSay(review).slice(0, 3);

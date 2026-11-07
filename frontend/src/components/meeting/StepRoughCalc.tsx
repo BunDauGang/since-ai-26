@@ -1,7 +1,7 @@
 "use client";
 
 import { Calculator, Info, RotateCcw } from "lucide-react";
-import { useEffect } from "react";
+import { useState } from "react";
 import { BASELINES } from "@/lib/config";
 import { full } from "@/lib/format";
 import type { MeetingState } from "@/lib/meeting";
@@ -18,12 +18,12 @@ export function StepRoughCalc({ review, meeting, onChange, onOpenMetric }: {
   onChange: (m: Partial<MeetingState>) => void;
   onOpenMetric: (id: string) => void;
 }) {
-  const inp: RoughInputs = meeting.rough ?? defaultRoughInputs(review);
-  // Persist defaults once so the export and the summary carry the same inputs the KAM sees.
-  useEffect(() => {
-    if (!meeting.rough) onChange({ rough: defaultRoughInputs(review) });
-  }, [meeting.rough, onChange, review]);
-  const set = (patch: Partial<RoughInputs>) => onChange({ rough: { ...inp, ...patch } });
+  // No euro figure until the KAM and the customer have agreed the prices (Script.md; judges do not reward
+  // the biggest claimed saving). Until then the prices are suggestions in a local draft.
+  const [draft, setDraft] = useState<RoughInputs>(() => defaultRoughInputs(review));
+  const agreed = meeting.rough != null;
+  const inp: RoughInputs = meeting.rough ?? draft;
+  const set = (patch: Partial<RoughInputs>) => (agreed ? onChange({ rough: { ...inp, ...patch } }) : setDraft({ ...inp, ...patch }));
   const res = roughCalc(review, inp);
   const maxLine = Math.max(1, ...res.lines.map((l) => l.eur.base));
   const alternatives = review.baseline_comparison;
@@ -32,8 +32,12 @@ export function StepRoughCalc({ review, meeting, onChange, onOpenMetric }: {
     <div>
       <StepHeader
         kicker="Value vs the alternative"
-        title={`Roughly ${eur(res.total.base)} a year compared with ${res.baselineName.toLowerCase()}`}
-        sub="A calculation we can do together at the table: the quantities come from your review, the prices are yours. Change any price and the total updates."
+        title={agreed ? `Roughly ${eur(res.total.base)} a year compared with ${res.baselineName.toLowerCase()}` : `What is the service worth compared with ${res.baselineName.toLowerCase()}?`}
+        sub={
+          agreed
+            ? "Calculated at the prices we agreed together: the quantities come from your review, the prices are yours. Change any price and the total updates."
+            : "The quantities below come from your review. Agree your own prices first; only then do we put a rough euro value on them."
+        }
         right={<RoughLabel />}
       />
 
@@ -82,9 +86,21 @@ export function StepRoughCalc({ review, meeting, onChange, onOpenMetric }: {
               The data pack assumes every repair postpones one replacement; 50% is the cautious low case.
             </span>
           </label>
-          <button onClick={() => onChange({ rough: defaultRoughInputs(review) })} className="mt-4 inline-flex items-center gap-1 text-[12px] font-medium text-navy hover:underline">
-            <RotateCcw size={12} /> Reset to defaults
-          </button>
+          {agreed ? (
+            <button
+              onClick={() => {
+                setDraft(defaultRoughInputs(review));
+                onChange({ rough: null });
+              }}
+              className="mt-4 inline-flex items-center gap-1 text-[12px] font-medium text-navy hover:underline"
+            >
+              <RotateCcw size={12} /> Start again with suggested prices
+            </button>
+          ) : (
+            <button onClick={() => onChange({ rough: draft })} className="btn-primary mt-4 w-full justify-center">
+              <Calculator size={14} /> We agree these prices: calculate
+            </button>
+          )}
         </section>
 
         <section className="card p-5">
@@ -93,16 +109,16 @@ export function StepRoughCalc({ review, meeting, onChange, onOpenMetric }: {
               <div key={l.id}>
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-[14px] font-medium text-ink">{l.label}</span>
-                  <span className="text-[18px] font-semibold text-ink tnum">{eur(l.eur.base)}</span>
+                  <span className="text-[18px] font-semibold text-ink tnum">{agreed ? eur(l.eur.base) : "€ –"}</span>
                 </div>
                 <div className="mt-1 h-2 overflow-hidden rounded-full bg-canvas">
-                  <div className="h-full rounded-full bg-navy" style={{ width: `${(l.eur.base / maxLine) * 100}%` }} />
+                  <div className="h-full rounded-full bg-navy" style={{ width: agreed ? `${(l.eur.base / maxLine) * 100}%` : "0%" }} />
                 </div>
                 <div className="mt-1 flex flex-wrap justify-between gap-x-3 text-[12px] text-muted tnum">
                   <span>
                     {l.quantity} × {l.price}
                   </span>
-                  {l.eur.high > l.eur.low && (
+                  {agreed && l.eur.high > l.eur.low && (
                     <span>
                       range {eur(l.eur.low)} to {eur(l.eur.high)}
                     </span>
@@ -112,21 +128,28 @@ export function StepRoughCalc({ review, meeting, onChange, onOpenMetric }: {
               </div>
             ))}
           </div>
-          <div className="mt-5 rounded-xl bg-navy px-5 py-4 text-white">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-[13px] text-blue-100">Rough value per year</span>
-              <span className="text-[30px] font-semibold tnum">{eur(res.total.base)}</span>
+          {agreed ? (
+            <div className="mt-5 rounded-xl bg-navy px-5 py-4 text-white">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="text-[13px] text-blue-100">Rough value per year, at the prices we agreed</span>
+                <span className="text-[30px] font-semibold tnum">{eur(res.total.base)}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap justify-between gap-2 text-[12px] text-blue-200 tnum">
+                <span>
+                  range {eur(res.total.low)} to {eur(res.total.high)}
+                </span>
+                <span>
+                  {res.perSite != null && <>≈ {eur(res.perSite)} per site</>}
+                  {res.perWearer != null && <> · ≈ {eur(res.perWearer)} per wearer</>}
+                </span>
+              </div>
             </div>
-            <div className="mt-1 flex flex-wrap justify-between gap-2 text-[12px] text-blue-200 tnum">
-              <span>
-                range {eur(res.total.low)} to {eur(res.total.high)}
-              </span>
-              <span>
-                {res.perSite != null && <>≈ {eur(res.perSite)} per site</>}
-                {res.perWearer != null && <> · ≈ {eur(res.perWearer)} per wearer</>}
-              </span>
+          ) : (
+            <div className="mt-5 rounded-xl border border-dashed border-navy/40 bg-navy-50/50 px-5 py-4 text-[13px] text-navy-900">
+              No euro value yet. Go through the prices on the left with the customer, adjust them to theirs, then press
+              <span className="font-semibold"> We agree these prices</span>.
             </div>
-          </div>
+          )}
           <p className="mt-3 flex gap-2 text-[12px] leading-relaxed text-muted">
             <Info size={14} className="mt-0.5 shrink-0" />
             <span>
