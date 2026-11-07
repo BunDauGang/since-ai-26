@@ -105,8 +105,12 @@ export default function Page() {
     setSiteId(id);
   }, []);
 
-  const siteBaselineNote =
-    r.siteLevelBaselineId !== controls.baselineId ? `vs ${baselineName(r.siteLevelBaselineId).toLowerCase()} (site/month detail needs live engine)` : undefined;
+  // Site/month detail of the bundled sample is fixed to its baseline and base case; say so next to those charts.
+  const siteNoteParts = [
+    r.siteLevelBaselineId !== controls.baselineId ? `vs ${baselineName(r.siteLevelBaselineId).toLowerCase()}` : null,
+    r.siteLevelSensitivity !== controls.sensitivity ? `${r.siteLevelSensitivity} case` : null,
+  ].filter(Boolean);
+  const siteBaselineNote = siteNoteParts.length ? `${siteNoteParts.join(", ")} (site/month detail needs live engine)` : undefined;
 
   async function onExport(format: "pptx" | "pdf") {
     if (!r.canExport) return;

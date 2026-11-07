@@ -61,7 +61,12 @@ export function useReview() {
 
   // Live mode: each change of an engine input asks for a freshly calculated review.json.
   useEffect(() => {
-    if (mode !== "live" || !periodValid) return;
+    if (mode !== "live" || !periodValid) {
+      // A pending request may have been cancelled by this change: never leave "Recalculating…" spinning.
+      reqId.current++;
+      setLoading(false);
+      return;
+    }
     const id = ++reqId.current;
     setLoading(true);
     setError(null);
@@ -93,6 +98,15 @@ export function useReview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, key, periodValid, attempt]);
 
+  // Offline there is only the bundled sample: switch the controls to its customer and period, so another
+  // customer's name is never shown (or exported) above the sample's numbers.
+  useEffect(() => {
+    const m = SAMPLE_REVIEW.meta;
+    if (mode === "offline" && (controls.customerId !== m.customer_id || controls.periodFrom !== m.period.from || controls.periodTo !== m.period.to)) {
+      setControls((c) => ({ ...c, customerId: m.customer_id, periodFrom: m.period.from, periodTo: m.period.to }));
+    }
+  }, [mode, controls.customerId, controls.periodFrom, controls.periodTo]);
+
   // Can the review on screen be trusted to match the controls?
   const liveForCustomer = live && live.review.meta.customer_id === controls.customerId ? live : null;
   const stale = mode === "live" && (!live || live.key !== key);
@@ -101,6 +115,8 @@ export function useReview() {
 
   const derived = useMemo(() => {
     const useLive = mode === "live" && liveForCustomer;
+    // Site and month rows of the sample (offline, or the API's sample fallback) are base case only.
+    const siteLevelSensitivity = useLive && liveForCustomer.source !== "sample" ? controls.sensitivity : SAMPLE_REVIEW.meta.sensitivity;
     const { review, siteLevelBaselineId } = useLive
       ? {
           review: liveForCustomer.review,
@@ -117,7 +133,7 @@ export function useReview() {
       priority_view: { ...review.priority_view, priority: controls.priority, emphasized_metric_ids: emphasized },
       observations: rankObservations(review.observations, emphasized),
     };
-    return { review: display, emphasized, siteLevelBaselineId };
+    return { review: display, emphasized, siteLevelBaselineId, siteLevelSensitivity };
   }, [mode, liveForCustomer, controls.baselineId, controls.priority, controls.sensitivity]);
 
   const update = useCallback((patch: Partial<Controls>) => setControls((c) => ({ ...c, ...patch })), []);

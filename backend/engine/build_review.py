@@ -142,7 +142,14 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
     if priority is not None and priority not in PRIORITIES:
         raise ValueError("Unknown priority")
     tables = load_tables(source_path)
-    quality = [dict(f) for f in _validated(tables)]
+    def in_period(finding):
+        # DQ4 laundry-month reconciliation findings belong to the selected period only; workbook-wide
+        # hygiene checks (DQ1-DQ3) stay as they are.
+        if finding.get("check_id") != "DQ4":
+            return True
+        month = (finding.get("quantitative_impact") or {}).get("month")
+        return not isinstance(month, str) or period_from <= month <= period_to
+    quality = [dict(f) for f in _validated(tables) if in_period(f)]
     quality.extend(dict(d) for d in getattr(tables, 'diagnostics', []))
     quality.extend(dict(check_id="PACK_DATA_STATUS", dataset=r["dataset"], severity="info", affected_rows=0,
                         message=f"{r['status']}: {r['note']}", treatment=f"Retain source evidence labels; confidence: {r['confidence']}")

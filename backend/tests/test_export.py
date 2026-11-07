@@ -519,3 +519,12 @@ def test_frontend_contract_targets_range_components_and_notes(meeting_review, tm
     text = '\n'.join(p.extract_text() for p in pdf.pages)
     assert '2026-12-01' in text and 'Customer-shared note' in text
     assert json.loads(pdf.attachments['review.json'][0])['meeting']['notes'] == packet['meeting']['notes']
+
+
+def test_sites_without_on_time_rate_are_not_ranked_lowest(review):
+    rows = copy.deepcopy(review)
+    first = next(s for s in rows['sites'] if s['country'] == rows['sites'][0]['country'])
+    first['metrics'].pop('on_time_rate', None)
+    pages = dict(build_pages(rows))
+    text = '\n'.join(str(b) for _, b in pages['Multi-site performance'])
+    assert f"{first['site_name']} ({first['site_id']})\nOn time: N/A" not in text

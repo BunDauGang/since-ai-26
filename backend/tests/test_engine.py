@@ -387,3 +387,11 @@ def test_workbook_peer_benchmarks_and_prices(pack_builder, pack_tables, customer
     for c in pack_tables["Customers"]:
         assert c["customer_name"] not in encoded
         assert c["customer_id"] not in encoded
+
+
+def test_dq4_findings_follow_the_selected_period(pack_builder):
+    q1 = pack_builder(period_from="2025-03", period_to="2025-05")
+    months = sorted(q["quantitative_impact"]["month"] for q in q1["data_quality"] if q["check_id"] == "DQ4")
+    assert months and all("2025-03" <= m <= "2025-05" for m in months)
+    full = pack_builder()
+    assert sum(q["check_id"] == "DQ4" for q in full["data_quality"]) > len(months)

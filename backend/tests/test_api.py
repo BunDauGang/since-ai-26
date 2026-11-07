@@ -223,3 +223,25 @@ def test_story_follows_baseline_and_case_without_forbidden_claims():
     missing = {**sample, "metrics": [m for m in sample["metrics"] if m["id"] not in ("co2e_saving_kg", "water_saving_l")]}
     r = client.post("/api/story", json={"persona": "ceo", "use_llm": False, "review": missing}).json()
     assert "~unavailable" not in _json.dumps(r, ensure_ascii=False)
+
+
+def test_sample_fallback_labels_follow_the_swapped_baseline(monkeypatch):
+    monkeypatch.setattr(api, "_ACTIVE_DATA_PATH", Path("/nonexistent/pack.xlsx"))
+    monkeypatch.setattr("backend.engine.adapters.excel_adapter.DEFAULT_SOURCE", Path("/nonexistent/pack.xlsx"))
+    api._REVIEW_CACHE.clear()
+    review = client.post("/api/review", json={"customer_id": "CUST001", "baseline_id": "B_HOME", "use_llm": False}).json()
+    labels = {m["id"]: m["label"] for m in review["metrics"]}
+    for metric_id in ("water_saving_l", "energy_saving_kwh", "co2e_saving_kg"):
+        assert labels[metric_id].endswith("vs home washing"), labels[metric_id]
+    api._REVIEW_CACHE.clear()
+
+
+def test_export_sanitises_customer_id_and_rejects_invalid_requests(monkeypatch, tmp_path):
+    import json as _json
+    monkeypatch.setattr(api.tempfile, "tempdir", str(tmp_path))
+    sample = _json.loads(api.SAMPLE_REVIEW_PATH.read_text(encoding="utf-8"))
+    sample["meta"]["customer_id"] = "ACME/EU/../x"
+    r = client.post("/api/export?format=pptx", json=sample)
+    assert r.status_code == 200 and "/" not in r.headers["content-disposition"].split("filename=")[-1]
+    bad = client.post("/api/export?format=pptx", json={"customer_id": "CUST001", "baseline_id": "B_X"})
+    assert bad.status_code == 422

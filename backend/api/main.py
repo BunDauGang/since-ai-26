@@ -14,18 +14,20 @@ from __future__ import annotations
 import copy
 import json
 import logging
+import re
 import shutil
 import tempfile
 from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Query
+from pydantic import ValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from starlette.background import BackgroundTask
 
-from backend.engine.build_review import build_review
+from backend.engine.build_review import build_review, metric_label
 from backend.insights.generate import generate_observations
 from backend.insights.priority import PRIORITY_EMPHASIS, interpret_prompt
 from backend.insights.rules import annotate_site_flags
@@ -151,6 +153,8 @@ def _sample_fallback(req: ReviewRequest, resolved_priority: str) -> dict:
         for metric in review["metrics"]:
             if metric["id"] in ("water_saving_l", "energy_saving_kwh", "co2e_saving_kg"):
                 metric["value"] = match[metric["id"]]
+                # The label must name the baseline the values now belong to.
+                metric["label"] = metric_label(metric["id"], match["name"])
     return review
 
 
@@ -279,7 +283,7 @@ def get_default_customer_review(
 
 
 PERSONA_PRIORITY_MAP: dict[str, Literal["water", "emissions", "cost", "circularity", "service", "improvement"]] = {
-    "ceo": "service",
+    "ceo": "improvement",
     "cfo": "cost",
     "operations": "service",
     "sustainability": "emissions",
@@ -709,7 +713,11 @@ def export_customer_review(
     else:
         valid_keys = set(ReviewRequest.model_fields.keys())
         req_kwargs = {k: v for k, v in payload.items() if k in valid_keys}
-        review, _ = _compute_full_review(ReviewRequest(**req_kwargs))
+        try:
+            req = ReviewRequest(**req_kwargs)
+        except ValidationError as exc:
+            raise HTTPException(status_code=422, detail=f"Invalid export request: {exc.errors()}") from exc
+        review, _ = _compute_full_review(req)
     if meeting_block is not None:
         review["meeting"] = copy.deepcopy(meeting_block)
     try:
@@ -721,7 +729,8 @@ def export_customer_review(
         raise HTTPException(status_code=501, detail=f"{format.upper()} exporter unavailable: {exc}") from exc
 
     tmp_dir = Path(tempfile.mkdtemp(prefix="lindstrom_export_"))
-    cid = str(review.get("meta", {}).get("customer_id", "review"))
+    # The id comes from the payload: keep only safe filename characters (no path separators).
+    cid = re.sub(r"[^A-Za-z0-9_-]", "_", str(review.get("meta", {}).get("customer_id", "review")))[:64] or "review"
     out_file = tmp_dir / f"Lindstrom_Value_Review_{cid}.{format}"
     try:
         exporter(review, str(out_file))

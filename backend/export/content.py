@@ -188,8 +188,11 @@ def _build_detail_pages(review):
     sites = review.get('sites', [])
     site_blocks = []
     for country in sorted({s['country'] for s in sites}):
-        rows = [s for s in sites if s['country'] == country]
-        rows.sort(key=lambda s: s['metrics'].get('on_time_rate', -1))
+        # Only sites with an on-time rate can be "lowest" or "highest"; sites without cycles are not ranked.
+        rows = [s for s in sites if s['country'] == country and isinstance(s['metrics'].get('on_time_rate'), (int, float))]
+        if not rows:
+            continue
+        rows.sort(key=lambda s: s['metrics']['on_time_rate'])
         chosen = list({s['site_id']: s for s in [rows[0], rows[-1]]}.values())
         text = []
         for s in chosen:
