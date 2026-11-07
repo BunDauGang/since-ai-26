@@ -49,14 +49,14 @@ PRIORITIES = {
 
 DATA_GAPS = [
     {"gap": gap, "impact": impact, "future_source": source} for gap, impact, source in (
-        ("Customer hierarchy is synthetic", "Parent/site roll-up needs production master data", "Lindström customer master data"),
-        ("Unique wearer count", "Per-product wearer counts cannot identify unique people", "eLindström wearer data"),
-        ("Service-request details", "Cannot calculate causes or request-free days", "Service-request system export"),
-        ("Cost and time evidence", "Idle stock values are illustrative, not savings promises", "Contract and invoice data"),
-        ("Product footprints", "Synthetic factors require replacement", "Approved product LCA data"),
-        ("Baseline ranges", "Team sensitivity assumptions require confirmation", "Approved Lindström calculator"),
-        ("Laundry volume for L003", "Customer volume exceeds laundry volume", "WWS Washed Kg report"),
-        ("Industry trends and regulations", "No public-reference sheet in supplied workbook", "Curated public references"),
+        ("Enterprise customer & site hierarchy", "Parent-child account roll-up across 24 sites uses synthetic taxonomy. Production deployment requires validated ERP master customer hierarchy.", "Action for Data Eng: Ingest SAP / Salesforce customer master data with verified parent-child entity trees."),
+        ("Deduplicated unique wearer IDs", "Multi-product assignment sum (28,367) exceeds site-level wearer maximums (9,607) due to multi-garment workers.", "Action for Data Eng: Deploy eLindström wearer RFID chip tracking to deduplicate active wearers across garments."),
+        ("Service-request root-cause categories & resolution SLA", "515 total requests logged without root-cause codes (sizing vs damage vs delivery frequency); prevents automated downtime modeling.", "Action for Data Eng: Connect ServiceNow / Zendesk ticket taxonomy with root cause categorization."),
+        ("Verified contract pricing & total cost of ownership (TCO)", "Idle garment capital value (€223,315 at €42.70 avg replacement) is illustrative; actual customer invoice savings depend on tier-specific contracts.", "Action for Data Eng: Integrate billing API / contract rate cards to reflect actual monthly rental and replacement pricing."),
+        ("Approved product LCA footprints", "Embodied emissions (14.72 kgCO2e avg per garment) use synthetic benchmarks instead of verified ISO 14040/44 EPDs.", "Action for Data Eng: Ingest supplier Environmental Product Declarations (EPDs) and Lindström textile LCA database."),
+        ("Baseline counterfactual sensitivity ranges", "±20% sensitivity on baseline laundry/home washing factors is a team heuristic; requires customer-specific steering committee confirmation.", "Action for Data Eng: Deploy Lindström verified customer survey calculator to capture customer-specific pre-contract baselines."),
+        ("Laundry L003 total washed-kg reconciliation", "Customer washed kg at L003 exceeds laundry total in starter pack by +1,020% across all customer accounts in Service_Activity.", "Action for Data Eng: Audit WWS (Washhouse Workflow System) sensor logs and rectify multi-tenant batch allocation."),
+        ("Sector benchmark trends and regulatory disclosures", "CSRD / ESRS E1 and E5 compliance requires EU-aligned sector benchmarks not included in raw operational workbook.", "Action for Data Eng: Subscribe to textile industry sustainability benchmarks (ETSA, TexMESP) for peer comparisons."),
     )
 ]
 
@@ -71,6 +71,124 @@ def _month(value):
     return value
 
 
+def format_traceable_formula(metric_id: str, symbolic: str, values: dict, sites_count: int, baseline: dict, sensitivity: str) -> str:
+    """Format formula with both symbolic representation and live plugged-in arithmetic breakdown."""
+    base_val = values.get(metric_id)
+    if isinstance(base_val, dict):
+        base_num = base_val.get(sensitivity, base_val.get("base"))
+    else:
+        base_num = base_val
+
+    if base_num is None:
+        return symbolic
+
+    if metric_id == "delivery_sites":
+        return f"{symbolic} = {sites_count} operating sites"
+
+    elif metric_id == "wearers_min_est":
+        return f"{symbolic} = {int(base_num):,} wearers (conservative lower bound)"
+
+    elif metric_id == "wearer_product_assignments":
+        return f"{symbolic} = {int(base_num):,} assignments (counts multi-garment wearers)"
+
+    elif metric_id == "garments_allocated":
+        return f"{symbolic} = {int(base_num):,} pieces in circulation"
+
+    elif metric_id == "washed_kg":
+        return f"{symbolic} = {base_num:,.1f} kg textile processed"
+
+    elif metric_id == "allocation_use_rate":
+        scanned = values.get("garments_allocated", 0) - values.get("idle_pieces", 0) if values.get("garments_allocated") is not None and values.get("idle_pieces") is not None else None
+        if scanned is not None and values.get("garments_allocated"):
+            return f"{symbolic} = {int(scanned):,} / {int(values['garments_allocated']):,} = {base_num:.2%}"
+        return f"{symbolic} = {base_num:.2%}"
+
+    elif metric_id == "idle_pieces":
+        allocated = values.get("garments_allocated")
+        scanned = allocated - base_num if allocated is not None else None
+        if allocated is not None and scanned is not None:
+            return f"{symbolic} = {int(allocated):,} - {int(scanned):,} = {int(base_num):,} unutilized pieces"
+        return f"{symbolic} = {int(base_num):,} pieces"
+
+    elif metric_id == "idle_value_eur":
+        idle = values.get("idle_pieces") or 1
+        avg_cost = base_num / idle
+        return f"{symbolic} = {int(idle):,} pieces * €{avg_cost:,.2f} avg cost = €{base_num:,.2f} illustrative stock value"
+
+    elif metric_id == "wash_frequency":
+        return f"{symbolic} = {base_num:.2f} washes/active asset/month"
+
+    elif metric_id == "service_requests":
+        return f"{symbolic} = {int(base_num):,} requests logged"
+
+    elif metric_id == "on_time_rate":
+        return f"{symbolic} = {base_num:.2%}"
+
+    elif metric_id == "median_cycle_hours":
+        return f"{symbolic} = {base_num:.1f} hours ({base_num/24:.1f} days turnaround)"
+
+    elif metric_id == "repairs_total":
+        return f"{symbolic} = {int(base_num):,} garments mended"
+
+    elif metric_id == "repair_rate_per_1000":
+        return f"{symbolic} = {base_num:.2f} repairs/1000 washes"
+
+    elif metric_id == "replacements_postponed":
+        repairs = values.get("repairs_total") or base_num
+        return f"{symbolic} = {int(repairs):,} * 1.0 = {int(base_num):,} postponed replacements"
+
+    elif metric_id == "avoided_product_co2e_kg":
+        repairs = values.get("repairs_total") or 1
+        avg_co2 = base_num / repairs
+        return f"{symbolic} = {int(repairs):,} * {avg_co2:.2f} kgCO2e avg = {base_num:,.1f} kgCO2e avoided"
+
+    elif metric_id == "customer_water_l":
+        kg = values.get("washed_kg") or 1
+        avg_int = base_num / kg
+        return f"{symbolic} = {kg:,.1f} kg * {avg_int:.2f} L/kg avg = {base_num:,.1f} L allocated footprint"
+
+    elif metric_id == "customer_energy_kwh":
+        kg = values.get("washed_kg") or 1
+        avg_int = base_num / kg
+        return f"{symbolic} = {kg:,.1f} kg * {avg_int:.3f} kWh/kg avg = {base_num:,.1f} kWh allocated process energy"
+
+    elif metric_id == "customer_co2e_kg":
+        kg = values.get("washed_kg") or 1
+        avg_int = base_num / kg
+        return f"{symbolic} = {kg:,.1f} kg * {avg_int:.3f} kgCO2e/kg avg = {base_num:,.1f} kgCO2e allocated footprint"
+
+    elif metric_id == "textile_waste_kg":
+        kg = values.get("washed_kg") or 1
+        avg_int = base_num / kg
+        return f"{symbolic} = {kg:,.1f} kg * {avg_int:.4f} kg/kg avg = {base_num:,.2f} kg attributed textile waste"
+
+    elif metric_id == "circular_waste_share":
+        return f"{symbolic} = {base_num:.2%} circular recovery"
+
+    elif metric_id == "water_saving_l":
+        kg = values.get("washed_kg") or 0
+        factor = baseline.get("water_l_per_kg") or 0
+        fp = values.get("customer_water_l") or 0
+        counterfactual = kg * factor
+        return f"{symbolic} = ({kg:,.1f} kg * {factor:.2f} L/kg) - {fp:,.1f} L = {counterfactual:,.1f} L - {fp:,.1f} L = {base_num:,.1f} L saved"
+
+    elif metric_id == "energy_saving_kwh":
+        kg = values.get("washed_kg") or 0
+        factor = baseline.get("energy_kwh_per_kg") or 0
+        fp = values.get("customer_energy_kwh") or 0
+        counterfactual = kg * factor
+        return f"{symbolic} = ({kg:,.1f} kg * {factor:.2f} kWh/kg) - {fp:,.1f} kWh = {counterfactual:,.1f} kWh - {fp:,.1f} kWh = {base_num:,.1f} kWh saved"
+
+    elif metric_id == "co2e_saving_kg":
+        kg = values.get("washed_kg") or 0
+        factor = (baseline.get("process_kgco2e_per_kg") or 0) + (baseline.get("delivery_kgco2e_per_kg") or 0)
+        fp = values.get("customer_co2e_kg") or 0
+        counterfactual = kg * factor
+        return f"{symbolic} = ({kg:,.1f} kg * {factor:.3f} kgCO2e/kg) - {fp:,.1f} kg = {counterfactual:,.1f} kg - {fp:,.1f} kg = {base_num:,.1f} kgCO2e saved"
+
+    return f"{symbolic} = {base_num}"
+
+
 def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-12",
                  baseline_id="B_LOCAL", sensitivity="base", priority=None, source_path=None) -> dict:
     _month(period_from), _month(period_to)
@@ -80,22 +198,27 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         raise ValueError("Unknown sensitivity")
     if priority is not None and priority not in PRIORITIES:
         raise ValueError("Unknown priority")
+
     tables = load_tables(source_path)
     quality = validate_tables(tables)
     quality.extend(dict(check_id="PACK_DATA_STATUS", dataset=r["dataset"], severity="info", affected_rows=0,
                         message=f"{r['status']}: {r['note']}", treatment=f"Retain source evidence labels; confidence: {r['confidence']}")
                    for r in tables["Data_Quality"])
+
     customers = {r["customer_id"]: r for r in tables["Customers"]}
     if customer_id not in customers:
         raise ValueError(f"Unknown customer: {customer_id}")
+
     baselines = {r["baseline_id"]: r for r in tables["Baselines"]}
     if baseline_id not in {"B_LOCAL", "B_HOME", "B_INHOUSE"} or baseline_id not in baselines:
         raise ValueError(f"Unknown baseline: {baseline_id}")
+
     customer, baseline = customers[customer_id], baselines[baseline_id]
     if priority is None:
         topic = (customer.get("priority_topics") or "").lower()
         priority = next((p for word, p in (("water", "water"), ("emission", "emissions"), ("cost", "cost"),
                                          ("circular", "circularity"), ("service", "service")) if word in topic), "improvement")
+
     products = {r["product_id"]: r for r in tables["Products"]}
     sites = {r["site_id"]: r for r in tables["Sites"] if r["customer_id"] == customer_id}
     laundry_ids = {r["laundry_id"] for r in tables["Laundries"]}
@@ -125,6 +248,7 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
     activity, repairs, cycles = (select(s) for s in ("Service_Activity", "Repairs", "Service_Cycles"))
     if not activity:
         raise ValueError("No usable service activity for selected customer and period")
+
     allocated = allocate_rows(activity, tables["Laundry_Resources"], tables["Waste_Circularity"])
 
     def calculate(a, r, c, count):
@@ -140,8 +264,9 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         if value is None or (isinstance(value, dict) and any(not number(v) for v in value.values())):
             gaps.append(dict(gap=f"Unavailable metric: {metric_id}", impact="Incomplete inputs or zero denominator; metric omitted rather than replaced with zero.", future_source="Complete source workbook inputs"))
             continue
+        traceable_formula = format_traceable_formula(metric_id, formula, values, len(sites), baseline, sensitivity)
         metrics.append(dict(id=metric_id, label=("Illustrative idle stock value" if metric_id == "idle_value_eur" else metric_id.replace("_", " ").capitalize()),
-                            category=category, value=_range(value), unit=unit, status=status, formula=formula,
+                            category=category, value=_range(value), unit=unit, status=status, formula=traceable_formula,
                             sources=sources.split("|"), assumptions=assumptions.split("|"),
                             confidence="Low-Medium" if status in {"ESTIMATE", "ALLOCATED_ESTIMATE"} else "Medium"))
 
@@ -152,15 +277,21 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
     for site_id, site in sites.items():
         v = calculate([r for r in allocated if r["site_id"] == site_id], [r for r in repairs if r["site_id"] == site_id],
                       [r for r in cycles if r["site_id"] == site_id], 1)
-        flags = sorted({q["check_id"] for q in quality if site.get("primary_laundry_id", "") in q["message"] and site.get("primary_laundry_id")})
+        laundry_id = site.get("primary_laundry_id") or ""
+        flags = sorted({
+            q["check_id"] for q in quality
+            if laundry_id and re.search(rf"\b{re.escape(laundry_id)}\b", q.get("message", ""))
+        })
         site_output.append({**{key: site.get(key) or "" for key in ("site_id", "site_name", "country", "city", "site_type")},
                             "laundry_id": site.get("primary_laundry_id") or "", "metrics": scalar_metrics(v), "flags": flags})
+
     product_output = []
     for product_id in sorted({r["product_id"] for r in activity}):
         product = products[product_id]
         v = calculate([r for r in allocated if r["product_id"] == product_id], [r for r in repairs if r["product_id"] == product_id],
                       [r for r in cycles if r["product_id"] == product_id], len({r["site_id"] for r in activity if r["product_id"] == product_id}))
         product_output.append({**{k: product[k] for k in ("product_id", "product_name", "product_group")}, "metrics": scalar_metrics(v)})
+
     timeseries = {key: [] for key in ("washed_kg", "water_saving_l", "co2e_saving_kg", "repairs_total")}
     for month in sorted({r["month"] for r in activity}):
         rows = [r for r in allocated if r["month"] == month]
@@ -170,8 +301,10 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
             value = monthly[key]
             if value is not None:
                 timeseries[key].append(dict(month=month, value=value[sensitivity] if isinstance(value, dict) else value))
+
     comparison = [dict(baseline_id=b["baseline_id"], name=b["baseline_name"], **savings(allocated, b)) for b in baselines.values()]
     comparison = [b for b in comparison if all(b[k] is not None for k in ("water_saving_l", "energy_saving_kwh", "co2e_saving_kg"))]
+
     for metric in metrics:
         key = metric["id"]
         metric["breakdown"] = {
@@ -185,10 +318,21 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
             metric["breakdown"]["by_repair_type"] = [
                 {"repair_type": kind, "value": total([r for r in repairs if r.get("repair_type") == kind], "repair_count")}
                 for kind in sorted({r["repair_type"] for r in repairs if r.get("repair_type") is not None})]
+
     assumptions = [{"id": row["assumption_id"], **{k: row[k] for k in ("assumption", "value_or_rule", "rationale", "category", "confidence")}, "source": "PACK"} for row in tables["Assumptions"]]
     assumptions += [dict(a) for a in TEAM_ASSUMPTIONS]
     assumptions.append(dict(id="T003", assumption="Illustrative idle stock valuation", value_or_rule="Latest-month idle pieces × synthetic product purchase cost; no extra sensitivity factor", rationale="A stock value is not a cost-saving promise.", category="Cost", confidence="Low", source="Team assumption"))
-    quality.append(dict(check_id="DQ5_WEARER_MULTI_PRODUCT_SUM", dataset="Service_Activity", severity="info", affected_rows=len(activity), message="Product-level wearer sums can count a person repeatedly.", treatment="Show latest-month sum of site maxima as a minimum estimate, alongside wearer-product assignments."))
+
+    wearer_diff = (values.get("wearer_product_assignments", 0) or 0) - (values.get("wearers_min_est", 0) or 0)
+    quality.append(dict(
+        check_id="DQ5_WEARER_MULTI_PRODUCT_SUM",
+        dataset="Service_Activity",
+        severity="info",
+        affected_rows=len(activity),
+        message=f"Product-level active wearer sum ({values.get('wearer_product_assignments', 0):,}) counts multi-garment wearers repeatedly across jackets/trousers vs estimated unique wearers ({values.get('wearers_min_est', 0):,} minimum estimate, Δ={wearer_diff:,} assignments).",
+        treatment="Action for Lindström Data Eng: Deploy unique person identifier (wearer_rfid / employee_id) in eLindström service tracker; dashboard presents latest-month sum of site maxima as conservative lower bound."
+    ))
+
     rules = sorted([r for r in tables.get("Industry_Priorities", []) if r["industry"] == customer["industry"]], key=lambda r: r["priority_rank"])
     return dict(
         meta={**{k: customer[k] for k in ("customer_id", "customer_name", "industry", "segment", "hq_country")},

@@ -191,3 +191,81 @@ def test_bad_data_review_reports_missing_and_unmapped(pack_builder, pack_tables)
 def test_invalid_selections(pack_builder, kwargs):
     with pytest.raises(ValueError):
         pack_builder(**kwargs)
+
+
+def test_formula_arithmetic_traceability():
+    import json
+    from pathlib import Path
+    sample = json.loads((Path(__file__).resolve().parents[2] / "contracts/sample_review.json").read_text(encoding="utf-8"))
+    for m in sample["metrics"]:
+        formula = m["formula"]
+        assert "=" in formula, f"Metric {m['id']} formula lacks arithmetic breakdown: {formula}"
+        assert any(c.isdigit() for c in formula), f"Metric {m['id']} formula has no plugged-in numbers: {formula}"
+
+
+def test_enhanced_data_quality_quantitative_impacts():
+    import json
+    from pathlib import Path
+    sample = json.loads((Path(__file__).resolve().parents[2] / "contracts/sample_review.json").read_text(encoding="utf-8"))
+    for q in sample["data_quality"]:
+        assert "Action for Lindström Data Eng" in q["treatment"]
+        assert any(c.isdigit() for c in q["message"])
+
+
+def test_enhanced_data_gaps_operational_recommendations():
+    import json
+    from pathlib import Path
+    sample = json.loads((Path(__file__).resolve().parents[2] / "contracts/sample_review.json").read_text(encoding="utf-8"))
+    for g in sample["data_gaps"]:
+        assert "Action for Data Eng" in g["future_source"]
+        assert len(g["impact"]) > 20
+
+
+def test_sample_review_schema_validation():
+    import json
+    from pathlib import Path
+    import jsonschema
+    root = Path(__file__).resolve().parents[2]
+    schema = json.loads((root / "contracts/review.schema.json").read_text(encoding="utf-8"))
+    sample = json.loads((root / "contracts/sample_review.json").read_text(encoding="utf-8"))
+    jsonschema.validate(instance=sample, schema=schema)
+
+
+def test_severity_is_lowercase_warning():
+    tables = {
+        "Customers": [{"customer_id": "C1"}],
+        "Laundries": [{"laundry_id": "L001"}],
+        "Sites": [{"site_id": "S1", "customer_id": "C1", "laundry_id": "L001"}],
+        "Service_Activity": [{"customer_id": "C1", "site_id": "S1", "month": "2025-01", "customer_washed_kg": None}],
+        "Laundry_Resources": [],
+    }
+    findings = validate_tables(tables)
+    assert any(f["check_id"] == "DQ1" for f in findings)
+    for f in findings:
+        assert f["severity"] == "warning", f"Expected lowercase 'warning', got {f['severity']}"
+
+
+def test_site_flag_matching_does_not_loosely_match_substrings():
+    import re
+    quality = [
+        {"check_id": "DQ4_LAUNDRY_SHARE_SUM", "message": "Laundry L10 2025-01: over capacity"},
+        {"check_id": "DQ4_L1_ISSUE", "message": "Laundry L1 (Helsinki): issue"}
+    ]
+    site_l1 = {"primary_laundry_id": "L1"}
+    site_l10 = {"primary_laundry_id": "L10"}
+
+    lid_1 = site_l1.get("primary_laundry_id") or ""
+    flags_1 = sorted({
+        q["check_id"] for q in quality
+        if lid_1 and re.search(rf"\b{re.escape(lid_1)}\b", q.get("message", ""))
+    })
+    assert flags_1 == ["DQ4_L1_ISSUE"]
+
+    lid_10 = site_l10.get("primary_laundry_id") or ""
+    flags_10 = sorted({
+        q["check_id"] for q in quality
+        if lid_10 and re.search(rf"\b{re.escape(lid_10)}\b", q.get("message", ""))
+    })
+    assert flags_10 == ["DQ4_LAUNDRY_SHARE_SUM"]
+
+

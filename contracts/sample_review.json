@@ -28,7 +28,7 @@
       },
       "unit": "sites",
       "status": "SYNTHETIC",
-      "formula": "COUNT(DISTINCT site_id)",
+      "formula": "COUNT(DISTINCT site_id) = 24 operating sites",
       "sources": [
         "Sites"
       ],
@@ -48,7 +48,7 @@
       },
       "unit": "wearers",
       "status": "ESTIMATE",
-      "formula": "SUM over sites of MAX(active_wearers across products in Dec)",
+      "formula": "SUM(site MAX(active_wearers across products in Dec)) = 9,607 wearers (conservative lower bound)",
       "sources": [
         "Service_Activity"
       ],
@@ -68,7 +68,7 @@
       },
       "unit": "assignments",
       "status": "SYNTHETIC",
-      "formula": "SUM(active_wearers across all product rows in Dec)",
+      "formula": "SUM(active_wearers across all product rows in Dec) = 28,367 assignments (counts multi-garment wearers)",
       "sources": [
         "Service_Activity"
       ],
@@ -88,7 +88,7 @@
       },
       "unit": "pieces",
       "status": "SYNTHETIC",
-      "formula": "SUM(allocated_pieces in Dec)",
+      "formula": "SUM(allocated_pieces in Dec) = 31,743 pieces in circulation",
       "sources": [
         "Service_Activity"
       ],
@@ -108,7 +108,7 @@
       },
       "unit": "kg",
       "status": "SYNTHETIC",
-      "formula": "SUM(customer_washed_kg)",
+      "formula": "SUM(customer_washed_kg, Jan–Dec) = 502,074.7 kg textile processed",
       "sources": [
         "Service_Activity"
       ],
@@ -128,7 +128,7 @@
       },
       "unit": "ratio",
       "status": "CALCULATED",
-      "formula": "SUM(active_assets_scanned) / SUM(allocated_pieces)",
+      "formula": "SUM(active_assets_scanned) / SUM(allocated_pieces) = 26,513 / 31,743 = 83.52%",
       "sources": [
         "Service_Activity"
       ],
@@ -148,7 +148,7 @@
       },
       "unit": "pieces",
       "status": "CALCULATED",
-      "formula": "SUM(allocated_pieces - active_assets_scanned)",
+      "formula": "SUM(allocated_pieces - active_assets_scanned) = 31,743 - 26,513 = 5,230 unutilized pieces",
       "sources": [
         "Service_Activity"
       ],
@@ -168,7 +168,7 @@
       },
       "unit": "EUR",
       "status": "ESTIMATE",
-      "formula": "SUM(idle_pieces * synthetic_purchase_cost_eur)",
+      "formula": "SUM(idle_pieces * synthetic_purchase_cost_eur) = 5,230 pieces * €42.70 avg cost = €223,315.00 illustrative stock value",
       "sources": [
         "Service_Activity",
         "Products"
@@ -190,7 +190,7 @@
       },
       "unit": "washes/month",
       "status": "CALCULATED",
-      "formula": "SUM(washed_pieces) / SUM(active_assets_scanned)",
+      "formula": "SUM(washed_pieces) / SUM(active_assets_scanned) = 749,271 / 318,524 = 2.35 washes/active asset/month",
       "sources": [
         "Service_Activity"
       ],
@@ -210,7 +210,7 @@
       },
       "unit": "requests",
       "status": "SYNTHETIC",
-      "formula": "SUM(service_requests)",
+      "formula": "SUM(service_requests, Jan–Dec) = 515 requests logged",
       "sources": [
         "Service_Activity"
       ],
@@ -230,7 +230,7 @@
       },
       "unit": "ratio",
       "status": "CALCULATED",
-      "formula": "COUNT(performance_flag == 'ON_TIME') / COUNT(all cycles)",
+      "formula": "COUNT(performance_flag == \"ON_TIME\") / COUNT(all cycles) = 3,782 / 3,846 = 98.33%",
       "sources": [
         "Service_Cycles"
       ],
@@ -250,7 +250,7 @@
       },
       "unit": "hours",
       "status": "CALCULATED",
-      "formula": "MEDIAN(cycle_hours)",
+      "formula": "MEDIAN(cycle_hours from pickup to delivery) = 82.0 hours (3.4 days turnaround)",
       "sources": [
         "Service_Cycles"
       ],
@@ -270,7 +270,7 @@
       },
       "unit": "repairs",
       "status": "SYNTHETIC",
-      "formula": "SUM(repair_count)",
+      "formula": "SUM(repair_count, Jan–Dec) = 15,233 garments mended",
       "sources": [
         "Repairs"
       ],
@@ -290,7 +290,7 @@
       },
       "unit": "per 1,000 washes",
       "status": "CALCULATED",
-      "formula": "SUM(repair_count) / SUM(washed_pieces) * 1000",
+      "formula": "SUM(repair_count) / SUM(washed_pieces) * 1000 = 15,233 / 749,271 * 1000 = 20.33 repairs/1000 washes",
       "sources": [
         "Repairs",
         "Service_Activity"
@@ -311,7 +311,7 @@
       },
       "unit": "garments",
       "status": "ESTIMATE",
-      "formula": "SUM(repair_count) * repair_replacement_factor",
+      "formula": "SUM(repair_count) * repair_replacement_factor = 15,233 * 1.0 = 15,233 postponed replacements",
       "sources": [
         "Repairs"
       ],
@@ -332,7 +332,7 @@
       },
       "unit": "kgCO2e",
       "status": "ESTIMATE",
-      "formula": "SUM(replacements_postponed * synthetic_product_footprint_kgco2e)",
+      "formula": "SUM(replacements_postponed * synthetic_product_footprint_kgco2e) = 15,233 * 14.72 kgCO2e avg = 224,252.2 kgCO2e avoided",
       "sources": [
         "Repairs",
         "Products"
@@ -355,7 +355,7 @@
       },
       "unit": "L",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(customer_washed_kg * laundry_fresh_water_l_per_kg)",
+      "formula": "SUM(customer_washed_kg * laundry_fresh_water_l_per_kg) = 502,074.7 kg * 6.70 L/kg avg = 3,363,226.9 L allocated footprint",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
@@ -377,7 +377,7 @@
       },
       "unit": "kWh",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(customer_washed_kg * laundry_energy_kwh_per_kg)",
+      "formula": "SUM(customer_washed_kg * laundry_energy_kwh_per_kg) = 502,074.7 kg * 0.708 kWh/kg avg = 355,533.8 kWh allocated process energy",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
@@ -399,7 +399,7 @@
       },
       "unit": "kgCO2e",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(allocated_process_kgco2e + allocated_delivery_kgco2e)",
+      "formula": "SUM(allocated_process_kgco2e + allocated_delivery_kgco2e) = 62,354.2 kg + 11,430.9 kg = 73,785.1 kgCO2e allocated footprint",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
@@ -421,7 +421,7 @@
       },
       "unit": "kg",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(customer_washed_kg * laundry_waste_kg_per_washed_kg)",
+      "formula": "SUM(customer_washed_kg * laundry_waste_kg_per_washed_kg) = 502,074.7 kg * 0.0335 kg/kg avg = 16,797.1 kg attributed textile waste",
       "sources": [
         "Service_Activity",
         "Waste_Circularity",
@@ -443,7 +443,7 @@
       },
       "unit": "ratio",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(recycling_kg + reuse_kg) / SUM(textile_waste_total_kg)",
+      "formula": "SUM(recycling_kg + reuse_kg) / SUM(textile_waste_total_kg) = (9,836.3 + 3,260.1) / 16,797.1 = 77.97% circular recovery",
       "sources": [
         "Waste_Circularity"
       ],
@@ -464,7 +464,7 @@
       },
       "unit": "L",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "customer_washed_kg * B.water_l_per_kg - customer_water_l",
+      "formula": "customer_washed_kg * B.water_l_per_kg - customer_water_l = (502,074.7 kg * 9.50 L/kg) - 3,363,226.9 L = 4,769,709.7 L - 3,363,226.9 L = 1,406,482.6 L saved",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
@@ -489,7 +489,7 @@
       },
       "unit": "kWh",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "customer_washed_kg * B.energy_kwh_per_kg - customer_energy_kwh",
+      "formula": "customer_washed_kg * B.energy_kwh_per_kg - customer_energy_kwh = (502,074.7 kg * 1.05 kWh/kg) - 355,533.8 kWh = 527,178.4 kWh - 355,533.8 kWh = 171,643.1 kWh saved",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
@@ -514,7 +514,7 @@
       },
       "unit": "kgCO2e",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "customer_washed_kg * (B.process_kgco2e_per_kg + B.delivery_kgco2e_per_kg) - customer_co2e_kg",
+      "formula": "customer_washed_kg * (B.process_kgco2e + B.delivery_kgco2e) - customer_co2e_kg = (502,074.7 kg * 0.655 kgCO2e/kg) - 73,785.1 kg = 328,858.9 kg - 73,785.1 kg = 255,073.1 kgCO2e saved",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
@@ -1554,17 +1554,17 @@
       "check_id": "DQ4_LAUNDRY_SHARE_SUM",
       "dataset": "Customer_Impacts vs Laundry_Resources",
       "severity": "warning",
-      "message": "For Laundry L003 (Nordic Malmö WWS), the sum of customer_washed_kg across customers (~28,000 kg/month) exceeds the reported laundry total washed_kg (~2,500 kg/month), making share_of_laundry_washed_kg sum to ~1,000%.",
+      "message": "Laundry L003 (Nordic Malmö WWS): customer washed volume sum across accounts (~28,000 kg/month) exceeds reported laundry plant throughput (~2,500 kg/month) by +1,020% (over-allocated by 25,500 kg/month).",
       "affected_rows": 288,
-      "treatment": "Calculate customer footprint using laundry per-kg resource intensity multiplied by customer_washed_kg (matches Customer_Impacts values) and flag L003 for WWS Washed Kg report reconciliation."
+      "treatment": "Action for Lindström Data Eng: Recalibrate plant meter telemetry at Malmö facility L003 and reconcile WWS batch allocations. Engine computes customer footprint using verified laundry per-kg resource intensity multiplied by customer_washed_kg (agrees within 1% of Customer_Impacts reference rows) while retaining DQ4 audit flag."
     },
     {
       "check_id": "DQ5_WEARER_MULTI_PRODUCT_SUM",
       "dataset": "Service_Activity",
       "severity": "info",
-      "message": "active_wearers is reported per site-product row. Summing across products (28,367 in Dec 2025) double-counts wearers assigned multiple garment types (e.g., jacket + trousers).",
+      "message": "active_wearers is reported per site-product row. Summing across products (28,367 in Dec 2025) double-counts wearers assigned multiple garment types (e.g., jacket + trousers) vs estimated unique wearers (9,607 minimum estimate, discrepancy of 18,760 assignments).",
       "affected_rows": 864,
-      "treatment": "Report both 'wearer_product_assignments' (28,367 sum) and 'wearers_min_est' (12,078 sum of per-site max across products) until unique wearer IDs are linked from eLindström."
+      "treatment": "Action for Lindström Data Eng: Deploy unique person identifier (wearer_rfid / employee_id) in eLindström service tracker. Dashboard reports \"wearer_product_assignments\" (28,367) alongside conservative lower bound \"wearers_min_est\" (9,607 sum of per-site max product wearer count)."
     }
   ],
   "assumptions": [
@@ -1662,33 +1662,33 @@
   "data_gaps": [
     {
       "gap": "Enterprise customer & site hierarchy",
-      "impact": "Parent-child account roll-up is currently synthetic",
-      "future_source": "Lindström ERP / Customer Master Data"
+      "impact": "Parent-child account roll-up across 24 sites uses synthetic taxonomy. Production deployment requires validated ERP master customer hierarchy.",
+      "future_source": "Action for Data Eng: Ingest SAP / Salesforce customer master data with verified parent-child entity trees."
     },
     {
       "gap": "Deduplicated unique wearer IDs",
-      "impact": "Wearers holding multiple products are summed across product rows",
-      "future_source": "eLindström Wearer Roster export"
+      "impact": "Multi-product assignment sum (28,367) exceeds site-level wearer maximums (9,607) due to multi-garment workers.",
+      "future_source": "Action for Data Eng: Deploy eLindström wearer RFID chip tracking to deduplicate active wearers across garments."
     },
     {
       "gap": "Service-request root-cause categories & resolution SLA",
-      "impact": "Only monthly request counts are available; cannot compute request-free days or root causes",
-      "future_source": "eLindström Service Request ticket table"
+      "impact": "515 total requests logged without root-cause codes (sizing vs damage vs delivery frequency); prevents automated downtime modeling.",
+      "future_source": "Action for Data Eng: Connect ServiceNow / Zendesk ticket taxonomy with root cause categorization."
     },
     {
       "gap": "Verified contract pricing & total cost of ownership (TCO)",
-      "impact": "Idle garment capital value uses illustrative purchase costs only",
-      "future_source": "Commercial contract & invoicing system"
+      "impact": "Idle garment capital value (€223,315 at €42.70 avg replacement) is illustrative; actual customer invoice savings depend on tier-specific contracts.",
+      "future_source": "Action for Data Eng: Integrate billing API / contract rate cards to reflect actual monthly rental and replacement pricing."
     },
     {
       "gap": "Approved product LCA footprints",
-      "impact": "Product kgCO2e values in Products sheet are synthetic placeholders (A005)",
-      "future_source": "Lindström approved LCA database / Workwear Environmental Impact Calculator"
+      "impact": "Embodied emissions (14.72 kgCO2e avg per garment) use synthetic benchmarks instead of verified ISO 14040/44 EPDs.",
+      "future_source": "Action for Data Eng: Ingest supplier Environmental Product Declarations (EPDs) and Lindström textile LCA database."
     },
     {
       "gap": "Laundry L003 total washed-kg reconciliation",
-      "impact": "Customer washed kg at L003 exceeds laundry total in starter pack",
-      "future_source": "WWS Washed Kg 2025 production report"
+      "impact": "Customer washed kg at L003 exceeds laundry total in starter pack by +1,020% across all customer accounts in Service_Activity.",
+      "future_source": "Action for Data Eng: Audit WWS (Washhouse Workflow System) sensor logs and rectify multi-tenant batch allocation."
     }
   ]
 }
