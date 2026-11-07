@@ -24,7 +24,8 @@ def test_powerpoint_has_core_sections_evidence_and_source_notes(review, tmp_path
     assert len(deck.slides) >= 9
     texts = ['\n'.join(s.text for s in slide.shapes if s.has_text_frame) for slide in deck.slides]
     assert all(FOOTER in t for t in texts)
-    assert '1,406,482.6' in texts[1]
+    water = next(m['value']['base'] for m in review['metrics'] if m['id'] == 'water_saving_l')
+    assert f'{water:,.2f}'.rstrip('0').rstrip('.') in texts[1]
     assert 'R1' not in texts[1]  # summary uses metrics, not existing observation prose
     assert 'L003' in texts[-1]
     assert '0.5' in texts[-1]
@@ -44,7 +45,8 @@ def test_pdf_has_matching_pages_footer_and_lossless_source(review, tmp_path):
     for title, _ in build_pages(review):
         assert any(title in text for text in texts)
     assert all(FOOTER in text for text in texts)
-    assert '1,406,482.6' in reader.pages[1].extract_text()
+    water = next(m['value']['base'] for m in review['metrics'] if m['id'] == 'water_saving_l')
+    assert f'{water:,.2f}'.rstrip('0').rstrip('.') in reader.pages[1].extract_text()
     assert 'L003' in reader.pages[-1].extract_text()
     assert json.loads(reader.attachments['review.json'][0]) == review
     assert review == before
@@ -69,6 +71,9 @@ def test_all_priority_spotlights(review, tmp_path, priority, metric):
 
 def test_export_never_uses_stale_sample_narratives(review):
     review['observations'][0]['observation'] = 'STALE SAMPLE NARRATIVE 999999'
+    for metric in review['metrics']:
+        if metric['id'] in ('repairs_total', 'textile_waste_kg'):
+            metric.pop('breakdown', None)
     assert 'STALE SAMPLE NARRATIVE' not in str(build_pages(review))
     assert 'not supplied' in str(build_pages(review))
 
@@ -252,6 +257,8 @@ def test_missing_emphasis_is_explicit_without_inventing_kpis(review):
 def test_breakdown_availability_is_checked_independently(review, repair_present, route_present):
     before = copy.deepcopy(review)
     metrics = {m['id']: m for m in review['metrics']}
+    metrics['repairs_total'].pop('breakdown', None)
+    metrics['textile_waste_kg'].pop('breakdown', None)
     if repair_present:
         metrics['repairs_total']['breakdown'] = {'by_repair_type': [{'repair_type': 'ZIPPER', 'value': 123}]}
     if route_present:

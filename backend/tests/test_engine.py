@@ -283,3 +283,50 @@ def test_nonfatal_adapter_diagnostics_reach_review(pack_builder, pack_tables, mo
     monkeypatch.setattr(pack_tables, 'diagnostics', [dict(check_id='DQ_HEADER', dataset='Sample_Output',
         severity='warning', affected_rows=1, message='Optional header invalid', treatment='Fix reference header')])
     assert any(q['check_id'] == 'DQ_HEADER' for q in pack_builder()['data_quality'])
+
+
+@pytest.mark.parametrize("customer,month,baseline,case", [
+    ("CUST001", "2025-12", "B_LOCAL", "base"),
+    ("CUST002", "2025-03", "B_HOME", "low"),
+    ("CUST002", "2025-06", "B_INHOUSE", "high"),
+])
+def test_live_formula_operands_follow_selection(pack_builder, pack_tables, customer, month, baseline, case):
+    from backend.engine.kpis import display_number
+    r = pack_builder(customer_id=customer, period_from=month, period_to=month, baseline_id=baseline, sensitivity=case)
+    m = {v["id"]: v for v in r["metrics"]}
+    for metric in m.values():
+        assert " | Live arithmetic" in metric["formula"]
+        assert display_number(metric["value"][case]) in metric["formula"]
+    b = next(v for v in pack_tables["Baselines"] if v["baseline_id"] == baseline)
+    formula = m["water_saving_l"]["formula"]
+    assert f"{display_number(m['washed_kg']['value']['base'])} kg" in formula
+    assert f"{display_number(b['water_l_per_kg'])} baseline/kg" in formula
+    assert display_number(m["customer_water_l"]["value"]["base"]) in formula
+    assert f"scenario={case}; baseline={baseline}" in formula
+    assert f"stock month {month}" in m["allocation_use_rate"]["formula"]
+
+
+def test_trace_does_not_make_missing_data_zero(pack_builder, pack_tables):
+    rows = pack_tables["Service_Activity"]
+    value = rows[0]["customer_washed_kg"]
+    try:
+        rows[0]["customer_washed_kg"] = None
+        review = pack_builder()
+    finally:
+        rows[0]["customer_washed_kg"] = value
+    assert "water_saving_l" not in metrics(review)
+    assert "washed_kg" not in metrics(review)
+
+
+def test_bundled_sample_contains_live_traces_and_valid_contract():
+    import json
+    from pathlib import Path
+    import jsonschema
+    from backend.engine.kpis import display_number
+    root = Path(__file__).resolve().parents[2]
+    review = json.loads((root / "contracts/sample_review.json").read_text())
+    jsonschema.validate(review, json.loads((root / "contracts/review.schema.json").read_text()))
+    assert len(review["metrics"]) == len(DEFINITIONS)
+    for metric in review["metrics"]:
+        assert " | Live arithmetic" in metric["formula"]
+        assert display_number(metric["value"][review["meta"]["sensitivity"]]) in metric["formula"]

@@ -1,6 +1,6 @@
 """Allocate resource intensity and waste routes, independent of reference output."""
 
-from .kpis import number, total, ratio
+from .kpis import number, total, ratio, display_number
 from .sensitivity import baseline_range, repair_range
 
 
@@ -77,3 +77,41 @@ def environmental(rows, repairs, products, baseline):
     result["avoided_product_co2e_kg"] = repair_range(sum(avoided)) if all(number(v) for v in avoided) else None
     result.update(savings(rows, baseline))
     return result
+
+
+def environmental_traces(rows, repairs, products, baseline, sensitivity):
+    """Show live operands, with process/logistics and scenarios kept explicit."""
+    f = display_number
+    values = environmental(rows, repairs, products, baseline)
+    kg = total(rows, "customer_washed_kg")
+    traces = {}
+    for key in ("customer_water_l", "customer_energy_kwh", "textile_waste_kg"):
+        value = values[key]
+        effective = ratio(value, kg)
+        if number(effective):
+            traces[key] = (f"{f(kg)} kg * {f(effective)} effective weighted amount/kg = {f(value)}; "
+                           "effective intensity is derived from the sum of row allocations, not a uniform source factor")
+    process, delivery = total(rows, "customer_process_kgco2e"), total(rows, "customer_delivery_kgco2e")
+    traces["customer_co2e_kg"] = f"{f(process)} allocated process kgCO2e + {f(delivery)} allocated delivery kgCO2e = {f(values['customer_co2e_kg'])}"
+    recycling, reuse = total(rows, "recycling_kg"), total(rows, "reuse_kg")
+    traces["circular_waste_share"] = f"({f(recycling)} recycling kg + {f(reuse)} reuse kg) / {f(values['textile_waste_kg'])} attributed waste kg = {f(values['circular_waste_share'])}"
+    repair_factor = {"low": 0.5, "base": 1.0, "high": 1.0}[sensitivity]
+    traces["replacements_postponed"] = f"{f(total(repairs, 'repair_count'))} repairs * {f(repair_factor)} repair factor"
+    product_terms = []
+    for pid in sorted({r["product_id"] for r in repairs}):
+        count = total([r for r in repairs if r["product_id"] == pid], "repair_count")
+        factor = products.get(pid, {}).get("synthetic_product_footprint_kgco2e")
+        product_terms.append(f"{pid}: {f(count)} repairs * {f(factor)} kgCO2e/product")
+    traces["avoided_product_co2e_kg"] = "(" + " + ".join(product_terms) + f") * {f(repair_factor)} repair factor"
+    multiplier = {"low": 0.8, "base": 1.0, "high": 1.2}[sensitivity]
+    for key, factor_key, footprint_key in (("water_saving_l", "water_l_per_kg", "customer_water_l"),
+                                            ("energy_saving_kwh", "energy_kwh_per_kg", "customer_energy_kwh"),
+                                            ("co2e_saving_kg", None, "customer_co2e_kg")):
+        factor_text = f(baseline.get(factor_key)) if factor_key else (
+            f"({f(baseline.get('process_kgco2e_per_kg'))} process + {f(baseline.get('delivery_kgco2e_per_kg'))} delivery)")
+        traces[key] = f"{f(kg)} kg * {factor_text} baseline/kg * {f(multiplier)} baseline multiplier - {f(values[footprint_key])} customer footprint"
+    for key in ("replacements_postponed", "avoided_product_co2e_kg", "water_saving_l", "energy_saving_kwh", "co2e_saving_kg"):
+        value = values[key]
+        if value is not None:
+            traces[key] += f" = {f(value[sensitivity])}; scenario={sensitivity}; baseline={baseline['baseline_id']}"
+    return {key: text for key, text in traces.items() if values[key] is not None}

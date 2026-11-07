@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 import re
 
 from .adapters.excel_adapter import load_tables
-from .impacts import allocate_rows, environmental, savings, ROUTES
-from .kpis import operational, total, number
+from .impacts import allocate_rows, environmental, savings, ROUTES, environmental_traces
+from .kpis import operational, total, number, operational_traces
 from .sensitivity import TEAM_ASSUMPTIONS
 from .validate import validate_tables
 from backend.insights.priority import interpret_prompt
@@ -133,6 +133,8 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         return values
 
     values = calculate(allocated, repairs, cycles, len(sites))
+    traces = operational_traces(allocated, repairs, cycles, products, len(sites), period_to)
+    traces.update(environmental_traces(allocated, repairs, products, baseline, sensitivity))
     gaps = [dict(g) for g in DATA_GAPS]
     metrics = []
     for metric_id, category, unit, status, formula, sources, assumptions in DEFINITIONS:
@@ -141,7 +143,8 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
             gaps.append(dict(gap=f"Unavailable metric: {metric_id}", impact="Incomplete inputs or zero denominator; metric omitted rather than replaced with zero.", future_source="Complete source workbook inputs"))
             continue
         metrics.append(dict(id=metric_id, label=("Illustrative idle stock value" if metric_id == "idle_value_eur" else metric_id.replace("_", " ").capitalize()),
-                            category=category, value=_range(value), unit=unit, status=status, formula=formula,
+                            category=category, value=_range(value), unit=unit, status=status,
+                            formula=formula + f" | Live arithmetic (display rounded to 6 decimals; result in {unit}): " + traces[metric_id],
                             sources=sources.split("|"), assumptions=assumptions.split("|"),
                             confidence="Low-Medium" if status in {"ESTIMATE", "ALLOCATED_ESTIMATE"} else "Medium"))
 
