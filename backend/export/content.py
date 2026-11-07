@@ -102,7 +102,7 @@ def story_blocks(observations, metrics, emphasized, case):
     return blocks
 
 
-def build_pages(review):
+def _build_detail_pages(review):
     meta = review['meta']
     metrics = {m['id']: m for m in review['metrics']}
     case = meta.get('sensitivity', 'base')
@@ -269,3 +269,15 @@ def summarize_quality(findings):
     if findings:
         lines.append('Summarized findings. Full messages, affected rows and treatments: embedded source review.')
     return '\n'.join(lines) or 'No flags supplied.'
+
+
+
+def baseline_name(baseline_id, fallback=''):
+    return {'B_LOCAL': 'The typical alternative (local laundry)', 'B_HOME': 'Home washing',
+            'B_INHOUSE': 'In-house laundry'}.get(baseline_id, fallback or 'Selected alternative')
+
+
+def build_pages(review):
+    from .meeting import prepare_export_review, build_meeting_pages
+    packet = prepare_export_review(review)
+    return build_meeting_pages(packet, _build_detail_pages(packet))
