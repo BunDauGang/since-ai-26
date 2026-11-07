@@ -119,3 +119,28 @@ To avoid Git merge conflicts, each seat owns separate folders and works on their
 The synthetic Excel data pack is excluded from Git via `.gitignore`.
 Drop `Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx` into [`data/`](./data/) when running the Python calculation engine locally.
 **Frontend (`Worker C`) and Insights/Exporter (`Worker B`) do not need the Excel file to start** — they can build and test directly against [`contracts/sample_review.json`](./contracts/sample_review.json).
+
+---
+
+## 5. Run It Locally
+
+**Requirements:** Python 3.11+ and Node.js 20+.
+
+```bash
+# 1. Backend: engine + insights + export behind FastAPI (http://localhost:8000)
+python -m venv .venv
+source .venv/bin/activate            # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn backend.api.main:app --port 8000
+
+# 2. Frontend dashboard (http://localhost:3000), in a second terminal
+cd frontend
+npm install
+npm run dev
+```
+
+- With the Excel pack in `data/`, the API calculates live reviews for CUST001–CUST003. Without it, the API serves `contracts/sample_review.json`.
+- The dashboard also runs **without the backend**, using its bundled copy of `contracts/sample_review.json`. The sidebar shows which data source is active. Set `NEXT_PUBLIC_API_URL` in `frontend/.env.local` if the API is not on `localhost:8000`.
+- **Tests:** `python -m pytest backend/tests`
+- **Regenerate the shared sample** after engine changes: `python scripts/build_review.py --source data/Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx --out contracts/sample_review.json`, then `cd frontend && npm run sync-contract`.
+- **Export from the command line:** `python -m backend.export --help`
