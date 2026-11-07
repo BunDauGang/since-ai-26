@@ -13,7 +13,7 @@
     "baseline_name": "Outsourced local laundry",
     "sensitivity": "base",
     "priority": "water",
-    "generated_at": "2026-11-07T10:12:53.988367+00:00",
+    "generated_at": "2026-11-07T11:25:24.427906+00:00",
     "data_notice": "Synthetic, illustrative prototype data. Not an approved Lindström claim."
   },
   "metrics": [
@@ -154,7 +154,7 @@
     },
     {
       "id": "wearers_min_est",
-      "label": "Wearers min est",
+      "label": "Active wearers (minimum deduplicated estimate)",
       "category": "scale",
       "value": {
         "low": 9607,
@@ -289,7 +289,7 @@
     },
     {
       "id": "wearer_product_assignments",
-      "label": "Wearer product assignments",
+      "label": "Wearer-product assignments",
       "category": "scale",
       "value": {
         "low": 28367,
@@ -559,7 +559,7 @@
     },
     {
       "id": "washed_kg",
-      "label": "Washed kg",
+      "label": "Washed textile volume",
       "category": "scale",
       "value": {
         "low": 502074.7,
@@ -686,17 +686,17 @@
           },
           {
             "product_id": "P1004",
-            "value": 143578.19999999998
+            "value": 143578.2
           }
         ],
         "by_month": [
           {
             "month": "2025-01",
-            "value": 42880.799999999996
+            "value": 42880.8
           },
           {
             "month": "2025-02",
-            "value": 45796.700000000004
+            "value": 45796.7
           },
           {
             "month": "2025-03",
@@ -708,7 +708,7 @@
           },
           {
             "month": "2025-05",
-            "value": 41536.899999999994
+            "value": 41536.9
           },
           {
             "month": "2025-06",
@@ -878,7 +878,7 @@
     },
     {
       "id": "idle_pieces",
-      "label": "Idle pieces",
+      "label": "Unscanned / idle allocated garments",
       "category": "allocation",
       "value": {
         "low": 5230,
@@ -1420,7 +1420,7 @@
     },
     {
       "id": "on_time_rate",
-      "label": "On time rate",
+      "label": "On-time service cycles",
       "category": "service",
       "value": {
         "low": 0.9832908275437516,
@@ -1555,7 +1555,7 @@
     },
     {
       "id": "median_cycle_hours",
-      "label": "Median cycle hours",
+      "label": "Median service-cycle time",
       "category": "service",
       "value": {
         "low": 82,
@@ -1690,7 +1690,7 @@
     },
     {
       "id": "repairs_total",
-      "label": "Repairs total",
+      "label": "Repairs completed",
       "category": "repair",
       "value": {
         "low": 15233,
@@ -1896,7 +1896,7 @@
     },
     {
       "id": "repair_rate_per_1000",
-      "label": "Repair rate per 1000",
+      "label": "Repair rate per 1,000 washes",
       "category": "repair",
       "value": {
         "low": 20.32947821050412,
@@ -2032,7 +2032,7 @@
     },
     {
       "id": "replacements_postponed",
-      "label": "Replacements postponed",
+      "label": "Replacements postponed (estimate)",
       "category": "repair",
       "value": {
         "low": 7616.5,
@@ -2168,7 +2168,7 @@
     },
     {
       "id": "avoided_product_co2e_kg",
-      "label": "Avoided product co2e kg",
+      "label": "Avoided new-product CO2e",
       "category": "repair",
       "value": {
         "low": 112126.1,
@@ -2306,7 +2306,7 @@
     },
     {
       "id": "customer_water_l",
-      "label": "Customer water l",
+      "label": "Allocated fresh-water use",
       "category": "footprint",
       "value": {
         "low": 3363089.3596561695,
@@ -2442,7 +2442,7 @@
     },
     {
       "id": "customer_energy_kwh",
-      "label": "Customer energy kwh",
+      "label": "Allocated laundry energy use",
       "category": "footprint",
       "value": {
         "low": 355537.12771304644,
@@ -2578,7 +2578,7 @@
     },
     {
       "id": "customer_co2e_kg",
-      "label": "Customer co2e kg",
+      "label": "Allocated process + delivery CO2e",
       "category": "footprint",
       "value": {
         "low": 73785.24389474289,
@@ -2714,7 +2714,7 @@
     },
     {
       "id": "textile_waste_kg",
-      "label": "Textile waste kg",
+      "label": "Allocated textile waste",
       "category": "footprint",
       "value": {
         "low": 16798.673198,
@@ -2868,7 +2868,7 @@
     },
     {
       "id": "circular_waste_share",
-      "label": "Circular waste share",
+      "label": "Circular share of textile waste",
       "category": "footprint",
       "value": {
         "low": 0.7797006215562635,
@@ -3005,7 +3005,7 @@
     },
     {
       "id": "water_saving_l",
-      "label": "Water saving l",
+      "label": "Water saving vs outsourced local laundry",
       "category": "handprint",
       "value": {
         "low": 452678.3603438311,
@@ -3136,17 +3136,17 @@
           },
           {
             "product_id": "P1004",
-            "value": 398279.7402996586
+            "value": 398279.74029965885
           }
         ],
         "by_month": [
           {
             "month": "2025-01",
-            "value": 172225.19750009477
+            "value": 172225.19750009483
           },
           {
             "month": "2025-02",
-            "value": 118006.75585863285
+            "value": 118006.7558586328
           },
           {
             "month": "2025-03",
@@ -3158,7 +3158,7 @@
           },
           {
             "month": "2025-05",
-            "value": 156166.1277058506
+            "value": 156166.12770585067
           },
           {
             "month": "2025-06",
@@ -3193,7 +3193,7 @@
     },
     {
       "id": "energy_saving_kwh",
-      "label": "Energy saving kwh",
+      "label": "Energy saving vs outsourced local laundry",
       "category": "handprint",
       "value": {
         "low": 66205.62028695364,
@@ -3324,7 +3324,7 @@
           },
           {
             "product_id": "P1004",
-            "value": 49437.37580255815
+            "value": 49437.37580255818
           }
         ],
         "by_month": []
@@ -3332,7 +3332,7 @@
     },
     {
       "id": "co2e_saving_kg",
-      "label": "Co2e saving kg",
+      "label": "CO2e saving vs outsourced local laundry",
       "category": "handprint",
       "value": {
         "low": 189301.89890525714,
@@ -3463,17 +3463,17 @@
           },
           {
             "product_id": "P1004",
-            "value": 72673.91758674577
+            "value": 72673.91758674578
           }
         ],
         "by_month": [
           {
             "month": "2025-01",
-            "value": 21104.6183942861
+            "value": 21104.618394286103
           },
           {
             "month": "2025-02",
-            "value": 23101.99156036148
+            "value": 23101.99156036147
           },
           {
             "month": "2025-03",
@@ -3485,7 +3485,7 @@
           },
           {
             "month": "2025-05",
-            "value": 21475.831753787512
+            "value": 21475.83175378752
           },
           {
             "month": "2025-06",
@@ -4487,7 +4487,7 @@
         "allocation_use_rate": 0.8391316195839768,
         "idle_pieces": 1771,
         "idle_value_eur": 60214,
-        "washed_kg": 143578.19999999998,
+        "washed_kg": 143578.2,
         "wash_frequency": 2.3520205433166645,
         "service_requests": 148,
         "on_time_rate": 0.9807796426637791,
@@ -4501,9 +4501,9 @@
         "circular_waste_share": 0.781931079661612,
         "replacements_postponed": 4249.0,
         "avoided_product_co2e_kg": 48438.6,
-        "water_saving_l": 398279.7402996586,
-        "energy_saving_kwh": 49437.37580255815,
-        "co2e_saving_kg": 72673.91758674577
+        "water_saving_l": 398279.74029965885,
+        "energy_saving_kwh": 49437.37580255818,
+        "co2e_saving_kg": 72673.91758674578
       }
     }
   ],
@@ -4511,11 +4511,11 @@
     "washed_kg": [
       {
         "month": "2025-01",
-        "value": 42880.799999999996
+        "value": 42880.8
       },
       {
         "month": "2025-02",
-        "value": 45796.700000000004
+        "value": 45796.7
       },
       {
         "month": "2025-03",
@@ -4527,7 +4527,7 @@
       },
       {
         "month": "2025-05",
-        "value": 41536.899999999994
+        "value": 41536.9
       },
       {
         "month": "2025-06",
@@ -4561,11 +4561,11 @@
     "water_saving_l": [
       {
         "month": "2025-01",
-        "value": 172225.19750009477
+        "value": 172225.19750009483
       },
       {
         "month": "2025-02",
-        "value": 118006.75585863285
+        "value": 118006.7558586328
       },
       {
         "month": "2025-03",
@@ -4577,7 +4577,7 @@
       },
       {
         "month": "2025-05",
-        "value": 156166.1277058506
+        "value": 156166.12770585067
       },
       {
         "month": "2025-06",
@@ -4611,11 +4611,11 @@
     "co2e_saving_kg": [
       {
         "month": "2025-01",
-        "value": 21104.6183942861
+        "value": 21104.618394286103
       },
       {
         "month": "2025-02",
-        "value": 23101.99156036148
+        "value": 23101.99156036147
       },
       {
         "month": "2025-03",
@@ -4627,7 +4627,7 @@
       },
       {
         "month": "2025-05",
-        "value": 21475.831753787512
+        "value": 21475.83175378752
       },
       {
         "month": "2025-06",
@@ -4786,7 +4786,7 @@
     {
       "id": "OBS1",
       "title": "Water value against the selected baseline",
-      "observation": "Water savings are allocated estimates against the selected baseline, with low/base/high uncertainty. Evidence: water_saving_l: Low 452,678.36 / Base 1,406,620.29 / High 2,360,562.22 L. Highest washed_kg: S008: 38,379.2 kg; S001: 36,207.3 kg; S007: 34,072.3 kg. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "observation": "Water savings are allocated estimates against the selected baseline, with low/base/high uncertainty. Evidence: water_saving_l: Low 452,678.36 / Base 1,406,620.29 / High 2,360,562.22 L. Highest washed_kg: S008: 38,379.2 kg; S001: 36,207.3 kg; S007: 34,072.3 kg. Why it matters: For a Food & Beverage customer: water savings stated against a named baseline and range are evidence the customer can use in its own sustainability reporting.",
       "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Validate water intensity and the selected baseline at 3 highest-volume sites covering 108,658.8 kg. Set an improvement target only after source validation. Potential benefit: better water-efficiency decisions; the existing baseline saving is not additional future saving.",
       "owner": "Both",
       "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Which baseline best represents the customer alternative?",
@@ -4805,7 +4805,7 @@
     {
       "id": "OBS2",
       "title": "Review service continuity at late-cycle sites",
-      "observation": "These sites fall below the customer on-time benchmark. Evidence: on_time_rate: S008: 97.22%; S014: 97.72%; S022: 97.82%. Benchmark: customer_on_time_rate: 98.33%. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "observation": "These sites fall below the customer on-time benchmark. Evidence: on_time_rate: S008: 97.22%; S014: 97.72%; S022: 97.82%. Benchmark: customer_on_time_rate: 98.33%. Why it matters: For a Food & Beverage customer: late service cycles mean wearers can wait for clean garments, which directly affects hygiene-critical garment availability.",
       "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Review pickup schedules at 15 flagged sites. Maximum benchmark gap: 1.11 percentage points. Propose closing the gap to the customer benchmark, subject to feasibility; late-cycle counts are unavailable. Potential benefit: more dependable garment availability; improvement is not guaranteed.",
       "owner": "Lindström",
       "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Which schedule changes could improve service continuity?",
@@ -4835,7 +4835,7 @@
     {
       "id": "OBS3",
       "title": "Investigate high service-request intensity",
-      "observation": "Service requests per estimated minimum wearer exceed the site-median threshold. The denominator is an estimate. Evidence: service_requests per 1,000 wearers: S022: 172.13; S003: 138.61; S004: 113.77. Benchmark: customer_site_median: 56.23. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "observation": "Service requests per estimated minimum wearer exceed the site-median threshold. The denominator is an estimate. Evidence: service_requests per 1,000 wearers: S022: 172.13; S003: 138.61; S004: 113.77. Benchmark: customer_site_median: 56.23. Why it matters: For a Food & Beverage customer: service requests are the customer's own friction signal; recurring causes cost time on both sides and put hygiene-critical garment availability at risk.",
       "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Classify 99 reported requests at 5 flagged sites. Maximum gap above site median: 115.9 requests per 1,000 estimated wearers. Validate wearer denominators before setting reduction targets. Potential benefit: address recurring service issues; counts alone cannot establish causes or response times.",
       "owner": "Both",
       "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Which request categories should the teams address first?",
@@ -4856,7 +4856,7 @@
     {
       "id": "OBS4",
       "title": "Review allocation at the lowest-use sites",
-      "observation": "Lowest-use sites warrant an allocation review; unscanned stock is not proof of waste. Evidence: allocation_use_rate: S010: 75.57%; S001: 76.21%; S024: 78.55%. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "observation": "Lowest-use sites warrant an allocation review; unscanned stock is not proof of waste. Evidence: allocation_use_rate: S010: 75.57%; S001: 76.21%; S024: 78.55%. Why it matters: For a Food & Beverage customer: idle garments tie up stock and can hide sizing or allocation mismatches; right-sizing must still protect hygiene-critical garment availability.",
       "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Review 5 flagged sites: 1,434 reported idle pieces. Confirm shift buffers before any rebalance; this is investigation scope, not removable stock. Potential benefit: better stock utilization while maintaining availability; no cost saving is established.",
       "owner": "Customer",
       "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Where can we pilot an allocation review while maintaining garment availability?",
@@ -4877,7 +4877,7 @@
     {
       "id": "OBS5",
       "title": "Resolve evidence gaps before external reporting",
-      "observation": "Data-quality warnings and missing production sources limit the conclusions. Sources to resolve: Customer hierarchy is synthetic; Unique wearer count. Additional gaps: 6; see the data-readiness registry. Checks: DQ1, DQ4, PACK_DATA_STATUS, DQ5_WEARER_MULTI_PRODUCT_SUM. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "observation": "Data-quality warnings and missing production sources limit the conclusions. Sources to resolve: Customer hierarchy is synthetic; Unique wearer count. Additional gaps: 6; see the data-readiness registry. Checks: DQ1, DQ4, PACK_DATA_STATUS, DQ5_WEARER_MULTI_PRODUCT_SUM. Why it matters: For a Food & Beverage customer: external sustainability claims must be defensible; closing these evidence gaps first protects both Lindström's and the customer's credibility.",
       "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Triage 8 data gaps and 22 finding records across 4 distinct checks. Assign source owners and agree evidence acceptance criteria before external claims. Potential benefit: more defensible customer discussions; finding records can repeat the same issue across months.",
       "owner": "Both",
       "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Which missing production source should we connect first?",

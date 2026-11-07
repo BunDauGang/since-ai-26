@@ -19,6 +19,8 @@ class Card:
     height: float
     text: str
     size: int
+    # {'chart': 'column'|'bar', 'categories': [...], 'series': [(name, [values])], 'unit': str}
+    chart: dict | None = None
 
 
 @dataclass
@@ -79,11 +81,14 @@ def layout_pages(pages):
         width, height = 1072 / cols, 477 / rows
         entries = []
         for heading, body in blocks:
-            entries.extend(_chunks(heading + '\n\n' + body, width - 37, height - 36))
+            if isinstance(body, dict) and body.get('chart'):
+                entries.append((heading, 12, body))  # charts keep one card; the renderer draws them
+            else:
+                entries.extend((text, size, None) for text, size in _chunks(heading + '\n\n' + body, width - 37, height - 36))
         for offset in range(0, max(1, len(entries)), capacity):
             cards = []
-            for i, (text, size) in enumerate(entries[offset:offset + capacity]):
+            for i, (text, size, chart) in enumerate(entries[offset:offset + capacity]):
                 cards.append(Card(40 + i % cols * width, 551 - i // cols * height,
-                                  width - 13, height - 12, text, size))
+                                  width - 13, height - 12, text, size, chart))
             result.append(Page(title + (' (continued)' if offset else ''), cards))
     return result

@@ -9,11 +9,22 @@ def valid(value):
 def enrich_facts(facts, review):
     sites = {s['site_id']: s.get('metrics', {}) for s in review.get('sites', [])}
     industry = review.get('meta', {}).get('industry', '')
-    relevance = {
-        'Food & Beverage': 'Food & Beverage teams need reliable garment availability for hygiene workflows.',
-        'Healthcare': 'Healthcare teams need service continuity and garment traceability.',
-        'Manufacturing': 'Manufacturing teams need stock efficiency and garment availability for production.',
-    }.get(industry, 'Account teams need dependable service and transparent resource planning.')
+    context = {
+        'Food & Beverage': 'hygiene-critical garment availability',
+        'Healthcare': 'service continuity and garment traceability',
+        'Manufacturing': 'production uptime and stock efficiency',
+    }.get(industry, 'dependable service')
+    lead = f'For a {industry} customer: ' if industry else 'For this account: '
+    # Business reason per rule (no numbers: evidence is appended separately and verbatim).
+    why = {
+        'R1': f'idle garments tie up stock and can hide sizing or allocation mismatches; right-sizing must still protect {context}.',
+        'R2': f'repair-heavy sites point to harsh work conditions or poor product fit; finding the cause protects {context} and extends garment life.',
+        'R3': f'late service cycles mean wearers can wait for clean garments, which directly affects {context}.',
+        'R4': f'service requests are the customer\'s own friction signal; recurring causes cost time on both sides and put {context} at risk.',
+        'R5': 'water savings stated against a named baseline and range are evidence the customer can use in its own sustainability reporting.',
+        'R6': 'external sustainability claims must be defensible; closing these evidence gaps first protects both Lindström\'s and the customer\'s credibility.',
+    }
+    default_why = f'the scale of service frames what {context} is worth to this customer.'
     for fact in facts:
         rule = fact['rule_id']
         selected = [sites[s] for s in fact['site_ids'] if s in sites]
@@ -42,7 +53,7 @@ def enrich_facts(facts, review):
                          finding_count=len(fact.get('data_quality', [])),
                          distinct_check_count=len({q['check_id'] for q in fact.get('data_quality', [])}))
         fact['action_scope'] = scope
-        fact['industry_relevance'] = relevance
+        fact['industry_relevance'] = lead + why.get(rule, default_why)
     return facts
 
 

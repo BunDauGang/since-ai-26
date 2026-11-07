@@ -79,6 +79,42 @@ def _group_by(rows, *fields):
     return groups
 
 
+# Customer-readable labels (shown on the dashboard and in the deck); ids stay the contract keys.
+LABELS = {
+    "delivery_sites": "Delivery sites",
+    "wearers_min_est": "Active wearers (minimum deduplicated estimate)",
+    "wearer_product_assignments": "Wearer-product assignments",
+    "garments_allocated": "Garments allocated",
+    "washed_kg": "Washed textile volume",
+    "allocation_use_rate": "Allocation use rate",
+    "idle_pieces": "Unscanned / idle allocated garments",
+    "idle_value_eur": "Illustrative idle stock value",
+    "wash_frequency": "Wash frequency",
+    "service_requests": "Service requests",
+    "on_time_rate": "On-time service cycles",
+    "median_cycle_hours": "Median service-cycle time",
+    "repairs_total": "Repairs completed",
+    "repair_rate_per_1000": "Repair rate per 1,000 washes",
+    "replacements_postponed": "Replacements postponed (estimate)",
+    "avoided_product_co2e_kg": "Avoided new-product CO2e",
+    "customer_water_l": "Allocated fresh-water use",
+    "customer_energy_kwh": "Allocated laundry energy use",
+    "customer_co2e_kg": "Allocated process + delivery CO2e",
+    "textile_waste_kg": "Allocated textile waste",
+    "circular_waste_share": "Circular share of textile waste",
+    "water_saving_l": "Water saving",
+    "energy_saving_kwh": "Energy saving",
+    "co2e_saving_kg": "CO2e saving",
+}
+
+
+def metric_label(metric_id, baseline_name):
+    label = LABELS.get(metric_id, metric_id.replace("_", " ").capitalize())
+    if metric_id in ("water_saving_l", "energy_saving_kwh", "co2e_saving_kg"):
+        label += f" vs {baseline_name.lower()}"
+    return label
+
+
 _VALIDATION_CACHE: dict = {}
 
 
@@ -184,7 +220,7 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         if value is None or (isinstance(value, dict) and any(not number(v) for v in value.values())):
             gaps.append(unavailable_gap(metric_id, activity, repairs, cycles, allocated, period_to, products, baseline))
             continue
-        metrics.append(dict(id=metric_id, label=("Illustrative idle stock value" if metric_id == "idle_value_eur" else metric_id.replace("_", " ").capitalize()),
+        metrics.append(dict(id=metric_id, label=metric_label(metric_id, baseline["baseline_name"]),
                             category=category, value=_range(value), unit=unit, status=status,
                             formula=formula + f" | Live arithmetic (display rounded to 6 decimals; result in {unit}): " + traces[metric_id],
                             sources=sources.split("|"), assumptions=assumptions.split("|"),
