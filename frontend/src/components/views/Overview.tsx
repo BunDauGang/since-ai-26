@@ -3,7 +3,7 @@
 import { ChevronDown, Search, Target } from "lucide-react";
 import { useState } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { INDUSTRY_RULES, isOutlier, priorityDef, shortSiteName, SITE_METRIC_META, type ViewId } from "@/lib/config";
+import { INDUSTRY_RULES, inScope, isOutlier, priorityDef, shortSiteName, SITE_METRIC_META, type SiteScope, type ViewId } from "@/lib/config";
 import { metricMap } from "@/lib/derive";
 import { dqNotes, type DqNote } from "@/lib/dq";
 import { compact, formatValue, monthLabel } from "@/lib/format";
@@ -22,7 +22,8 @@ const CATEGORY_LABEL: Record<string, string> = {
   handprint: "Handprint vs selected baseline",
 };
 
-export function Overview({ review, priority, sensitivity, emphasized, onOpenMetric, onOpenSite, onView, siteBaselineNote }: {
+export function Overview({ review, priority, sensitivity, emphasized, onOpenMetric, onOpenSite, onView, siteBaselineNote, scope = null }: {
+  scope?: SiteScope | null;
   review: Review;
   priority: Priority;
   sensitivity: Sensitivity;
@@ -42,7 +43,7 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
   // Spotlight chart: sites ranked by the priority's site metric.
   const sm = SITE_METRIC_META[p.siteMetric];
   const siteData = review.sites
-    .filter((s) => s.metrics[p.siteMetric] != null) // missing data is not a zero
+    .filter((s) => s.metrics[p.siteMetric] != null && inScope(s, scope)) // missing data is not a zero
     .map((s) => ({ id: s.site_id, name: shortSiteName(s.site_name, review.meta.customer_name), value: s.metrics[p.siteMetric]!, flagged: isOutlier(s) }))
     .sort((a, b) => (p.siteSort === "desc" ? b.value - a.value : a.value - b.value))
     .slice(0, 10);
@@ -94,7 +95,7 @@ export function Overview({ review, priority, sensitivity, emphasized, onOpenMetr
       {/* Charts */}
       <div className="grid gap-4 xl:grid-cols-5">
         <div className="card p-4 xl:col-span-3">
-          <SectionTitle sub={`Top 10 · click a bar to drill down${p.siteMetric.includes("saving") && siteBaselineNote ? ` · ${siteBaselineNote}` : ""}`}>{p.siteMetricLabel}</SectionTitle>
+          <SectionTitle sub={`${scope ? `${scope.label} · ` : ""}Top 10 · click a bar to drill down${p.siteMetric.includes("saving") && siteBaselineNote ? ` · ${siteBaselineNote}` : ""}`}>{p.siteMetricLabel}</SectionTitle>
           <div className="h-72">
             <ResponsiveContainer>
               <BarChart data={siteData} layout="vertical" margin={{ left: 8, right: 16 }}>

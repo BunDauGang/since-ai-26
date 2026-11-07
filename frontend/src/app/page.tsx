@@ -11,9 +11,10 @@ import { Methodology } from "@/components/views/Methodology";
 import { Observations } from "@/components/views/Observations";
 import { Overview } from "@/components/views/Overview";
 import { Sites } from "@/components/views/Sites";
+import { SafeToSay } from "@/components/SafeToSay";
 import { WhatIfSimulator } from "@/components/WhatIfSimulator";
 import { ApiError, downloadJson, exportReview } from "@/lib/api";
-import { isOutlier, priorityDef, type ViewId } from "@/lib/config";
+import { isOutlier, KAM_ONLY_METRICS, priorityDef, type Audience, type SiteScope, type ViewId } from "@/lib/config";
 import { baselineName } from "@/lib/derive";
 import { useReview } from "@/lib/useReview";
 
@@ -21,19 +22,34 @@ const TITLES: Record<ViewId, string> = {
   overview: "Executive value overview",
   sites: "Multi-site consolidation & drill-down",
   baselines: "Baseline comparison & circularity",
-  observations: "2026 actions, what-if & steering questions",
+  observations: "Meeting prep: talking points, 2026 what-if & actions",
   methodology: "Methodology, data quality & data gaps",
 };
 
 const VIEW_IDS = Object.keys(TITLES) as ViewId[];
 
 export default function Page() {
+  const [audience, setAudience] = useState<Audience>("kam");
   const r = useReview();
-  const { review, controls, emphasized } = r;
+  const { controls } = r;
+  const customerView = audience === "customer";
+  // Customer view hides KAM-internal context; numbers themselves are unchanged.
+  const review = customerView
+    ? {
+        ...r.review,
+        metrics: r.review.metrics.filter((m) => !KAM_ONLY_METRICS.includes(m.id)),
+        priority_view: {
+          ...r.review.priority_view,
+          emphasized_metric_ids: r.review.priority_view.emphasized_metric_ids.filter((id) => !KAM_ONLY_METRICS.includes(id)),
+        },
+      }
+    : r.review;
+  const emphasized = customerView ? r.emphasized.filter((id) => !KAM_ONLY_METRICS.includes(id)) : r.emphasized;
   const [view, setViewState] = useState<ViewId>("overview");
   const [metricId, setMetricId] = useState<string | null>(null);
   const [siteId, setSiteId] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"pptx" | "pdf" | null>(null);
+  const [scope, setScope] = useState<SiteScope | null>(null);
   const [toast, setToast] = useState<{ kind: "error" | "info"; text: string; action?: { label: string; run: () => void } } | null>(null);
 
   // Keep the active view in the URL hash so a demo can deep-link (#sites, #methodology…).
@@ -104,6 +120,24 @@ export default function Page() {
           <AlertTriangle size={13} className="text-amber-300" />
           SYNTHETIC PROTOTYPE DATA — For demonstration only, not audited. Not an approved Lindström or customer claim.
         </div>
+        <div className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-line bg-white px-4 py-2 lg:px-8">
+          <span className="text-[12px] text-muted">
+            {customerView
+              ? "Customer view: preview of a future eLindström decision-maker module. KAM-internal context is hidden."
+              : "KAM view: full context for preparing the customer review."}
+          </span>
+          <div className="inline-flex rounded-lg bg-canvas p-0.5 ring-1 ring-inset ring-line" role="group" aria-label="Audience">
+            {(["kam", "customer"] as const).map((a) => (
+              <button
+                key={a}
+                onClick={() => setAudience(a)}
+                className={`rounded-md px-3 py-1 text-[12.5px] font-medium ${audience === a ? "bg-white text-navy shadow-sm ring-1 ring-line" : "text-muted hover:text-ink"}`}
+              >
+                {a === "kam" ? "KAM view" : "Customer view"}
+              </button>
+            ))}
+          </div>
+        </div>
         <ControlBar
           controls={controls}
           update={r.update}
@@ -114,6 +148,9 @@ export default function Page() {
           onExport={onExport}
           exporting={exporting}
           canExport={r.canExport}
+          sites={review.sites}
+          scope={scope}
+          onScope={setScope}
           exportBlockedReason={!r.periodValid ? "Fix the reporting period first" : "Waiting for the engine to finish recalculating"}
         />
         <MobileNav view={view} onView={setView} />
@@ -132,7 +169,9 @@ export default function Page() {
                   </>
                 )}
               </div>
-              <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-ink">{TITLES[view]}</h1>
+              <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-ink">
+                {customerView && view === "observations" ? "Your 2026 actions and results" : TITLES[view]}
+              </h1>
             </div>
             <div className="flex items-center gap-3 text-[12px] text-muted">
               {r.loading && (
@@ -205,9 +244,10 @@ export default function Page() {
               onOpenSite={openSite}
               onView={setView}
               siteBaselineNote={siteBaselineNote}
+              scope={scope}
             />
           )}
-          {view === "sites" && <Sites review={review} onOpenSite={openSite} siteBaselineNote={siteBaselineNote} />}
+          {view === "sites" && <Sites review={review} onOpenSite={openSite} siteBaselineNote={siteBaselineNote} scope={scope} />}
           {view === "baselines" && (
             <Baselines
               review={review}
@@ -219,6 +259,7 @@ export default function Page() {
           )}
           {view === "observations" && (
             <div className="space-y-6">
+              <SafeToSay review={review} onOpenMetric={openMetric} audience={audience} />
               <WhatIfSimulator review={review} onOpenSite={openSite} />
               <Observations review={review} priority={controls.priority} emphasized={emphasized} onOpenMetric={openMetric} onOpenSite={openSite} />
             </div>

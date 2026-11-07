@@ -1,9 +1,9 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Filter } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis } from "recharts";
-import { isOutlier, SITE_METRIC_META } from "@/lib/config";
+import { isOutlier, SITE_METRIC_META, type SiteScope } from "@/lib/config";
 import { dqNotes, type DqNote } from "@/lib/dq";
 import { median } from "@/lib/derive";
 import { compact, formatValue, pct } from "@/lib/format";
@@ -25,10 +25,21 @@ const COLUMNS: SiteMetricKey[] = [
 
 const FLAG_COUNTRY: Record<string, string> = { Finland: "🇫🇮", Sweden: "🇸🇪", Poland: "🇵🇱" };
 
-export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review; onOpenSite: (id: string) => void; siteBaselineNote?: string }) {
-  const [country, setCountry] = useState("all");
-  const [type, setType] = useState("all");
-  const [flaggedOnly, setFlaggedOnly] = useState(false);
+export function Sites({ review, onOpenSite, siteBaselineNote, scope = null }: {
+  review: Review;
+  onOpenSite: (id: string) => void;
+  siteBaselineNote?: string;
+  scope?: SiteScope | null;
+}) {
+  const [country, setCountry] = useState(scope?.country ?? "all");
+  const [type, setType] = useState(scope?.siteType ?? "all");
+  const [flaggedOnly, setFlaggedOnly] = useState(!!scope?.outliersOnly);
+  // A prompt such as "our Swedish plants" sets these filters; the user can still change them here.
+  useEffect(() => {
+    setCountry(scope?.country ?? "all");
+    setType(scope?.siteType ?? "all");
+    setFlaggedOnly(!!scope?.outliersOnly);
+  }, [scope]);
   const [sort, setSort] = useState<{ key: SiteMetricKey | "site_name"; dir: 1 | -1 }>({ key: "allocation_use_rate", dir: 1 });
 
   const dq = useMemo(() => dqNotes(review).bySite, [review]);

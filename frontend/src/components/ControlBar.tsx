@@ -1,16 +1,19 @@
 "use client";
 
-import { FileDown, Loader2, Presentation, Sparkles, Wand2 } from "lucide-react";
+import { FileDown, Filter, Loader2, Presentation, Sparkles, Wand2, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { interpretPrompt } from "@/lib/api";
-import { BASELINES, CUSTOMERS, INDUSTRY_RULES, interpretPromptOffline, PRIORITIES, priorityDef, SUGGESTED_PROMPTS, type ViewId } from "@/lib/config";
+import { BASELINES, CUSTOMERS, INDUSTRY_RULES, interpretPromptOffline, interpretScope, PRIORITIES, priorityDef, SUGGESTED_PROMPTS, type SiteScope, type ViewId } from "@/lib/config";
 import type { Controls, Mode } from "@/lib/useReview";
 import type { Priority, Sensitivity } from "@/lib/types";
 import { Segmented } from "./ui";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => `2025-${String(i + 1).padStart(2, "0")}`);
 
-export function ControlBar({ controls, update, mode, industry, customerAvailable, onView, onExport, exporting, canExport, exportBlockedReason }: {
+export function ControlBar({ controls, update, mode, industry, customerAvailable, onView, onExport, exporting, canExport, exportBlockedReason, sites, scope, onScope }: {
+  sites: { country: string; site_type: string }[];
+  scope: SiteScope | null;
+  onScope: (s: SiteScope | null) => void;
   controls: Controls;
   update: (p: Partial<Controls>) => void;
   mode: Mode;
@@ -39,6 +42,7 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
     if (!text.trim()) return;
     const id = ++intent.current;
     setBusy(true);
+    onScope(interpretScope(text, sites)); // "our Swedish plants" -> site filter (display only)
     const offline = interpretPromptOffline(text, industry);
     let priority = offline.priority;
     let source: "interpret API" | "keywords" | "industry default" = offline.matched ? "keywords" : "industry default";
@@ -74,6 +78,7 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
               setBusy(false);
               setInterp(null);
               setDraft("");
+              onScope(null);
               update({ customerId: c.id, priority: c.defaultPriority, prompt: "" });
             }}
           >
@@ -170,6 +175,15 @@ export function ControlBar({ controls, update, mode, industry, customerAvailable
         </form>
       </div>
       <div className="flex flex-wrap items-center gap-2 px-4 pb-3 lg:px-8">
+        {scope && (
+          <span className="lift-in inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[12px] font-medium text-amber-900 ring-1 ring-inset ring-amber-300">
+            <Filter size={12} /> Site scope: {scope.label}
+            <span className="font-normal text-amber-800">(site views filtered; KPIs stay customer totals)</span>
+            <button onClick={() => onScope(null)} aria-label="Clear site scope" className="ml-0.5 rounded-full p-0.5 hover:bg-amber-100">
+              <X size={12} />
+            </button>
+          </span>
+        )}
         {interp ? (
           <div className="lift-in flex flex-wrap items-center gap-2 text-[12.5px]">
             <span className="text-muted">Interpreted as</span>

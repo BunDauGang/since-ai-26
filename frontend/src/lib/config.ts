@@ -135,6 +135,11 @@ export const SUGGESTED_PROMPTS: { prompt: string; who: string; priority: Priorit
 
 export type ViewId = "overview" | "sites" | "baselines" | "observations" | "methodology";
 
+/** Who the screen is for. "customer" previews the future eLindström decision-maker module. */
+export type Audience = "kam" | "customer";
+/** KAM-internal context hidden from the customer view (illustrative stock value, not a customer claim). */
+export const KAM_ONLY_METRICS = ["idle_value_eur"];
+
 export const FLAG_LABELS: Record<string, { label: string; tone: "red" | "amber" | "blue" }> = {
   R1_LOW_ALLOCATION_USE: { label: "R1 Low allocation use", tone: "amber" },
   R2_HIGH_REPAIR_RATE: { label: "R2 High repair rate", tone: "red" },
@@ -215,3 +220,44 @@ export function shortSiteName(siteName: string, customerName: string): string {
  */
 const OUTLIER_RULES = ["R1_", "R2_", "R4_"];
 export const isOutlier = (s: { flags: string[] }) => s.flags.some((f) => OUTLIER_RULES.some((r) => f.startsWith(r)));
+
+/** A display-only site filter derived from a free-text prompt ("our Swedish production plants"). */
+export interface SiteScope {
+  country?: string;
+  siteType?: string;
+  outliersOnly?: boolean;
+  label: string;
+}
+
+const COUNTRY_WORDS: [RegExp, string][] = [
+  [/\b(finland|finnish)\b/, "Finland"],
+  [/\b(sweden|swedish)\b/, "Sweden"],
+  [/\b(poland|polish)\b/, "Poland"],
+];
+const TYPE_WORDS: [RegExp, RegExp][] = [
+  [/\b(production|plants?|factor(y|ies)|manufacturing)\b/, /plant/i],
+  [/\b(offices?|operations)\b/, /office/i],
+  [/\b(distribution|warehouses?|logistics)\b/, /distribution/i],
+  [/\bhospitals?\b/, /hospital/i],
+  [/\bservice cent(er|re)s?\b/, /service center/i],
+  [/\b(laundry hubs?|hubs?)\b/, /hub/i],
+];
+
+/** Only returns filters that match sites this customer actually has. */
+export function interpretScope(text: string, sites: { country: string; site_type: string }[]): SiteScope | null {
+  const t = text.toLowerCase();
+  const countries = new Set(sites.map((s) => s.country));
+  const types = Array.from(new Set(sites.map((s) => s.site_type)));
+  const country = COUNTRY_WORDS.find(([re, c]) => re.test(t) && countries.has(c))?.[1];
+  const typeRe = TYPE_WORDS.find(([re]) => re.test(t))?.[1];
+  const siteType = typeRe ? types.find((x) => typeRe.test(x)) : undefined;
+  const outliersOnly = /\b(outliers?|flagged|low[- ]use|worst|problem)\b/.test(t) || undefined;
+  if (!country && !siteType && !outliersOnly) return null;
+  const label = [country, siteType ? `${siteType} sites` : null, outliersOnly ? "outlier sites" : null].filter(Boolean).join(" · ");
+  return { country, siteType, outliersOnly, label };
+}
+
+export function inScope(s: { country: string; site_type: string; flags: string[] }, scope: SiteScope | null): boolean {
+  if (!scope) return true;
+  return (!scope.country || s.country === scope.country) && (!scope.siteType || s.site_type === scope.siteType) && (!scope.outliersOnly || isOutlier(s));
+}
