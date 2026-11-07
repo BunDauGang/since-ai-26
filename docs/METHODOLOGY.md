@@ -33,36 +33,44 @@ We validated the formulas below across all **1,248 site-product-month rows** in 
 ### 3.1 Allocated Customer Footprint (`ALLOCATED_ESTIMATE`)
 Laundry resource consumption is measured at the laundry-month level (`Laundry_Resources`) and allocated to each customer site by washed textile weight (`customer_washed_kg`):
 
-$$\text{Customer Water (L)} = \sum_{m, s, p} \text{customer\_washed\_kg}_{m,s,p} \times \text{fresh\_water\_l\_per\_kg}_{m,l}$$
+```text
+Customer Water (L) = SUM( customer_washed_kg * laundry_fresh_water_l_per_kg )
 
-$$\text{Customer Energy (kWh)} = \sum_{m, s, p} \text{customer\_washed\_kg}_{m,s,p} \times \text{energy\_kwh\_per\_kg}_{m,l}$$
+Customer Energy (kWh) = SUM( customer_washed_kg * laundry_energy_kwh_per_kg )
 
-$$\text{Customer CO}_2\text{e (kg)} = \sum_{m, s, p} \left(\text{allocated\_process\_kgco2e}_{m,s,p} + \text{allocated\_delivery\_kgco2e}_{m,s,p}\right)$$
+Customer CO2e (kg) = SUM( allocated_process_kgco2e + allocated_delivery_kgco2e )
+```
 
-### 3.2 Operational Handprint Savings vs. Selected Baseline $B$ (`ALLOCATED_ESTIMATE`)
-For any selected baseline $B \in \{\text{B\_LOCAL}, \text{B\_HOME}, \text{B\_INHOUSE}\}$:
+### 3.2 Operational Handprint Savings vs. Selected Baseline B (`ALLOCATED_ESTIMATE`)
+For any selected baseline B in {B_LOCAL, B_HOME, B_INHOUSE}:
 
-$$\text{Water Saving vs } B\text{ (L)} = \left(\text{customer\_washed\_kg} \times B.\text{water\_l\_per\_kg}\right) - \text{Customer Water (L)}$$
+```text
+Water Saving vs B (L) = ( customer_washed_kg * B.water_l_per_kg ) - Customer Water (L)
 
-$$\text{Energy Saving vs } B\text{ (kWh)} = \left(\text{customer\_washed\_kg} \times B.\text{energy\_kwh\_per\_kg}\right) - \text{Customer Energy (kWh)}$$
+Energy Saving vs B (kWh) = ( customer_washed_kg * B.energy_kwh_per_kg ) - Customer Energy (kWh)
 
-$$\text{CO}_2\text{e Saving vs } B\text{ (kg)} = \text{customer\_washed\_kg} \times \left(B.\text{process\_kgco2e\_per\_kg} + B.\text{delivery\_kgco2e\_per\_kg}\right) - \text{Customer CO}_2\text{e (kg)}$$
+CO2e Saving vs B (kg) = ( customer_washed_kg * (B.process_kgco2e_per_kg + B.delivery_kgco2e_per_kg) ) - Customer CO2e (kg)
+```
 
 ### 3.3 Circular Repair Handprint (`ESTIMATE` — Assumption `A002`)
 Under prototype assumption `A002`, completed garment repairs extend textile lifetime and postpone replacement purchases:
 
-$$\text{Replacements Postponed} = \text{repair\_count} \times k_{\text{repair}}$$
+```text
+Replacements Postponed = repair_count * k_repair
 
-$$\text{Avoided New-Garment CO}_2\text{e (kg)} = \sum_{p} \text{Replacements Postponed}_p \times \text{synthetic\_product\_footprint\_kgco2e}_p$$
+Avoided New-Garment CO2e (kg) = SUM( Replacements Postponed * synthetic_product_footprint_kgco2e )
+```
 
-where $k_{\text{repair}} = 1.0$ in the base case and $0.5$ in the conservative low case (`T001`). We report repair-avoided product CO₂e **separately** from laundry process/delivery CO₂e savings so users never conflate operational laundry efficiency with avoided manufacturing assumptions.
+where `k_repair = 1.0` in the base case and `0.5` in the conservative low case (`T001`). We report repair-avoided product CO₂e **separately** from laundry process/delivery CO₂e savings so users never conflate operational laundry efficiency with avoided manufacturing assumptions.
 
 ### 3.4 Textile Waste & Circular Routing (`ALLOCATED_ESTIMATE` — Assumptions `A003`, `A004`)
 Laundry-level textile waste (`Waste_Circularity`) is attributed to customers via `waste_kg_per_washed_kg`:
 
-$$\text{Customer Textile Waste (kg)} = \sum_{m,s,p} \text{customer\_washed\_kg}_{m,s,p} \times \text{waste\_kg\_per\_washed\_kg}_{m,l}$$
+```text
+Customer Textile Waste (kg) = SUM( customer_washed_kg * laundry_waste_kg_per_washed_kg )
 
-$$\text{Circular Waste Share} = \frac{\text{recycling\_kg} + \text{reuse\_kg}}{\text{textile\_waste\_total\_kg}}$$
+Circular Waste Share = ( recycling_kg + reuse_kg ) / textile_waste_total_kg
+```
 
 ---
 
