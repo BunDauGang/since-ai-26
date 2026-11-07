@@ -13,7 +13,7 @@
     "baseline_name": "Outsourced local laundry",
     "sensitivity": "base",
     "priority": "water",
-    "generated_at": "2026-11-07T09:33:56.037945+00:00",
+    "generated_at": "2026-11-07T10:12:53.988367+00:00",
     "data_notice": "Synthetic, illustrative prototype data. Not an approved Lindström claim."
   },
   "metrics": [
@@ -4786,10 +4786,10 @@
     {
       "id": "OBS1",
       "title": "Water value against the selected baseline",
-      "observation": "Water savings are allocated estimates against the selected baseline, with low/base/high uncertainty. Evidence: water_saving_l: Low 452,678.36 / Base 1,406,620.29 / High 2,360,562.22 L. Highest washed_kg: S008: 38,379.2 kg; S001: 36,207.3 kg; S007: 34,072.3 kg.",
-      "recommended_action": "Validate laundry intensity and the comparison baseline before external use.",
+      "observation": "Water savings are allocated estimates against the selected baseline, with low/base/high uncertainty. Evidence: water_saving_l: Low 452,678.36 / Base 1,406,620.29 / High 2,360,562.22 L. Highest washed_kg: S008: 38,379.2 kg; S001: 36,207.3 kg; S007: 34,072.3 kg. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Validate water intensity and the selected baseline at 3 highest-volume sites covering 108,658.8 kg. Set an improvement target only after source validation. Potential benefit: better water-efficiency decisions; the existing baseline saving is not additional future saving.",
       "owner": "Both",
-      "steering_question": "Which baseline best represents the customer alternative?",
+      "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Which baseline best represents the customer alternative?",
       "metric_ids": [
         "water_saving_l",
         "washed_kg"
@@ -4805,10 +4805,10 @@
     {
       "id": "OBS2",
       "title": "Review service continuity at late-cycle sites",
-      "observation": "These sites fall below the customer on-time benchmark. Evidence: on_time_rate: S008: 97.22%; S014: 97.72%; S022: 97.82%. Benchmark: customer_on_time_rate: 98.33%.",
-      "recommended_action": "Review pickup schedules and late-cycle causes with the service team.",
+      "observation": "These sites fall below the customer on-time benchmark. Evidence: on_time_rate: S008: 97.22%; S014: 97.72%; S022: 97.82%. Benchmark: customer_on_time_rate: 98.33%. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Review pickup schedules at 15 flagged sites. Maximum benchmark gap: 1.11 percentage points. Propose closing the gap to the customer benchmark, subject to feasibility; late-cycle counts are unavailable. Potential benefit: more dependable garment availability; improvement is not guaranteed.",
       "owner": "Lindström",
-      "steering_question": "Which schedule changes could improve service continuity?",
+      "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Which schedule changes could improve service continuity?",
       "metric_ids": [
         "on_time_rate"
       ],
@@ -4835,10 +4835,10 @@
     {
       "id": "OBS3",
       "title": "Investigate high service-request intensity",
-      "observation": "Service requests per estimated minimum wearer exceed the site-median threshold. The denominator is an estimate. Evidence: service_requests per 1,000 wearers: S022: 172.13; S003: 138.61; S004: 113.77. Benchmark: customer_site_median: 56.23.",
-      "recommended_action": "Obtain request categories and resolution times before assigning causes.",
+      "observation": "Service requests per estimated minimum wearer exceed the site-median threshold. The denominator is an estimate. Evidence: service_requests per 1,000 wearers: S022: 172.13; S003: 138.61; S004: 113.77. Benchmark: customer_site_median: 56.23. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Classify 99 reported requests at 5 flagged sites. Maximum gap above site median: 115.9 requests per 1,000 estimated wearers. Validate wearer denominators before setting reduction targets. Potential benefit: address recurring service issues; counts alone cannot establish causes or response times.",
       "owner": "Both",
-      "steering_question": "Which request categories should the teams address first?",
+      "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Which request categories should the teams address first?",
       "metric_ids": [
         "service_requests",
         "wearers_min_est"
@@ -4856,10 +4856,10 @@
     {
       "id": "OBS4",
       "title": "Review allocation at the lowest-use sites",
-      "observation": "Lowest-use sites warrant an allocation review; unscanned stock is not proof of waste. Evidence: allocation_use_rate: S010: 75.57%; S001: 76.21%; S024: 78.55%.",
-      "recommended_action": "Review locker buffers and shift requirements before rebalancing garments.",
+      "observation": "Lowest-use sites warrant an allocation review; unscanned stock is not proof of waste. Evidence: allocation_use_rate: S010: 75.57%; S001: 76.21%; S024: 78.55%. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Review 5 flagged sites: 1,434 reported idle pieces. Confirm shift buffers before any rebalance; this is investigation scope, not removable stock. Potential benefit: better stock utilization while maintaining availability; no cost saving is established.",
       "owner": "Customer",
-      "steering_question": "Where can we pilot an allocation review while maintaining garment availability?",
+      "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Where can we pilot an allocation review while maintaining garment availability?",
       "metric_ids": [
         "allocation_use_rate",
         "idle_pieces"
@@ -4877,10 +4877,10 @@
     {
       "id": "OBS5",
       "title": "Resolve evidence gaps before external reporting",
-      "observation": "Data-quality warnings and missing production sources limit the conclusions. Sources to resolve: Customer hierarchy is synthetic; Unique wearer count; Service-request details; Cost and time evidence; Product footprints; Baseline ranges; Laundry volume for L003; Industry trends and regulations. Checks: DQ1, DQ1, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, DQ5_WEARER_MULTI_PRODUCT_SUM.",
-      "recommended_action": "Reconcile laundry volumes and link approved wearer and service-request sources.",
+      "observation": "Data-quality warnings and missing production sources limit the conclusions. Sources to resolve: Customer hierarchy is synthetic; Unique wearer count. Additional gaps: 6; see the data-readiness registry. Checks: DQ1, DQ4, PACK_DATA_STATUS, DQ5_WEARER_MULTI_PRODUCT_SUM. Why it matters: Food & Beverage teams need reliable garment availability for hygiene workflows.",
+      "recommended_action": "Proposed Q1 2026 planning scenario (KAM must confirm or reschedule): Triage 8 data gaps and 22 finding records across 4 distinct checks. Assign source owners and agree evidence acceptance criteria before external claims. Potential benefit: more defensible customer discussions; finding records can repeat the same issue across months.",
       "owner": "Both",
-      "steering_question": "Which missing production source should we connect first?",
+      "steering_question": "Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? Which missing production source should we connect first?",
       "metric_ids": [
         "wearers_min_est",
         "service_requests",
@@ -4895,114 +4895,277 @@
     {
       "check_id": "DQ1",
       "dataset": "Sample_Output",
-      "severity": "WARNING",
-      "message": "Blank cells in source rows.",
+      "severity": "warning",
+      "message": "3/13 rows contain 3 blank/non-finite cells: {'status/interpretation': 1, 'unit': 2}. Known affected washed kg: unavailable; unknown-kg rows: 0. Kg is unavailable where that field is absent.",
       "affected_rows": 3,
-      "treatment": "Retain rows; report missing inputs explicitly before calculating affected metrics."
+      "treatment": "Data engineering: restore the listed fields from their source export and check Excel formula caches. Retain source rows; omit dependent metrics when required inputs are unavailable. Documentation/reference blanks are informational to calculations, not lost operational volume.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "known_washed_kg": null,
+        "unknown_washed_kg_rows": 0,
+        "kg_field_present": false,
+        "missing_cells_by_column": {
+          "status/interpretation": 1,
+          "unit": 2
+        }
+      }
     },
     {
       "check_id": "DQ1",
       "dataset": "Data_Dictionary",
-      "severity": "WARNING",
-      "message": "Blank cells in source rows.",
+      "severity": "warning",
+      "message": "112/139 rows contain 112 blank/non-finite cells: {'join_role': 112}. Known affected washed kg: unavailable; unknown-kg rows: 0. Kg is unavailable where that field is absent.",
       "affected_rows": 112,
-      "treatment": "Retain rows; report missing inputs explicitly before calculating affected metrics."
+      "treatment": "Data engineering: restore the listed fields from their source export and check Excel formula caches. Retain source rows; omit dependent metrics when required inputs are unavailable. Documentation/reference blanks are informational to calculations, not lost operational volume.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "known_washed_kg": null,
+        "unknown_washed_kg_rows": 0,
+        "kg_field_present": false,
+        "missing_cells_by_column": {
+          "join_role": 112
+        }
+      }
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-01: customer shares total 1125.1% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-01: known customer kg 28,428.8 vs laundry kg 2,526.7; excess 25,902.1 kg; customer shares 1125.1%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-01",
+        "customer_washed_kg": 28428.799999999996,
+        "laundry_washed_kg": 2526.7,
+        "excess_kg": 25902.099999999995,
+        "share": 11.251355523014208,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-01"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-02: customer shares total 1258.1% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-02: known customer kg 29,891.9 vs laundry kg 2,375.9; excess 27,516 kg; customer shares 1258.1%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-02",
+        "customer_washed_kg": 29891.899999999998,
+        "laundry_washed_kg": 2375.9,
+        "excess_kg": 27515.999999999996,
+        "share": 12.581295509070246,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-02"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-03: customer shares total 1122.1% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-03: known customer kg 30,502 vs laundry kg 2,718.2; excess 27,783.8 kg; customer shares 1122.1%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-03",
+        "customer_washed_kg": 30501.999999999996,
+        "laundry_washed_kg": 2718.2,
+        "excess_kg": 27783.799999999996,
+        "share": 11.22139651239791,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-03"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-04: customer shares total 1085.2% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-04: known customer kg 28,344.5 vs laundry kg 2,612; excess 25,732.5 kg; customer shares 1085.2%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-04",
+        "customer_washed_kg": 28344.499999999996,
+        "laundry_washed_kg": 2612,
+        "excess_kg": 25732.499999999996,
+        "share": 10.851646248085757,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-04"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-05: customer shares total 1118.1% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-05: known customer kg 28,996 vs laundry kg 2,593.3; excess 26,402.7 kg; customer shares 1118.1%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-05",
+        "customer_washed_kg": 28995.999999999993,
+        "laundry_washed_kg": 2593.3,
+        "excess_kg": 26402.699999999993,
+        "share": 11.181120579956037,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-05"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-06: customer shares total 997.7% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-06: known customer kg 28,341.4 vs laundry kg 2,840.8; excess 25,500.6 kg; customer shares 997.7%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-06",
+        "customer_washed_kg": 28341.4,
+        "laundry_washed_kg": 2840.8,
+        "excess_kg": 25500.600000000002,
+        "share": 9.97655589974655,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-06"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-07: customer shares total 1241.6% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-07: known customer kg 28,419.1 vs laundry kg 2,288.9; excess 26,130.2 kg; customer shares 1241.6%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-07",
+        "customer_washed_kg": 28419.1,
+        "laundry_washed_kg": 2288.9,
+        "excess_kg": 26130.199999999997,
+        "share": 12.416051378391366,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-07"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-08: customer shares total 1056.8% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-08: known customer kg 24,859.9 vs laundry kg 2,352.4; excess 22,507.5 kg; customer shares 1056.8%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-08",
+        "customer_washed_kg": 24859.9,
+        "laundry_washed_kg": 2352.4,
+        "excess_kg": 22507.5,
+        "share": 10.567888114266282,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-08"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-09: customer shares total 964.3% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-09: known customer kg 25,936.4 vs laundry kg 2,689.8; excess 23,246.6 kg; customer shares 964.3%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-09",
+        "customer_washed_kg": 25936.399999999998,
+        "laundry_washed_kg": 2689.8,
+        "excess_kg": 23246.6,
+        "share": 9.642501301211984,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-09"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-10: customer shares total 1062.2% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-10: known customer kg 26,101.4 vs laundry kg 2,457.2; excess 23,644.2 kg; customer shares 1062.2%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-10",
+        "customer_washed_kg": 26101.399999999994,
+        "laundry_washed_kg": 2457.2,
+        "excess_kg": 23644.199999999993,
+        "share": 10.622415757773073,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-10"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-11: customer shares total 1051.2% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-11: known customer kg 28,956.9 vs laundry kg 2,754.6; excess 26,202.3 kg; customer shares 1051.2%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-11",
+        "customer_washed_kg": 28956.899999999987,
+        "laundry_washed_kg": 2754.6,
+        "excess_kg": 26202.29999999999,
+        "share": 10.512197778261813,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-11"
     },
     {
       "check_id": "DQ4",
       "dataset": "Laundry_Resources",
-      "severity": "WARNING",
-      "message": "Laundry L003 2025-12: customer shares total 963.6% (>100%).",
+      "severity": "warning",
+      "message": "Laundry L003 2025-12: known customer kg 27,046 vs laundry kg 2,806.9; excess 24,239.1 kg; customer shares 963.6%. Unknown customer-kg rows: 0. Footprints from this laundry-month require reconciliation.",
       "affected_rows": 42,
-      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+      "treatment": "Data engineering: reconcile WWS Washed Kg and customer activity at the same laundry/month, unit and service boundary; correct the source volume, not the output. Use laundry resource intensity per kg × customer washed kg without capping or rescaling; omit allocation when laundry kg is zero. Do not sum overlapping quality findings.",
+      "scope": "whole workbook; all customers",
+      "quantitative_impact": {
+        "laundry_id": "L003",
+        "month": "2025-12",
+        "customer_washed_kg": 27046.0,
+        "laundry_washed_kg": 2806.9,
+        "excess_kg": 24239.1,
+        "share": 9.635540988278883,
+        "unknown_washed_kg_rows": 0
+      },
+      "laundry_id": "L003",
+      "month": "2025-12"
     },
     {
       "check_id": "PACK_DATA_STATUS",
@@ -5064,9 +5227,15 @@
       "check_id": "DQ5_WEARER_MULTI_PRODUCT_SUM",
       "dataset": "Service_Activity",
       "severity": "info",
-      "affected_rows": 864,
-      "message": "Product-level wearer sums can count a person repeatedly.",
-      "treatment": "Show latest-month sum of site maxima as a minimum estimate, alongside wearer-product assignments."
+      "affected_rows": 72,
+      "scope": "customer=CUST001; month=2025-12",
+      "quantitative_impact": {
+        "assignments": 28367,
+        "minimum_estimate": 9607,
+        "difference": 18760
+      },
+      "message": "CUST001 2025-12: 28,367 wearer-product assignments versus 9,607 sum of site maxima; difference 18,760. This difference is NOT a count of duplicate people.",
+      "treatment": "Data engineering: join a stable, pseudonymous wearer ID to site/product/month; count distinct active wearer IDs. Until available, retain both estimates and never label product assignments as unique people."
     }
   ],
   "assumptions": [
@@ -5173,18 +5342,18 @@
   "data_gaps": [
     {
       "gap": "Customer hierarchy is synthetic",
-      "impact": "Parent/site roll-up needs production master data",
+      "impact": "24 sites for CUST001 rely on synthetic account mappings; roll-up requires effective-dated production ownership.",
       "future_source": "Lindström customer master data"
     },
     {
       "gap": "Unique wearer count",
-      "impact": "Per-product wearer counts cannot identify unique people",
-      "future_source": "eLindström wearer data"
+      "impact": "CUST001 2025-12: 28,367 wearer-product assignments versus 9,607 sum of site maxima; difference 18,760. This difference is NOT a count of duplicate people.",
+      "future_source": "eLindström wearer data; Data engineering: join a stable, pseudonymous wearer ID to site/product/month; count distinct active wearer IDs. Until available, retain both estimates and never label product assignments as unique people."
     },
     {
       "gap": "Service-request details",
-      "impact": "Cannot calculate causes or request-free days",
-      "future_source": "Service-request system export"
+      "impact": "515 requests across 24 selected customer sites; timestamps and causes are absent, so request-free days and root causes cannot be calculated.",
+      "future_source": "Service-request system export; export request IDs, site IDs, opened/closed timestamps and cause codes."
     },
     {
       "gap": "Cost and time evidence",
@@ -5203,8 +5372,8 @@
     },
     {
       "gap": "Laundry volume for L003",
-      "impact": "Customer volume exceeds laundry volume",
-      "future_source": "WWS Washed Kg report"
+      "impact": "12 global L003 laundry-month discrepancies in the requested period; 140214.8 kg of selected customer activity assigned to L003. Global excess volumes are not this customer's footprint error.",
+      "future_source": "WWS Washed Kg report; reconcile laundry/month/service-boundary totals and units before using allocated impacts externally."
     },
     {
       "gap": "Industry trends and regulations",

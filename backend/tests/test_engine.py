@@ -330,3 +330,41 @@ def test_bundled_sample_contains_live_traces_and_valid_contract():
     for metric in review["metrics"]:
         assert " | Live arithmetic" in metric["formula"]
         assert display_number(metric["value"][review["meta"]["sensitivity"]]) in metric["formula"]
+
+
+def test_quality_quantifies_affected_volume_and_missing_inputs():
+    tables = {
+        "Customers": [{"customer_id": "C1"}],
+        "Sites": [{"site_id": "S1", "customer_id": "C1", "primary_laundry_id": "L003"}],
+        "Laundries": [{"laundry_id": "L003"}],
+        "Service_Activity": [
+            {"site_id": "S1", "customer_id": "C1", "laundry_id": "L003", "month": "2025-01", "customer_washed_kg": 100, "active_wearers": None},
+            {"site_id": "UNKNOWN", "customer_id": "C1", "laundry_id": "L003", "month": "2025-01", "customer_washed_kg": 200},
+            {"site_id": "S1", "customer_id": "WRONG", "laundry_id": "L003", "month": "2025-01", "customer_washed_kg": 300},
+            {"site_id": "S1", "customer_id": "C1", "laundry_id": "L003", "month": "2025-01", "customer_washed_kg": None},
+        ],
+        "Laundry_Resources": [{"laundry_id": "L003", "month": "2025-01", "washed_kg": 50}],
+    }
+    findings = validate_tables(tables)
+    dq1 = next(q for q in findings if q["check_id"] == "DQ1")
+    assert dq1["quantitative_impact"]["missing_cells_by_column"] == {"active_wearers": 1, "customer_washed_kg": 1}
+    assert dq1["quantitative_impact"]["known_washed_kg"] == 100
+    assert dq1["quantitative_impact"]["unknown_washed_kg_rows"] == 1
+    dq2 = next(q for q in findings if q["check_id"] == "DQ2" and q["quantitative_impact"].get("key") == "site_id")
+    assert dq2["quantitative_impact"]["known_washed_kg"] == 200
+    dq3 = next(q for q in findings if q["check_id"] == "DQ3")
+    assert dq3["quantitative_impact"]["known_washed_kg"] == 300
+    dq4 = next(q for q in findings if q["check_id"] == "DQ4")
+    assert dq4["quantitative_impact"] == dict(laundry_id="L003", month="2025-01", customer_washed_kg=600,
+                                            laundry_washed_kg=50, excess_kg=550, share=12, unknown_washed_kg_rows=1)
+    assert all("Data engineering:" in q["treatment"] for q in findings)
+
+
+def test_wearer_quality_is_quantitative_and_customer_month_scoped(pack_builder):
+    r = pack_builder()
+    dq5 = next(q for q in r["data_quality"] if q["check_id"].startswith("DQ5"))
+    assert dq5["quantitative_impact"] == dict(assignments=28367, minimum_estimate=9607, difference=18760)
+    assert dq5["affected_rows"] == 72
+    assert "NOT a count of duplicate people" in dq5["message"]
+    assert "customer=CUST001; month=2025-12" == dq5["scope"]
+    assert any("18760" in g["impact"].replace(",", "") for g in r["data_gaps"] if g["gap"] == "Unique wearer count")

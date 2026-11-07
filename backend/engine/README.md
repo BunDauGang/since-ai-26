@@ -76,3 +76,53 @@ configuration are left to the lead.
   `primary_laundry_id` is absent.
 - Engine defaults and user prompts share `backend.insights.priority.interpret_prompt`:
   the first explicit topic wins, with the same industry fallback for empty text.
+
+## Quantitative quality findings and demo edge cases
+
+DQ1 counts missing/non-finite cells by column. DQ2 lists orphan IDs, and DQ3
+counts ownership conflicts. Each finding records its scope and
+`quantitative_impact`: known affected kg, unknown-kg row count and whether a kg
+field exists. Master-data rows without a kg field report an unavailable amount,
+not zero. Different checks and sheets overlap; never add their affected volumes.
+DQ4 reports each laundry/month's known customer kg, laundry kg, excess kg and
+share; zero laundry kg has an undefined share, not Infinity. Its scope is the
+whole workbook across customers, while the L003 data gap separately shows the
+selected customer's kg. None of these volumes is a quantified footprint error.
+
+DQ5 uses only the selected customer's last reporting month. It reports
+assignments, the sum of site maxima, and their difference. That difference is
+not a count of duplicate people. Its recommendation is to join pseudonymous
+wearer IDs and count distinct active people. Every finding includes a source
+reconciliation recommendation; missing-metric gaps name unavailable inputs,
+factors or denominators rather than inventing an impact estimate.
+
+The self-contained `backend/tests/test_engine_edges.py` suite needs no workbook.
+It covers CUST002, single-month selection, all three baselines/scenarios,
+custom source baseline factors within the existing baseline-ID enum, negative
+savings, zero denominators/washed kg, absent repairs/cycles, missing final-month
+stock, missing laundry-month joins, non-finite input, ownership/unmapped rows,
+duplicate allocation keys, and input immutability. Duplicate laundry/month keys
+raise an explicit ValueError rather than silently picking a row or double-counting.
+The integration tests in `test_engine.py` additionally use the actual challenge
+workbook and check all 1,248 Customer_Impacts rows within the specified tolerance.
+
+Rollups index records once per request by site/product/month, preserving source
+row order and sum order. Trace builders reuse calculated totals. There is no
+shared cache in this engine, so subsequent requests use current factors/rows.
+Six CUST001/CUST002 low/base/high outputs were exactly equal before and after
+indexing, excluding generated_at. A local seven-run median for preloaded data
+was approximately 155 ms before and 139 ms after; this excludes workbook I/O
+and is not an end-to-end latency guarantee.
+
+To refresh the shared bundled demo from the actual workbook and regenerate
+observations without any LLM/network call, run:
+
+```bash
+python -m backend.engine.sample_review --source /path/to/pack.xlsx
+python -m pytest backend/tests
+```
+
+The bundler validates the existing shared schema and finite JSON before writing
+`contracts/sample_review.json`; it does not modify the schema, frontend bundle,
+API or exporters. Frontend's separate `npm run sync-contract` remains a task for
+the frontend owner after a contract sample update.

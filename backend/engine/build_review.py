@@ -1,13 +1,14 @@
 """Build the shared review contract using deterministic workbook calculations."""
 
 from datetime import datetime, timezone
+from collections import defaultdict
 import re
 
 from .adapters.excel_adapter import load_tables
 from .impacts import allocate_rows, environmental, savings, ROUTES, environmental_traces
 from .kpis import operational, total, number, operational_traces
 from .sensitivity import TEAM_ASSUMPTIONS
-from .validate import validate_tables
+from .validate import validate_tables, row_impact, wearer_finding, unavailable_gap
 from backend.insights.priority import interpret_prompt
 
 
@@ -72,6 +73,19 @@ def _month(value):
     return value
 
 
+def _group_by(rows, *fields):
+    """Index once per request, preserving row order and floating-point sums.
+
+    Request-local lists refer to the unchanged input records. No process cache
+    is used, so an edited workbook or baseline cannot reuse stale aggregates.
+    """
+    groups = {field: defaultdict(list) for field in fields}
+    for row in rows:
+        for field in fields:
+            groups[field][row.get(field)].append(row)
+    return groups
+
+
 def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-12",
                  baseline_id="B_LOCAL", sensitivity="base", priority=None, source_path=None) -> dict:
     _month(period_from), _month(period_to)
@@ -101,25 +115,28 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
     laundry_ids = {r["laundry_id"] for r in tables["Laundries"]}
 
     def select(sheet):
-        result, invalid = [], 0
+        result, invalid = [], []
         for row in tables[sheet]:
             if row.get("customer_id") != customer_id:
                 continue
             stamp = row.get("pickup_timestamp") if sheet == "Service_Cycles" else row.get("month")
             month = stamp.strftime("%Y-%m") if isinstance(stamp, datetime) else stamp
             if not isinstance(month, str) or not re.fullmatch(r"\d{4}-\d{2}", month):
-                invalid += 1
+                invalid.append(row)
                 continue
             if not period_from <= month <= period_to:
                 continue
             if row.get("site_id") not in sites or row.get("product_id") not in products or row.get("laundry_id") not in laundry_ids:
-                invalid += 1
+                invalid.append(row)
                 continue
             result.append(row)
         if invalid:
-            quality.append(dict(check_id="DQ_SELECTION", dataset=sheet, severity="warning", affected_rows=invalid,
-                                message="Rows cannot be assigned to customer/period/master data.",
-                                treatment="Retained in source tables; excluded from this review's aggregates."))
+            impact = row_impact(invalid)
+            quality.append(dict(check_id="DQ_SELECTION", dataset=sheet, severity="warning", affected_rows=len(invalid),
+                                scope=f"customer={customer_id}; period={period_from}..{period_to}; includes undated rows",
+                                quantitative_impact=impact,
+                                message=f"{len(invalid)} rows cannot be assigned to customer/period/master data; known affected kg={impact['known_washed_kg']}; unknown-kg rows={impact['unknown_washed_kg_rows']}. These rows are excluded, not repaired.",
+                                treatment="Data engineering: restore missing dates and reconcile site/customer/product/laundry keys against the master data; retain raw rows and rerun after correction."))
         return result
 
     activity, repairs, cycles = (select(s) for s in ("Service_Activity", "Repairs", "Service_Cycles"))
@@ -133,14 +150,30 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         return values
 
     values = calculate(allocated, repairs, cycles, len(sites))
-    traces = operational_traces(allocated, repairs, cycles, products, len(sites), period_to)
-    traces.update(environmental_traces(allocated, repairs, products, baseline, sensitivity))
+    traces = operational_traces(allocated, repairs, cycles, products, len(sites), period_to, values=values)
+    traces.update(environmental_traces(allocated, repairs, products, baseline, sensitivity, values=values))
     gaps = [dict(g) for g in DATA_GAPS]
+    dq5 = wearer_finding(activity, values, customer_id, period_to)
+    quality.append(dq5)
+    for gap in gaps:
+        if gap["gap"] == "Unique wearer count":
+            gap["impact"] = dq5["message"]
+            gap["future_source"] += "; " + dq5["treatment"]
+        elif gap["gap"] == "Service-request details":
+            gap["impact"] = f"{values['service_requests']} requests across {len(sites)} selected customer sites; timestamps and causes are absent, so request-free days and root causes cannot be calculated."
+            gap["future_source"] += "; export request IDs, site IDs, opened/closed timestamps and cause codes."
+        elif gap["gap"] == "Customer hierarchy is synthetic":
+            gap["impact"] = f"{len(sites)} sites for {customer_id} rely on synthetic account mappings; roll-up requires effective-dated production ownership."
+        elif gap["gap"] == "Laundry volume for L003":
+            relevant = [q for q in quality if q["check_id"] == "DQ4" and q["quantitative_impact"].get("laundry_id") == "L003" and period_from <= q["quantitative_impact"]["month"] <= period_to]
+            selected_kg = total([r for r in activity if r["laundry_id"] == "L003"], "customer_washed_kg")
+            gap["impact"] = f"{len(relevant)} global L003 laundry-month discrepancies in the requested period; {selected_kg} kg of selected customer activity assigned to L003. Global excess volumes are not this customer's footprint error."
+            gap["future_source"] += "; reconcile laundry/month/service-boundary totals and units before using allocated impacts externally."
     metrics = []
     for metric_id, category, unit, status, formula, sources, assumptions in DEFINITIONS:
         value = values[metric_id]
         if value is None or (isinstance(value, dict) and any(not number(v) for v in value.values())):
-            gaps.append(dict(gap=f"Unavailable metric: {metric_id}", impact="Incomplete inputs or zero denominator; metric omitted rather than replaced with zero.", future_source="Complete source workbook inputs"))
+            gaps.append(unavailable_gap(metric_id, activity, repairs, cycles, allocated, period_to, products, baseline))
             continue
         metrics.append(dict(id=metric_id, label=("Illustrative idle stock value" if metric_id == "idle_value_eur" else metric_id.replace("_", " ").capitalize()),
                             category=category, value=_range(value), unit=unit, status=status,
@@ -151,10 +184,13 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
     def scalar_metrics(v):
         return {key: value[sensitivity] if isinstance(value, dict) else value for key, value in v.items() if value is not None}
 
+    activity_groups = _group_by(allocated, "site_id", "product_id", "month")
+    repair_groups = _group_by(repairs, "site_id", "product_id", "month", "repair_type")
+    cycle_groups = _group_by(cycles, "site_id", "product_id")
     site_output = []
     for site_id, site in sites.items():
-        v = calculate([r for r in allocated if r["site_id"] == site_id], [r for r in repairs if r["site_id"] == site_id],
-                      [r for r in cycles if r["site_id"] == site_id], 1)
+        v = calculate(activity_groups["site_id"][site_id], repair_groups["site_id"][site_id],
+                      cycle_groups["site_id"][site_id], 1)
         laundry_id = site.get("primary_laundry_id") or site.get("laundry_id") or ""
         def applies(finding):
             if not laundry_id:
@@ -167,16 +203,17 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         site_output.append({**{key: site.get(key) or "" for key in ("site_id", "site_name", "country", "city", "site_type")},
                             "laundry_id": laundry_id, "metrics": scalar_metrics(v), "flags": flags})
     product_output = []
-    for product_id in sorted({r["product_id"] for r in activity}):
+    for product_id in sorted(activity_groups["product_id"]):
         product = products[product_id]
-        v = calculate([r for r in allocated if r["product_id"] == product_id], [r for r in repairs if r["product_id"] == product_id],
-                      [r for r in cycles if r["product_id"] == product_id], len({r["site_id"] for r in activity if r["product_id"] == product_id}))
+        product_rows = activity_groups["product_id"][product_id]
+        v = calculate(product_rows, repair_groups["product_id"][product_id],
+                      cycle_groups["product_id"][product_id], len({r["site_id"] for r in product_rows}))
         product_output.append({**{k: product[k] for k in ("product_id", "product_name", "product_group")}, "metrics": scalar_metrics(v)})
     timeseries = {key: [] for key in ("washed_kg", "water_saving_l", "co2e_saving_kg", "repairs_total")}
-    for month in sorted({r["month"] for r in activity}):
-        rows = [r for r in allocated if r["month"] == month]
-        monthly = environmental(rows, [r for r in repairs if r["month"] == month], products, baseline)
-        monthly.update(washed_kg=total(rows, "customer_washed_kg"), repairs_total=total([r for r in repairs if r["month"] == month], "repair_count"))
+    for month in sorted(activity_groups["month"]):
+        rows, month_repairs = activity_groups["month"][month], repair_groups["month"][month]
+        monthly = environmental(rows, month_repairs, products, baseline)
+        monthly.update(washed_kg=total(rows, "customer_washed_kg"), repairs_total=total(month_repairs, "repair_count"))
         for key in timeseries:
             value = monthly[key]
             if value is not None:
@@ -194,12 +231,11 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
             metric["breakdown"]["by_route"] = [{"route": route, "value": total(allocated, route)} for route in ROUTES]
         if key == "repairs_total":
             metric["breakdown"]["by_repair_type"] = [
-                {"repair_type": kind, "value": total([r for r in repairs if r.get("repair_type") == kind], "repair_count")}
-                for kind in sorted({r["repair_type"] for r in repairs if r.get("repair_type") is not None})]
+                {"repair_type": kind, "value": total(repair_groups["repair_type"][kind], "repair_count")}
+                for kind in sorted(k for k in repair_groups["repair_type"] if k is not None)]
     assumptions = [{"id": row["assumption_id"], **{k: row[k] for k in ("assumption", "value_or_rule", "rationale", "category", "confidence")}, "source": "PACK"} for row in tables["Assumptions"]]
     assumptions += [dict(a) for a in TEAM_ASSUMPTIONS]
     assumptions.append(dict(id="T003", assumption="Illustrative idle stock valuation", value_or_rule="Latest-month idle pieces × synthetic product purchase cost; no extra sensitivity factor", rationale="A stock value is not a cost-saving promise.", category="Cost", confidence="Low", source="Team assumption"))
-    quality.append(dict(check_id="DQ5_WEARER_MULTI_PRODUCT_SUM", dataset="Service_Activity", severity="info", affected_rows=len(activity), message="Product-level wearer sums can count a person repeatedly.", treatment="Show latest-month sum of site maxima as a minimum estimate, alongside wearer-product assignments."))
     rules = sorted([r for r in tables.get("Industry_Priorities", []) if r["industry"] == customer["industry"]], key=lambda r: r["priority_rank"])
     return dict(
         meta={**{k: customer[k] for k in ("customer_id", "customer_name", "industry", "segment", "hq_country")},

@@ -59,10 +59,11 @@ def display_number(value):
     return f"{value:,.6f}".rstrip("0").rstrip(".") if number(value) else "unavailable"
 
 
-def operational_traces(activity, repairs, cycles, products, site_count, latest_month):
+def operational_traces(activity, repairs, cycles, products, site_count, latest_month, *, values=None):
     """Arithmetic for this selection, using the same rows as operational()."""
     f = display_number
-    values = operational(activity, repairs, cycles, products, site_count, latest_month)
+    if values is None:
+        values = operational(activity, repairs, cycles, products, site_count, latest_month)
     latest = [r for r in activity if r["month"] == latest_month]
     allocated, scanned = total(latest, "allocated_pieces"), total(latest, "active_assets_scanned")
     traces = {

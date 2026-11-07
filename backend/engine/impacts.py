@@ -79,10 +79,11 @@ def environmental(rows, repairs, products, baseline):
     return result
 
 
-def environmental_traces(rows, repairs, products, baseline, sensitivity):
+def environmental_traces(rows, repairs, products, baseline, sensitivity, *, values=None):
     """Show live operands, with process/logistics and scenarios kept explicit."""
     f = display_number
-    values = environmental(rows, repairs, products, baseline)
+    if values is None:
+        values = environmental(rows, repairs, products, baseline)
     kg = total(rows, "customer_washed_kg")
     traces = {}
     for key in ("customer_water_l", "customer_energy_kwh", "textile_waste_kg"):
@@ -91,6 +92,8 @@ def environmental_traces(rows, repairs, products, baseline, sensitivity):
         if number(effective):
             traces[key] = (f"{f(kg)} kg * {f(effective)} effective weighted amount/kg = {f(value)}; "
                            "effective intensity is derived from the sum of row allocations, not a uniform source factor")
+        elif number(value):
+            traces[key] = f"SUM({key}) over {len(rows)} row allocations = {f(value)}; effective amount/kg unavailable when washed kg is zero"
     process, delivery = total(rows, "customer_process_kgco2e"), total(rows, "customer_delivery_kgco2e")
     traces["customer_co2e_kg"] = f"{f(process)} allocated process kgCO2e + {f(delivery)} allocated delivery kgCO2e = {f(values['customer_co2e_kg'])}"
     recycling, reuse = total(rows, "recycling_kg"), total(rows, "reuse_kg")
@@ -102,7 +105,7 @@ def environmental_traces(rows, repairs, products, baseline, sensitivity):
         count = total([r for r in repairs if r["product_id"] == pid], "repair_count")
         factor = products.get(pid, {}).get("synthetic_product_footprint_kgco2e")
         product_terms.append(f"{pid}: {f(count)} repairs * {f(factor)} kgCO2e/product")
-    traces["avoided_product_co2e_kg"] = "(" + " + ".join(product_terms) + f") * {f(repair_factor)} repair factor"
+    traces["avoided_product_co2e_kg"] = "(" + (" + ".join(product_terms) or "0; no selected repairs") + f") * {f(repair_factor)} repair factor"
     multiplier = {"low": 0.8, "base": 1.0, "high": 1.2}[sensitivity]
     for key, factor_key, footprint_key in (("water_saving_l", "water_l_per_kg", "customer_water_l"),
                                             ("energy_saving_kwh", "energy_kwh_per_kg", "customer_energy_kwh"),
