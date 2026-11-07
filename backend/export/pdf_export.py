@@ -13,6 +13,7 @@ from reportlab.graphics.charts.barcharts import HorizontalBarChart, VerticalBarC
 from reportlab.graphics.shapes import Drawing, Rect, String
 from pypdf import PdfReader, PdfWriter
 from .content import build_pages, FOOTER
+from .meeting import prepare_export_review
 from .fonts import review_font as _font
 from .layout import layout_pages, paragraph
 from .pptx_export import LOGO, STATUS_COLORS, subtitle
@@ -80,6 +81,7 @@ def _kpi(c, card, font):
 
 
 def export_pdf(review: dict, out_path: str) -> str:
+    review = prepare_export_review(review)
     font = _font()
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=(1152, 648))

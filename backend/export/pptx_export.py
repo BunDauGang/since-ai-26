@@ -13,6 +13,7 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 from .content import build_pages, FOOTER
+from .meeting import prepare_export_review
 from .fonts import font_family
 from .layout import layout_pages
 
@@ -149,6 +150,7 @@ def _chart(slide, card, y):
 
 
 def export_pptx(review: dict, out_path: str) -> str:
+    review = prepare_export_review(review)
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(16), Inches(9)
     pages = layout_pages(build_pages(review))

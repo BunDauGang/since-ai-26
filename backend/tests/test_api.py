@@ -145,7 +145,7 @@ def test_export_follows_reordered_dashboard_observations():
     obs = review["observations"]
     assert len(obs) >= 2
     review["observations"] = [dict(o, title="KAM " + "ABCDEFGH"[i] + " " + o["title"]) for i, o in enumerate(obs)][::-1]
-    text = str(build_pages(review))
+    text = str(next(p for p in build_pages(review) if p[0] == "Observations & recommended next actions"))
     assert all(f"KAM {'ABCDEFGH'[i]} " in text for i in range(len(obs)))
     assert text.index("KAM " + "ABCDEFGH"[len(obs) - 1]) < text.index("KAM A")
 
