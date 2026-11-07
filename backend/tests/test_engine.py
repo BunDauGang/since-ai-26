@@ -374,8 +374,8 @@ def test_wearer_quality_is_quantitative_and_customer_month_scoped(pack_builder):
 def test_workbook_peer_benchmarks_and_prices(pack_builder, pack_tables, customer_id):
     r = pack_builder(customer_id=customer_id, period_from="2025-03", period_to="2025-03")
     peers = r["peer_benchmark"]
-    assert len(peers["customer"]) == 5
-    assert all(v["sample_size"] == 3 and 0 <= v["percentile"] <= 1 for v in peers["customer"].values())
+    assert peers["customer"] == {}  # Three-customer pack cannot expose network statistics.
+    assert len(peers["methodology"]["suppressed_metrics"]) == 5
     assert set(peers["sites"]) == {s["site_id"] for s in r["sites"]}
     assert all(0 <= rank <= 1 for values in peers["sites"].values() for rank in values.values())
     assert peers == pack_builder(customer_id=customer_id, period_from="2025-03", period_to="2025-03",
