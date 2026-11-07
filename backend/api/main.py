@@ -744,3 +744,15 @@ def export_customer_review(
     # Delete the temp folder once the file has been sent.
     return FileResponse(path=str(out_file), media_type=EXPORT_MEDIA[format], filename=out_file.name,
                         background=BackgroundTask(shutil.rmtree, tmp_dir, ignore_errors=True))
+
+
+# Meeting Prep is isolated from the legacy story payload; deterministic review
+# resolution keeps using the same cache and error handling as /api/review.
+from backend.api.prep import create_prep_router
+
+
+def _resolve_prep_review(selection: dict) -> tuple[dict, dict[str, str]]:
+    return _compute_full_review(ReviewRequest(**selection))
+
+
+app.include_router(create_prep_router(_resolve_prep_review))

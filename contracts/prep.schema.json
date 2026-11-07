@@ -1,0 +1,455 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LindstromMeetingPrepResponse",
+  "description": "Canonical Meeting Prep response or the existing frontend compatibility envelope. Source numbers remain in canonical evidence; compatibility tokens are constructed by the server from validated metric IDs.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/canonicalResponse"
+    },
+    {
+      "$ref": "#/$defs/frontendCompatibilityResponse"
+    }
+  ],
+  "$defs": {
+    "claim": {
+      "type": "object",
+      "required": [
+        "text",
+        "metric_ids",
+        "observation_ids",
+        "context_ids",
+        "evidence_ids"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "metric_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "observation_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "context_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "answer": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/claim"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "question_id",
+        "question",
+        "kind",
+        "readiness",
+        "limitations"
+      ],
+      "properties": {
+        "question_id": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "readiness": {
+          "enum": [
+            "evidence",
+            "caveat",
+            "data_gap"
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "metric": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "category",
+        "value",
+        "unit",
+        "status",
+        "formula",
+        "sources",
+        "assumptions",
+        "confidence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "object",
+          "required": [
+            "low",
+            "base",
+            "high"
+          ],
+          "properties": {
+            "low": {
+              "type": "number"
+            },
+            "base": {
+              "type": "number"
+            },
+            "high": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true
+        },
+        "unit": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "MEASURED",
+            "CALCULATED",
+            "ALLOCATED_ESTIMATE",
+            "ESTIMATE",
+            "SYNTHETIC",
+            "PUBLIC_REFERENCE"
+          ]
+        },
+        "formula": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "scale",
+            "allocation",
+            "service",
+            "repair",
+            "footprint",
+            "handprint"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "canonicalResponse": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "kam_only",
+        "audience_role",
+        "audience_mapping",
+        "source",
+        "fallback_reason",
+        "answers",
+        "talk_track",
+        "likely_objections",
+        "do_not_say",
+        "evidence_catalog",
+        "context_status",
+        "review_meta"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "kam_only": {
+          "const": true
+        },
+        "audience_role": {
+          "type": "string"
+        },
+        "audience_mapping": {
+          "type": "object",
+          "required": [
+            "persona",
+            "priority",
+            "emphasized_metric_ids",
+            "source",
+            "reason"
+          ],
+          "properties": {
+            "persona": {
+              "enum": [
+                "ceo",
+                "cfo",
+                "operations",
+                "sustainability"
+              ]
+            },
+            "priority": {
+              "enum": [
+                "water",
+                "emissions",
+                "cost",
+                "circularity",
+                "service",
+                "improvement"
+              ]
+            },
+            "emphasized_metric_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "source": {
+              "enum": [
+                "template",
+                "gemini"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "source": {
+          "enum": [
+            "template",
+            "gemini"
+          ]
+        },
+        "fallback_reason": {
+          "enum": [
+            null,
+            "disabled",
+            "missing_key",
+            "no_evidence",
+            "timeout",
+            "provider_error",
+            "invalid_model_output"
+          ]
+        },
+        "answers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/answer"
+          }
+        },
+        "talk_track": {
+          "type": "object",
+          "required": [
+            "opening",
+            "points",
+            "ask"
+          ],
+          "properties": {
+            "opening": {
+              "type": "string"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/claim"
+              }
+            },
+            "ask": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "likely_objections": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/claim"
+              }
+            ],
+            "type": "object",
+            "required": [
+              "question"
+            ],
+            "properties": {
+              "question": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "do_not_say": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_catalog": {
+          "type": "object",
+          "required": [
+            "metrics",
+            "observations",
+            "context"
+          ],
+          "properties": {
+            "metrics": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/metric"
+              }
+            },
+            "observations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            },
+            "context": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "context_status": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "review_meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "goal": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        }
+      },
+      "additionalProperties": true
+    },
+    "frontendCompatibilityResponse": {
+      "type": "object",
+      "required": [
+        "answers",
+        "source",
+        "fallback_reason",
+        "prep"
+      ],
+      "properties": {
+        "answers": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "required": [
+              "question_id",
+              "answer"
+            ],
+            "properties": {
+              "question_id": {
+                "type": "string"
+              },
+              "answer": {
+                "type": "string"
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "text"
+                  ],
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "metric_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "gap": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "source": {
+          "enum": [
+            "template",
+            "gemini"
+          ]
+        },
+        "fallback_reason": {
+          "enum": [
+            null,
+            "disabled",
+            "missing_key",
+            "no_evidence",
+            "timeout",
+            "provider_error",
+            "invalid_model_output"
+          ]
+        },
+        "prep": {
+          "$ref": "#/$defs/canonicalResponse"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
