@@ -126,3 +126,34 @@ The bundler validates the existing shared schema and finite JSON before writing
 `contracts/sample_review.json`; it does not modify the schema, frontend bundle,
 API or exporters. Frontend's separate `npm run sync-contract` remains a task for
 the frontend owner after a contract sample update.
+
+## Peer review contract (Codex A / final meeting-mode plan)
+
+`build_review` additionally emits the optional `peer_benchmark` block. Its
+`customer` map contains `on_time_rate`, `allocation_use_rate`,
+`repair_rate_per_1000`, `median_cycle_hours`, `service_requests_per_wearer`.
+Each available KPI contains `network_median`, `percentile` (0–1) and
+`sample_size`. The population is all eligible workbook customers, including
+the selected one, in the same reporting period. Each customer contributes one
+operational aggregate; sites/cycles are not pooled across customers. Selection
+uses the same valid customer/site/product/laundry keys and pickup-month rule
+as the review. Missing/non-finite values are excluded separately per KPI.
+
+`sites[site_id][kpi]` is the site's percentile among the selected customer's
+sites. Rank = (number strictly below + (number equal − 1)/2)/(n − 1).
+Ties share rank; a singleton receives neutral 0.5. Rank is ascending numerical
+position, not a performance score. The `methodology.preferred_direction` map
+marks higher/lower preferences; repair-rate comparisons are investigation
+signals, not proof of poor service. Requests per wearer = requests in the
+reporting period divided by final-month minimum wearer estimate, not unique
+people or a month-normalised rate. Missing/zero wearer denominators are omitted.
+
+The block discloses its synthetic, small-cohort limitations and contains no
+other customer names, IDs or individual values. It is not an industry standard.
+Baseline/sensitivity changes do not affect these operational comparisons.
+
+`products[].synthetic_purchase_cost_eur` exposes the source synthetic unit
+purchase cost (not the rental price, not a cost saving). Zero is valid; absent,
+non-finite or negative costs omit this optional field. All existing metric and
+product fields remain intact. Schema/API/frontend/export updates remain with
+their owners; no shared schema or bundled frontend data is changed here.

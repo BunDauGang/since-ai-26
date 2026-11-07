@@ -8,6 +8,7 @@ from .adapters.excel_adapter import load_tables
 from .impacts import allocate_rows, environmental, savings, ROUTES, environmental_traces
 from .kpis import operational, total, number, operational_traces
 from .sensitivity import TEAM_ASSUMPTIONS
+from .peer_benchmark import build_peer_benchmark
 from .validate import validate_tables, row_impact, wearer_finding, unavailable_gap
 from backend.insights.priority import PRIORITY_EMPHASIS, interpret_prompt
 
@@ -254,6 +255,9 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         v = calculate(product_rows, repair_groups["product_id"][product_id],
                       cycle_groups["product_id"][product_id], len({r["site_id"] for r in product_rows}))
         product_output.append({**{k: product[k] for k in ("product_id", "product_name", "product_group")}, "metrics": scalar_metrics(v)})
+        purchase_cost = product.get("synthetic_purchase_cost_eur")
+        if number(purchase_cost) and purchase_cost >= 0:
+            product_output[-1]["synthetic_purchase_cost_eur"] = purchase_cost
     timeseries = {key: [] for key in ("washed_kg", "water_saving_l", "co2e_saving_kg", "repairs_total")}
     for month in sorted(activity_groups["month"]):
         rows, month_repairs = activity_groups["month"][month], repair_groups["month"][month]
@@ -290,4 +294,5 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         metrics=metrics, sites=site_output, products=product_output, timeseries=timeseries, baseline_comparison=comparison,
         priority_view=dict(priority=priority, emphasized_metric_ids=[m for m in PRIORITIES[priority] if m in {v['id'] for v in metrics}],
                            industry_rules=[f"{r['industry']} #{r['priority_rank']}: {r['priority_theme']} — {r['dashboard_emphasis']}" for r in rules]),
-        observations=[], data_quality=quality, assumptions=assumptions, data_gaps=gaps)
+        observations=[], data_quality=quality, assumptions=assumptions, data_gaps=gaps,
+        peer_benchmark=build_peer_benchmark(tables, customer_id, period_from, period_to, values, site_output))

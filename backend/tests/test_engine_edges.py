@@ -261,3 +261,18 @@ def test_sample_builder_uses_current_engine_and_offline_observations(tiny_builde
     assert metric_map(r)["water_saving_l"] == 240
     assert r["meta"]["customer_id"] == "CUST002"
     assert calls == []
+
+
+def test_product_purchase_prices_and_benchmark_are_additive(tiny_builder, tiny_tables):
+    r = tiny_builder()
+    assert {p["product_id"]: p["synthetic_purchase_cost_eur"] for p in r["products"]} == {"P1": 10, "P2": 20}
+    assert set(r["peer_benchmark"]["sites"]) == {"S2"}
+    assert r["peer_benchmark"]["customer"]["on_time_rate"]["sample_size"] == 1
+    assert r["peer_benchmark"]["sites"]["S2"]["on_time_rate"] == 0.5
+    tiny_tables["Products"][0]["synthetic_purchase_cost_eur"] = None
+    tiny_tables["Service_Activity"][0]["active_wearers"] = 0
+    for row in tiny_tables["Service_Activity"]:
+        row["active_wearers"] = 0
+    r = tiny_builder()
+    assert "synthetic_purchase_cost_eur" not in r["products"][0]
+    assert "service_requests_per_wearer" not in r["peer_benchmark"]["customer"]

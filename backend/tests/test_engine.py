@@ -368,3 +368,22 @@ def test_wearer_quality_is_quantitative_and_customer_month_scoped(pack_builder):
     assert "NOT a count of duplicate people" in dq5["message"]
     assert "customer=CUST001; month=2025-12" == dq5["scope"]
     assert any("18760" in g["impact"].replace(",", "") for g in r["data_gaps"] if g["gap"] == "Unique wearer count")
+
+
+@pytest.mark.parametrize("customer_id", ["CUST001", "CUST002"])
+def test_workbook_peer_benchmarks_and_prices(pack_builder, pack_tables, customer_id):
+    r = pack_builder(customer_id=customer_id, period_from="2025-03", period_to="2025-03")
+    peers = r["peer_benchmark"]
+    assert len(peers["customer"]) == 5
+    assert all(v["sample_size"] == 3 and 0 <= v["percentile"] <= 1 for v in peers["customer"].values())
+    assert set(peers["sites"]) == {s["site_id"] for s in r["sites"]}
+    assert all(0 <= rank <= 1 for values in peers["sites"].values() for rank in values.values())
+    assert peers == pack_builder(customer_id=customer_id, period_from="2025-03", period_to="2025-03",
+                                 baseline_id="B_HOME", sensitivity="low")["peer_benchmark"]
+    products = {p["product_id"]: p for p in pack_tables["Products"]}
+    for p in r["products"]:
+        assert p["synthetic_purchase_cost_eur"] == products[p["product_id"]]["synthetic_purchase_cost_eur"]
+    encoded = __import__("json").dumps(peers)
+    for c in pack_tables["Customers"]:
+        assert c["customer_name"] not in encoded
+        assert c["customer_id"] not in encoded
