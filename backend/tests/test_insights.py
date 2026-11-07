@@ -189,24 +189,3 @@ def test_unapproved_model_claims_fail_closed(review, monkeypatch, claim):
     rows[0]['observation'] = claim
     with patch.object(llm, '_request', return_value=rows):
         assert generate_observations(review) == generate_observations(review, False)
-
-
-def test_story_wording_adds_only_number_free_sentences(monkeypatch):
-    from backend.insights import llm
-    review = {'meta': {'customer_name': 'NorthStar Foods Group', 'industry': 'Food & Beverage'}}
-    fallback = {'opening': 'Template opening with 98.3%.', 'points': [{'text': 'x'}], 'ask': 'Agree a pilot.', 'source': 'template'}
-    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
-    with patch.object(llm, '_request', side_effect=AssertionError('network forbidden')):
-        assert llm.story_talk_track(review, 'cfo', 'renewal', 15, fallback) is fallback
-    monkeypatch.setenv('GEMINI_API_KEY', 'test-placeholder')
-    good = {'opening_line': 'Thank you for a strong year together.', 'closing_line': 'Let us agree the next step today.'}
-    with patch.object(llm, '_request', return_value=good):
-        out = llm.story_talk_track(review, 'cfo', 'renewal', 15, fallback)
-    assert out['opening'] == 'Thank you for a strong year together. Template opening with 98.3%.'
-    assert out['closing'] == good['closing_line'] and out['points'] == fallback['points'] and out['source'] == 'template+ai_wording'
-    for bad in ({'opening_line': 'We saved you 20% this year.', 'closing_line': 'Ok.'},
-                {'opening_line': 'Fully audited results.', 'closing_line': 'Ok.'},
-                {'opening_line': 'We guarantee savings.', 'closing_line': 'Ok.'},
-                {'opening_line': 'Half the cost.', 'closing_line': 'Ok.'}, ['wrong shape']):
-        with patch.object(llm, '_request', return_value=bad):
-            assert llm.story_talk_track(review, 'cfo', 'renewal', 15, fallback) is fallback

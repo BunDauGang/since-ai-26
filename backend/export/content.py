@@ -233,8 +233,6 @@ def build_pages(review):
         return (o['title'], f"{body}\nAction{(' (' + tag + ')') if tag else ''}: {action}\nOwner: {o['owner']} | {refs}")
     page('Observations & recommended next actions', [observation_card(o) for o in observations])
     page('Steering-committee discussion', [(o['title'], o['steering_question'] + '\nDecision owner: ' + o['owner']) for o in observations])
-    for title, blocks_ in meeting_pages(review.get('meeting'), metrics):
-        page(title, blocks_)
     methodology = [('Calculation boundaries', 'All values are synthetic. Footprint uses laundry intensity × customer washed kg.\n'
                     'Handprint is the selected alternative minus the allocated service footprint.\n'
                     'Wearers are minimum estimates; wearer-product assignments are not unique people.\n'
@@ -244,121 +242,6 @@ def build_pages(review):
     methodology.append(('Data-quality flags', summarize_quality(review.get('data_quality', []))))
     methodology.append(('Production data gaps', '\n'.join(f"{g['gap']} → {g['future_source']}" for g in review.get('data_gaps', [])) or 'No gaps supplied.'))
     page('Methodology, assumptions & data readiness', methodology)
-    return pages
-
-
-MEETING_STATUS = {'met': 'Met', 'close': 'Close', 'missed': 'Not met', 'unknown': 'No data'}
-TARGET_LABELS = {
-    'on_time_rate': ('On-time delivery', 'min', 'ratio'),
-    'median_cycle_hours': ('Typical cycle time (median)', 'max', 'hours'),
-    'allocation_use_rate': ('Garments in circulation', 'min', 'ratio'),
-    'repair_rate_per_1000': ('Repairs per 1,000 washes', 'max', 'rate'),
-    'requests_per_100_wearers': ('Service requests per 100 wearers', 'max', 'per100'),
-}
-
-
-def _target_value(value, unit):
-    if not isinstance(value, (int, float)):
-        return 'n/a'
-    if unit == 'ratio':
-        return f'{value * 100:.1f}%'
-    if unit == 'hours':
-        return f'{value:.0f} h'
-    return f'{value:.1f}'
-
-
-def _eur(value):
-    return f'€{value:,.0f}' if isinstance(value, (int, float)) else 'n/a'
-
-
-def meeting_pages(meeting, metrics):
-    """Optional slides from review.meeting (sent by the dashboard): agreed KPIs, rough calculation, next steps.
-
-    Everything here is KAM input recorded in the meeting, labelled as such; the engine never produces it.
-    """
-    if not isinstance(meeting, dict):
-        return []
-    pages = []
-    # 1. Agreement & KPIs
-    rows = meeting.get('target_results')
-    if not isinstance(rows, list):
-        rows = []
-        for metric_id, target in (meeting.get('targets') or {}).items():
-            label, direction, unit = TARGET_LABELS.get(metric_id, (metrics.get(metric_id, {}).get('label', metric_id), 'min', 'rate'))
-            actual = metrics.get(metric_id, {}).get('value', {}).get('base')
-            rows.append({'label': label, 'target': target, 'actual': actual, 'unit': unit, 'metric_id': metric_id, 'status': ''})
-    kpi_lines = []
-    for row in rows:
-        direction = TARGET_LABELS.get(row.get('metric_id'), ('', 'min', ''))[1]
-        unit = row.get('unit', 'rate')
-        status = MEETING_STATUS.get(row.get('status', ''), row.get('status', ''))
-        kpi_lines.append(f"{row.get('label', row.get('metric_id', 'KPI'))}: target {'≥' if direction == 'min' else '≤'} "
-                         f"{_target_value(row.get('target'), unit)} | actual {_target_value(row.get('actual'), unit)}"
-                         + (f' | {status}' if status else ''))
-    agreement = []
-    if kpi_lines:
-        met = sum(1 for r in rows if r.get('status') == 'met')
-        heading = f'Agreed service KPIs: {met} of {len(rows)} on target' if any(r.get('status') for r in rows) else 'Agreed service KPIs'
-        agreement.append((heading, '\n'.join(kpi_lines) + '\nTargets entered by the KAM to match the customer agreement; actuals from this review.'))
-    sat = meeting.get('satisfaction') or {}
-    if isinstance(sat, dict) and (sat.get('score') is not None or sat.get('comment')):
-        score = sat.get('score')
-        text = f"Score: {score if score is not None else '–'} / {sat.get('scale', 10)}"
-        if sat.get('comment'):
-            text += f"\nWhat would make it a 10: {sat['comment']}"
-        agreement.append(('Customer satisfaction (KAM input)', text + '\nRecorded in the meeting; not part of the data pack.'))
-    if agreement:
-        pages.append(('Our agreement | service KPIs', agreement))
-    # 2. Rough calculation
-    rough = meeting.get('rough_calc')
-    if isinstance(rough, dict) and isinstance(rough.get('result_eur'), (int, float)):
-        rng = rough.get('range_eur') or {}
-        has_range = isinstance(rng.get('low'), (int, float)) and isinstance(rng.get('high'), (int, float)) and rng['high'] > rng['low']
-        tile = ('Rough value per year vs the alternative', {
-            'kpi': True, 'id': 'rough_calc',
-            'value': _eur(rough['result_eur']),
-            'detail': f"{rough.get('label', 'ROUGH CALCULATION')} | KAM assumptions, not a quote",
-            'range': f"Range {_eur(rng['low'])} to {_eur(rng['high'])}" if has_range else 'Single value',
-            'status': 'ESTIMATE', 'confidence': 'Low',
-        })
-        lines = [f"{line.get('label', '')}: {_eur(line.get('eur'))}" for line in rough.get('lines') or [] if isinstance(line, dict)]
-        inputs = rough.get('inputs') or {}
-        names = {'baseline_id': 'Compared with', 'water_eur_per_m3': 'Water + wastewater €/m³', 'energy_eur_per_kwh': 'Energy €/kWh',
-                 'carbon_eur_per_t': 'Internal carbon price €/t', 'garment_eur': 'Replacement garment €', 'repair_share': 'Repairs that postpone a purchase'}
-        def show(k, v):
-            if k == 'baseline_id':
-                return {'B_LOCAL': 'Outsourced local laundry', 'B_HOME': 'Home washing', 'B_INHOUSE': 'In-house customer laundry'}.get(v, str(v))
-            if k == 'repair_share' and isinstance(v, (int, float)):
-                return f'{v * 100:.0f}%'
-            return str(v)
-        input_lines = [f"{names.get(k, k)}: {show(k, v)}" for k, v in inputs.items()]
-        blocks_ = [tile]
-        if lines:
-            blocks_.append(('What makes up the total', '\n'.join(lines)))
-        if input_lines:
-            blocks_.append(('Prices agreed at the table', '\n'.join(input_lines)))
-        blocks_.append(('Not included', 'Lindström service fee, the customer\'s own staff time and invoice data. '
-                        'A conversation starter, not a business case or a promised saving.'))
-        pages.append(('Value vs the alternative | rough calculation', blocks_))
-    # 3. Next steps
-    def action_text(a):
-        if isinstance(a, dict):
-            extra = ', '.join(x for x in (a.get('owner') and f"owner: {a['owner']}", a.get('due') and f"by {a['due']}") if x)
-            return a.get('text', '') + (f' ({extra})' if extra else '')
-        return str(a)
-    actions = [action_text(a) for a in meeting.get('agreed_actions') or [] if action_text(a).strip()]
-    topics = [str(t) for t in meeting.get('open_topics') or [] if str(t).strip()]
-    steps = [('Agreed actions', '\n'.join('• ' + a for a in actions) if actions else 'No actions recorded yet.'),
-             ('Open topics for the next meeting', '\n'.join('• ' + t for t in topics) if topics else 'Nothing parked.')]
-    follow = []
-    if meeting.get('next_meeting'):
-        follow.append(f"Next meeting: {meeting['next_meeting']}")
-    if str(meeting.get('notes', '')).strip():
-        follow.append(str(meeting['notes']).strip())
-    if follow:
-        steps.append(('Follow-up', '\n'.join(follow)))
-    if actions or topics or follow:
-        pages.append(('Agreed next steps & open topics', steps))
     return pages
 
 

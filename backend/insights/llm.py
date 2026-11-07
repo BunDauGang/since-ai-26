@@ -17,11 +17,11 @@ INSTRUCTION = ("Select wording using ONLY the supplied facts. Return a JSON arra
                + json.dumps(APPROVED_PROSE) + ". The application appends immutable evidence and action plans.")
 
 
-def _request(facts, key, instruction=INSTRUCTION):
+def _request(facts, key):
     model = os.getenv('GEMINI_MODEL', 'gemini-2.5-flash')
     if not re.fullmatch(r'[a-zA-Z0-9._-]+', model):
         raise ValueError('Invalid Gemini model name')
-    payload = {'systemInstruction': {'parts': [{'text': instruction}]},
+    payload = {'systemInstruction': {'parts': [{'text': INSTRUCTION}]},
                'contents': [{'role': 'user', 'parts': [{'text': json.dumps(facts)}]}],
                'generationConfig': {'responseMimeType': 'application/json', 'temperature': 0}}
     request = urllib.request.Request(
@@ -61,49 +61,4 @@ def polish(facts, fallback):
     except Exception:
         # Do not log responses, headers or exception strings (may contain credentials).
         log.warning('Gemini wording unavailable or rejected; using deterministic observations')
-        return fallback
-
-
-STORY_INSTRUCTION = (
-    "You help a Lindström key account manager open and close a customer meeting. Using ONLY the supplied "
-    "persona, goal, customer name and industry, return JSON {\"opening_line\": string, \"closing_line\": string}: "
-    "one warm, plain-English sentence each, at most 30 words. Never use digits, quantities, percentages, money, "
-    "dates, competitor names, or the words audited, verified, certified or guaranteed. "
-    "The application adds every number and piece of evidence itself.")
-STORY_UNSAFE = re.compile(r'[€$£]|\bguarantee', re.I)
-
-
-def _safe_line(value):
-    if not isinstance(value, str):
-        raise ValueError('Missing line')
-    value = ' '.join(value.split())
-    if not value or len(value) > 240 or UNSAFE.search(value) or STORY_UNSAFE.search(value):
-        raise ValueError('Unsupported prose or numeric claim')
-    return value
-
-
-def story_talk_track(review, persona, goal, minutes, fallback):
-    """Optional AI framing for /api/story: one opening and one closing sentence, no numbers.
-
-    The deterministic talk track (all numbers, points, objections and the ask) is kept unchanged; without a key
-    or on any rejected answer the template is returned as is.
-    """
-    key = os.getenv('GEMINI_API_KEY')
-    if not key:
-        return fallback
-    try:
-        meta = review.get('meta', {})
-        facts = {'persona': persona, 'goal': str(goal)[:200], 'customer': meta.get('customer_name', ''),
-                 'industry': meta.get('industry', '')}
-        out = _request(facts, key, STORY_INSTRUCTION)
-        if not isinstance(out, dict):
-            raise ValueError('Wrong shape')
-        opening, closing = _safe_line(out.get('opening_line')), _safe_line(out.get('closing_line'))
-        result = dict(fallback)
-        result['opening'] = opening + ' ' + fallback['opening']
-        result['closing'] = closing
-        result['source'] = 'template+ai_wording'
-        return result
-    except Exception:
-        log.warning('Gemini story wording unavailable or rejected; using the deterministic talk track')
         return fallback
