@@ -76,9 +76,11 @@ export function useReview() {
           priority: controls.priority,
         });
         if (id !== reqId.current) return;
-        if (r.meta?.customer_id !== controls.customerId) {
-          // The API falls back to the bundled sample when the engine fails. Never show it as another customer.
-          throw new Error(`engine returned ${r.meta?.customer_id ?? "no customer"} instead of ${controls.customerId}`);
+        // The API silently falls back to the NorthStar sample when the engine fails, overwriting only
+        // meta.customer_id/period. Check the name too, so another customer's numbers are never shown.
+        const expectedName = CUSTOMERS.find((c) => c.id === controls.customerId)?.name;
+        if (r.meta?.customer_id !== controls.customerId || (expectedName && r.meta?.customer_name !== expectedName)) {
+          throw new Error(`the engine could not calculate ${expectedName ?? controls.customerId} (API returned ${r.meta?.customer_name ?? "no customer"} data)`);
         }
         setLive({ key, review: normalizeReview(r) });
       } catch (e) {
@@ -104,15 +106,16 @@ export function useReview() {
       ? { review: liveForCustomer.review, siteLevelBaselineId: liveForCustomer.review.meta.baseline_id }
       : rebaseReview(NORMALIZED_SAMPLE, controls.baselineId);
     const emphasized = emphasizedIds(review, controls.priority);
-    const observations = rankObservations(review.observations, emphasized);
-    // What gets exported must equal what is on screen.
-    const exportable: Review = {
+    // Sent to /api/export. Observations keep the engine's order: backend/export only reuses supplied
+    // observations when they match its own rule order, so re-ranking them here would make the deck drop them.
+    const exportReview: Review = {
       ...review,
       meta: { ...review.meta, sensitivity: controls.sensitivity, priority: controls.priority },
       priority_view: { ...review.priority_view, priority: controls.priority, emphasized_metric_ids: emphasized },
-      observations,
     };
-    return { review: exportable, emphasized, siteLevelBaselineId };
+    // Shown on screen: same data, observations touching the active lens first.
+    const display: Review = { ...exportReview, observations: rankObservations(review.observations, emphasized) };
+    return { review: display, exportReview, emphasized, siteLevelBaselineId };
   }, [mode, liveForCustomer, controls.baselineId, controls.priority, controls.sensitivity]);
 
   const update = useCallback((patch: Partial<Controls>) => setControls((c) => ({ ...c, ...patch })), []);

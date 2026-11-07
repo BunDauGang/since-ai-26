@@ -87,7 +87,6 @@ export const PRIORITIES: PriorityDef[] = [
     siteMetric: "on_time_rate",
     siteMetricLabel: "On-time cycle rate by site (weakest first)",
     siteSort: "asc",
-    timeseries: "service_requests",
     headline: "Delivery reliability, turnaround time and service requests across sites.",
     keywords: ["service", "delivery", "on-time", "on time", "late", "reliab", "turnaround", "hygiene", "continuity"],
   },
@@ -209,3 +208,10 @@ export function shortSiteName(siteName: string, customerName: string): string {
   const brand = customerName.split(" ")[0];
   return brand && siteName.startsWith(`${brand} `) ? siteName.slice(brand.length + 1) : siteName;
 }
+
+/**
+ * Outlier rules worth highlighting in red. R3 ("below the customer average") is true for roughly
+ * half the sites by construction and DQ* flags are data issues, so they show as chips only.
+ */
+const OUTLIER_RULES = ["R1_", "R2_", "R4_"];
+export const isOutlier = (s: { flags: string[] }) => s.flags.some((f) => OUTLIER_RULES.some((r) => f.startsWith(r)));

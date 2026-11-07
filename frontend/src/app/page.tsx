@@ -12,7 +12,7 @@ import { Observations } from "@/components/views/Observations";
 import { Overview } from "@/components/views/Overview";
 import { Sites } from "@/components/views/Sites";
 import { downloadJson, exportReview } from "@/lib/api";
-import { priorityDef, type ViewId } from "@/lib/config";
+import { isOutlier, priorityDef, type ViewId } from "@/lib/config";
 import { baselineName } from "@/lib/derive";
 import { useReview } from "@/lib/useReview";
 
@@ -67,20 +67,20 @@ export default function Page() {
     if (!r.canExport) return;
     setExporting(format);
     try {
-      await exportReview(review, format);
+      await exportReview(r.exportReview, format);
       setToast({ kind: "info", text: `${format.toUpperCase()} downloaded — built from the same review.json shown here.` });
     } catch {
       setToast({
         kind: "error",
         text: `Export service not reachable (${format.toUpperCase()} is rendered by backend/export via FastAPI). Start the API, or download the exact review.json behind this view.`,
-        action: { label: "Download review.json", run: () => downloadJson(review) },
+        action: { label: "Download review.json", run: () => downloadJson(r.exportReview) },
       });
     } finally {
       setExporting(null);
     }
   }
 
-  const flagged = review.sites.filter((s) => s.flags.length).length;
+  const flagged = review.sites.filter(isOutlier).length;
   const metric = metricId ? review.metrics.find((m) => m.id === metricId) ?? null : null;
 
   return (
@@ -138,11 +138,11 @@ export default function Page() {
               )}
               {flagged > 0 && view !== "sites" && !r.blocking && (
                 <button onClick={() => setView("sites")} className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100">
-                  {flagged} sites flagged
+                  {flagged} outlier sites
                 </button>
               )}
               <button
-                onClick={() => downloadJson(review)}
+                onClick={() => downloadJson(r.exportReview)}
                 disabled={!r.canExport}
                 className="inline-flex items-center gap-1 hover:text-navy disabled:opacity-40"
                 title="Download the exact review.json behind this view"
