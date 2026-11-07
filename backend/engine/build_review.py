@@ -8,6 +8,7 @@ from .impacts import allocate_rows, environmental, savings, ROUTES
 from .kpis import operational, total, number
 from .sensitivity import TEAM_ASSUMPTIONS
 from .validate import validate_tables
+from backend.insights.priority import interpret_prompt
 
 
 # id, category, unit, status, formula, sources, assumptions
@@ -82,6 +83,7 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         raise ValueError("Unknown priority")
     tables = load_tables(source_path)
     quality = validate_tables(tables)
+    quality.extend(getattr(tables, 'diagnostics', []))
     quality.extend(dict(check_id="PACK_DATA_STATUS", dataset=r["dataset"], severity="info", affected_rows=0,
                         message=f"{r['status']}: {r['note']}", treatment=f"Retain source evidence labels; confidence: {r['confidence']}")
                    for r in tables["Data_Quality"])
@@ -93,9 +95,7 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
         raise ValueError(f"Unknown baseline: {baseline_id}")
     customer, baseline = customers[customer_id], baselines[baseline_id]
     if priority is None:
-        topic = (customer.get("priority_topics") or "").lower()
-        priority = next((p for word, p in (("water", "water"), ("emission", "emissions"), ("cost", "cost"),
-                                         ("circular", "circularity"), ("service", "service")) if word in topic), "improvement")
+        priority = interpret_prompt(customer.get("priority_topics") or "", customer["industry"])
     products = {r["product_id"]: r for r in tables["Products"]}
     sites = {r["site_id"]: r for r in tables["Sites"] if r["customer_id"] == customer_id}
     laundry_ids = {r["laundry_id"] for r in tables["Laundries"]}
@@ -152,9 +152,17 @@ def build_review(customer_id="CUST001", period_from="2025-01", period_to="2025-1
     for site_id, site in sites.items():
         v = calculate([r for r in allocated if r["site_id"] == site_id], [r for r in repairs if r["site_id"] == site_id],
                       [r for r in cycles if r["site_id"] == site_id], 1)
-        flags = sorted({q["check_id"] for q in quality if site.get("primary_laundry_id", "") in q["message"] and site.get("primary_laundry_id")})
+        laundry_id = site.get("primary_laundry_id") or site.get("laundry_id") or ""
+        def applies(finding):
+            if not laundry_id:
+                return False
+            if finding.get("laundry_id") is not None:
+                return finding["laundry_id"] == laundry_id
+            # Legacy findings have no structured target; match the complete ID token.
+            return bool(re.search(r"(?<![\w])" + re.escape(laundry_id) + r"(?![\w])", finding["message"]))
+        flags = sorted({q["check_id"] for q in quality if applies(q)})
         site_output.append({**{key: site.get(key) or "" for key in ("site_id", "site_name", "country", "city", "site_type")},
-                            "laundry_id": site.get("primary_laundry_id") or "", "metrics": scalar_metrics(v), "flags": flags})
+                            "laundry_id": laundry_id, "metrics": scalar_metrics(v), "flags": flags})
     product_output = []
     for product_id in sorted({r["product_id"] for r in activity}):
         product = products[product_id]

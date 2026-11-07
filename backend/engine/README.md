@@ -63,3 +63,16 @@ review = build_review(customer_id="CUST001", baseline_id="B_HOME",
 All outputs describe synthetic prototype data, with source, formula, status,
 assumption IDs, and confidence. Shared contracts, API code, and root dependency
 configuration are left to the lead.
+
+## Review regression fixes
+
+- Optional/reference sheets with blank or duplicate headers are excluded with a
+  lowercase `warning` finding (`DQ_HEADER`) instead of aborting calculations.
+  Ambiguous headers in required calculation sheets remain explicit input errors;
+  guessing those mappings would risk incorrect calculations.
+- DQ1–DQ4 findings use lowercase contract severity. DQ4 includes exact structured
+  `laundry_id` and `month` targets; site flags use these targets, with token-exact
+  matching for older text-only findings. `laundry_id` is supported when
+  `primary_laundry_id` is absent.
+- Engine defaults and user prompts share `backend.insights.priority.interpret_prompt`:
+  the first explicit topic wins, with the same industry fallback for empty text.
