@@ -6,12 +6,15 @@ import re
 import urllib.request
 
 log = logging.getLogger(__name__)
-INSTRUCTION = '''Write concise executive prose using ONLY the supplied structured facts.
-Do not calculate, infer causes, assert compliance or claim savings are guaranteed.
-Return a JSON array in input order with rule_id, observation, recommended_action,
-and steering_question strings. Do not use digits, numeric words, percentages,
-quantities or site identifiers in prose. The application appends exact evidence.
-Do not claim outputs are audited, verified or certified. No markdown.'''
+APPROVED_PROSE = {
+    'observation': ['Review the supplied evidence with the account team.', 'Discuss this finding using the supplied evidence.'],
+    'recommended_action': ['Confirm the source with the site team.', 'Confirm the proposed plan with the account team.'],
+    'steering_question': ['Which action should the account team prioritize?', 'Who should confirm the evidence and follow-up?'],
+}
+INSTRUCTION = ("Select wording using ONLY the supplied facts. Return a JSON array in input order "
+               "with rule_id, observation, recommended_action and steering_question. For each prose "
+               "field copy exactly one of these approved strings; do not edit them: "
+               + json.dumps(APPROVED_PROSE) + ". The application appends immutable evidence and action plans.")
 
 
 def _request(facts, key):
@@ -48,11 +51,10 @@ def polish(facts, fallback):
             output = dict(base)
             for field in ['observation', 'recommended_action', 'steering_question']:
                 value = row[field]
-                if not isinstance(value, str) or not value.strip() or len(value) > 650 or UNSAFE.search(value):
+                if not isinstance(value, str) or not value.strip() or len(value) > 650 or UNSAFE.search(value) or value not in APPROVED_PROSE[field]:
                     raise ValueError('Unsupported prose or numeric claim')
-                output[field] = value.strip()
-            # No model-generated numeric text is accepted. Evidence is copied verbatim from code.
-            output['observation'] += base['observation'][base['observation'].find(' Evidence:'):] if ' Evidence:' in base['observation'] else ' ' + base['observation']
+                output[field] = value.strip() + ' ' + base[field]
+            # All substantive claims, numeric evidence and targets stay deterministic.
             output['status'] = 'AI_GENERATED_FROM_CALCULATED_DATA'
             result.append(output)
         return result

@@ -2,6 +2,7 @@
 from .rules import evaluate_rules
 from .priority import interpret_prompt
 from .formatting import fmt
+from .actions import action_text
 
 COPY = {
     'R1': ('Lowest-use sites warrant an allocation review; unscanned stock is not proof of waste.', 'Review locker buffers and shift requirements before rebalancing garments.', 'Customer', 'Where can we pilot an allocation review while maintaining garment availability?'),
@@ -48,6 +49,9 @@ def render_fact(fact, index):
         if len(gaps) > 2:
             observation += f' Additional gaps: {len(gaps) - 2}; see the data-readiness registry.'
         observation += ' Checks: ' + ', '.join(dict.fromkeys(q['check_id'] for q in fact.get('data_quality', []))) + '.'
+    observation += ' Why it matters: ' + fact['industry_relevance']
+    action = action_text(fact)
+    question = 'Which site/source owner will confirm this scope, the proposed benefit and a comparable follow-up measure? ' + question
     return dict(id=f'OBS{index}', title=fact['title'], observation=observation,
                 recommended_action=action, owner=owner, steering_question=question,
                 metric_ids=fact['metric_ids'], site_ids=fact['site_ids'],
@@ -66,3 +70,6 @@ def generate_observations(review: dict, use_llm: bool = True) -> list[dict]:
         from .llm import polish
         return polish(facts, fallback)
     return fallback
+
+
+interpret_priority = interpret_prompt

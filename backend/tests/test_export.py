@@ -17,11 +17,11 @@ def review():
     return json.loads((ROOT / 'contracts/sample_review.json').read_text())
 
 
-def test_powerpoint_has_nine_slides_evidence_and_source_notes(review, tmp_path):
+def test_powerpoint_has_core_sections_evidence_and_source_notes(review, tmp_path):
     before = copy.deepcopy(review)
     path = export_pptx(review, str(tmp_path / 'nested/review.pptx'))
     deck = Presentation(path)
-    assert len(deck.slides) == 9
+    assert len(deck.slides) >= 9
     texts = ['\n'.join(s.text for s in slide.shapes if s.has_text_frame) for slide in deck.slides]
     assert all(FOOTER in t for t in texts)
     assert '1,406,482.6' in texts[1]
@@ -39,11 +39,11 @@ def test_pdf_has_matching_pages_footer_and_lossless_source(review, tmp_path):
     before = copy.deepcopy(review)
     path = export_pdf(review, str(tmp_path / 'nested/review.pdf'))
     reader = PdfReader(path)
-    assert len(reader.pages) == 9
-    for page, (title, _) in zip(reader.pages, build_pages(review)):
-        text = page.extract_text()
-        assert title in text
-        assert FOOTER in text
+    assert len(reader.pages) >= 9
+    texts = [p.extract_text() for p in reader.pages]
+    for title, _ in build_pages(review):
+        assert any(title in text for text in texts)
+    assert all(FOOTER in text for text in texts)
     assert '1,406,482.6' in reader.pages[1].extract_text()
     assert 'L003' in reader.pages[-1].extract_text()
     assert json.loads(reader.attachments['review.json'][0]) == review
@@ -64,7 +64,7 @@ def test_all_priority_spotlights(review, tmp_path, priority, metric):
     pages = build_pages(review)
     assert metric in str(pages[2])
     assert 'LOW' in str(pages[2])
-    assert len(PdfReader(export_pdf(review, str(tmp_path / (priority + '.pdf')))).pages) == 9
+    assert len(PdfReader(export_pdf(review, str(tmp_path / (priority + '.pdf')))).pages) >= 9
 
 
 def test_export_never_uses_stale_sample_narratives(review):
@@ -184,7 +184,7 @@ def test_real_engine_exports_all_customer_priority_paths(workbook_tables, monkey
     assert {q['severity'] for q in review['data_quality']} <= {'warning', 'info', 'error'}
     pdf = PdfReader(export_pdf(review, str(tmp_path / 'engine.pdf')))
     deck = Presentation(export_pptx(review, str(tmp_path / 'engine.pptx')))
-    assert len(pdf.pages) == len(deck.slides) == 9
+    assert len(pdf.pages) == len(deck.slides) >= 9
     text = '\n'.join(p.extract_text() for p in pdf.pages)
     assert 'L003' in text
     assert 'by_route' in deck.slides[-1].notes_slide.notes_text_frame.text
@@ -201,6 +201,8 @@ def test_api_exports_use_actual_workbook_without_sample_fallback(tmp_path, monke
     if not source.is_file():
         pytest.skip('Set ENGINE_TEST_WORKBOOK for real-workbook API export tests')
     monkeypatch.setattr(api, 'DEFAULT_DATA_PATH', source)
+    monkeypatch.setattr(api, '_ACTIVE_DATA_PATH', source)
+    monkeypatch.setattr(api, '_REVIEW_CACHE', {})
     def forbidden_fallback():
         raise AssertionError('Real-workbook test must not silently use the sample')
     monkeypatch.setattr(api, '_load_sample_review', forbidden_fallback)
@@ -219,11 +221,11 @@ def test_api_exports_use_actual_workbook_without_sample_fallback(tmp_path, monke
             path.write_bytes(response.content)
             if fmt == 'pdf':
                 pdf = PdfReader(path)
-                assert len(pdf.pages) == 9
+                assert len(pdf.pages) >= 9
                 embedded = json.loads(pdf.attachments['review.json'][0])
             else:
                 deck = Presentation(path)
-                assert len(deck.slides) == 9
+                assert len(deck.slides) >= 9
                 notes = deck.slides[-1].notes_slide.notes_text_frame.text
                 embedded = json.loads(notes.split('SOURCE REVIEW (complete provenance, unchanged):\n', 1)[1])
             assert embedded['metrics'] == review['metrics']

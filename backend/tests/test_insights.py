@@ -128,3 +128,61 @@ def test_gemini_request_uses_only_facts_and_bounded_timeout():
     assert json.loads(payload['contents'][0]['parts'][0]['text']) == facts
     assert 'test-placeholder' not in request.full_url
     assert call.call_args.kwargs['timeout'] == 10
+
+
+
+def test_quantified_action_scope_and_no_invented_repair_counts(review):
+    from backend.insights.generate import render_fact, interpret_priority
+    assert interpret_priority('water', '') == interpret_prompt('water', '')
+    # Known unrounded fixture: rates flag repair intensity but cannot determine
+    # avoidable repairs without actual wash denominators.
+    review['sites'] = [dict(site_id=f'S{i}', metrics=dict(
+        allocation_use_rate=.5 + i / 100, idle_pieces=10 + i,
+        repair_rate_per_1000=10 if i < 9 else 16, repairs_total=100 + i,
+        on_time_rate=.9 if i == 0 else .99, service_requests=1 if i < 9 else 10,
+        wearers_min_est=100, washed_kg=1000 + i)) for i in range(10)]
+    facts = {f['rule_id']: f for f in evaluate_rules(review)}
+    assert facts['R1']['action_scope']['idle_pieces_in_scope'] == 21
+    assert facts['R2']['action_scope']['reported_repairs_in_scope'] == 109
+    assert facts['R2']['action_scope']['max_rate_gap_per_1000'] == 6
+    assert facts['R4']['action_scope']['requests_in_scope'] == 10
+    assert facts['R3']['action_scope']['max_gap_percentage_points'] == pytest.approx(8.33)
+    assert facts['R5']['action_scope']['priority_site_washed_kg'] == 3024
+    assert facts['R6']['action_scope']['data_gap_count'] == len(review['data_gaps'])
+    for rule in ('R1', 'R2', 'R3', 'R4', 'R5', 'R6'):
+        o = render_fact(facts[rule], 1)
+        assert 'Why it matters:' in o['observation'] and 'Food & Beverage' in o['observation']
+        assert 'Q1 2026' in o['recommended_action']
+        assert 'Potential benefit:' in o['recommended_action']
+    assert 'Exact excess repair counts are unavailable' in render_fact(facts['R2'], 1)['recommended_action']
+
+
+def test_missing_idle_counts_are_not_reported_as_zero(review):
+    for site in review['sites']:
+        site['metrics'].pop('idle_pieces', None)
+    f = next(f for f in evaluate_rules(review) if f['rule_id'] == 'R1')
+    assert 'idle_pieces_in_scope' not in f['action_scope']
+    from backend.insights.generate import render_fact
+    assert 'count unavailable' in render_fact(f, 1)['recommended_action']
+
+
+def test_llm_cannot_drop_action_targets_or_industry_context(review, monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-placeholder')
+    base = generate_observations(review, False)
+    rows = llm_rows(evaluate_rules(review)[:5])
+    with patch.object(llm, '_request', return_value=rows):
+        result = generate_observations(review)
+    for actual, expected in zip(result, base):
+        assert expected['recommended_action'] in actual['recommended_action']
+        assert expected['observation'] in actual['observation']
+        assert expected['steering_question'] in actual['steering_question']
+
+
+@pytest.mark.parametrize('claim', ['Savings are ninety-nine litres.', 'Savings are quatre litres.',
+                                  'Savings are ½ litre.', 'All idle stock can safely be removed.'])
+def test_unapproved_model_claims_fail_closed(review, monkeypatch, claim):
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-placeholder')
+    rows = llm_rows(evaluate_rules(review)[:5])
+    rows[0]['observation'] = claim
+    with patch.object(llm, '_request', return_value=rows):
+        assert generate_observations(review) == generate_observations(review, False)

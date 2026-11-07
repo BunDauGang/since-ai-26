@@ -1,6 +1,7 @@
 """Deterministic findings. No workbook access or language-model arithmetic."""
 from math import ceil, isfinite
 from statistics import median
+from .actions import enrich_facts
 
 PRIORITY_RULES = {
     'water': ['R5', 'R3', 'R4', 'R1', 'R2', 'R6'],
@@ -92,4 +93,4 @@ def evaluate_rules(review: dict) -> list[dict]:
         return (0 if rule == priority[0] else 1,
                 industry.index(rule) if rule in industry else 99,
                 priority.index(rule) if rule in priority else 99, rule)
-    return sorted(facts, key=rank)
+    return enrich_facts(sorted(facts, key=rank), review)
