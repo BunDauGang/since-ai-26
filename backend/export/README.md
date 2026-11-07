@@ -100,6 +100,6 @@ The latter two are explicitly shared meeting fields; arbitrary internal note
 keys remain excluded. Target comparison directions are explicit for known KPIs;
 an unknown target never receives an invented pass/fail judgement.
 
-Small-cohort network medians are retained for this synthetic demonstration only.
+Network summaries follow the engine cohort policy; suppressed summaries fall back to site peers.
 A median can equal an individual customer value; name removal is not a privacy
 guarantee. Production needs an agreed minimum cohort size and disclosure controls.
