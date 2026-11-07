@@ -291,7 +291,9 @@ def generate_prep(review: dict, audience_role='CEO', goal='', minutes=15, questi
     # percentage-point gaps). Reject those facts before rendering a narrative.
     try:
         _check_finite(evaluate_rules(review))
-    except ArithmeticError as exc:
+    except (ArithmeticError, ValueError) as exc:
+        # Overflow can surface as an exception or as an infinite value; either way the request is
+        # rejected (HTTP 422) instead of letting infinity reach the narrative or the JSON.
         raise ValueError('Review calculations exceed supported numeric bounds') from exc
     # Numeric narratives in incoming observations may be stale; regenerate facts
     # without network calls, and make the returned catalog authoritative for IDs.

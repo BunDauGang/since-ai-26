@@ -6,7 +6,7 @@ import { AUDIENCE_SUGGESTIONS, matchAudience } from "@/lib/audience";
 import type { Comparison } from "@/lib/comparison";
 import type { MeetingState } from "@/lib/meeting";
 import { personaDef } from "@/lib/personas";
-import { aiPrep, freeRequestTemplate, siteName, STEERCO_QUESTIONS, steercoTemplate, type PrepAnswer, type PrepContext } from "@/lib/prep";
+import { aiPrep, freeRequestTemplate, reasonText, siteName, STEERCO_QUESTIONS, steercoTemplate, type PrepAnswer, type PrepContext } from "@/lib/prep";
 import type { Review } from "@/lib/types";
 import { Segmented } from "../ui";
 import { StoryAssistant } from "./StoryAssistant";
@@ -39,6 +39,7 @@ export function MeetingPrepAI({ review, meeting, comparison, onAudience, onOpenM
   const template = useMemo(() => steercoTemplate(ctx), [review, meeting, comparison, audience]); // eslint-disable-line react-hooks/exhaustive-deps
   const [ai, setAi] = useState<{ key: string; answers: PrepAnswer[]; replaced: number } | null>(null);
   const [aiState, setAiState] = useState<"idle" | "busy" | "unavailable">("idle");
+  const [aiReason, setAiReason] = useState<string | null>(null);
   const aiKey = JSON.stringify([review.meta.customer_id, review.meta.period, audience, template.map((t) => t.answer)]);
   const answers = ai && ai.key === aiKey ? ai.answers : template;
   const [copied, setCopied] = useState(false);
@@ -56,10 +57,14 @@ export function MeetingPrepAI({ review, meeting, comparison, onAudience, onOpenM
   async function polish() {
     setAiState("busy");
     const res = await aiPrep(ctx, STEERCO_QUESTIONS, template);
-    if (res) {
-      setAi({ key: aiKey, ...res });
+    if (res && res.replaced > 0) {
+      setAi({ key: aiKey, answers: res.answers, replaced: res.replaced });
       setAiState("idle");
-    } else setAiState("unavailable");
+    } else {
+      // Endpoint missing, or the server fell back to its template: keep ours and say why.
+      setAiReason(res ? reasonText(res.reason) : "the AI service is not reachable");
+      setAiState("unavailable");
+    }
   }
 
   async function ask(e: React.FormEvent) {
@@ -168,7 +173,7 @@ export function MeetingPrepAI({ review, meeting, comparison, onAudience, onOpenM
             </div>
             {aiState === "unavailable" && (
               <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800 ring-1 ring-amber-200">
-                <AlertCircle size={13} /> The AI service is not connected yet, so these are the evidence templates. Every number is still from the review.
+                <AlertCircle size={13} /> AI wording not available ({aiReason}), so these are the evidence templates. Every number is still from the review.
               </p>
             )}
             {ai && ai.key === aiKey && (

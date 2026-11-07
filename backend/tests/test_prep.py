@@ -137,9 +137,10 @@ def test_arithmetic_overflow_does_not_escape_as_infinity(review):
     previous = prior(review)
     next(m for m in review['metrics'] if m['id'] == 'on_time_rate')['value']['base'] = 1e307
     next(m for m in previous['metrics'] if m['id'] == 'on_time_rate')['value']['base'] = 0
-    result = prep.generate_prep(review, previous_review=previous, use_llm=False)
-    assert 'comparison.on_time_rate' not in result['evidence_catalog']['context']
-    json.dumps(result, allow_nan=False)
+    # Finite input whose rule arithmetic overflows is rejected with a clear error (422 at the API),
+    # never returned as infinity.
+    with pytest.raises(ValueError, match='numeric bounds'):
+        prep.generate_prep(review, previous_review=previous, use_llm=False)
 
 
 def test_empty_context_is_distinct_from_missing_and_not_proof_of_no_actions(review):

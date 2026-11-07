@@ -269,7 +269,28 @@ interface ApiAnswer {
  * sentence passes fillPlaceholders; otherwise the template answer is kept. Returns null when the endpoint
  * is missing or fails (the UI then shows the template only).
  */
-export async function aiPrep(c: PrepContext, questions: { id: string; text: string }[], template: PrepAnswer[]): Promise<{ answers: PrepAnswer[]; replaced: number } | null> {
+export interface AiPrepResult {
+  answers: PrepAnswer[];
+  replaced: number;
+  /** "gemini" when the AI answered; "template" when the server fell back (see reason). */
+  source: string;
+  reason: string | null;
+}
+
+const REASONS: Record<string, string> = {
+  missing_key: "no Gemini key is configured on the server",
+  disabled: "AI wording is switched off",
+  timeout: "the AI service timed out",
+  provider_error: "the AI service returned an error",
+  invalid_model_output: "the AI answer failed the evidence and number checks",
+  no_evidence: "there is no evidence to word",
+};
+
+export function reasonText(reason: string | null): string {
+  return (reason && REASONS[reason]) || "the AI service did not return usable wording";
+}
+
+export async function aiPrep(c: PrepContext, questions: { id: string; text: string }[], template: PrepAnswer[]): Promise<AiPrepResult | null> {
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 20000);
@@ -291,7 +312,7 @@ export async function aiPrep(c: PrepContext, questions: { id: string; text: stri
     });
     clearTimeout(timer);
     if (!res.ok) return null;
-    const data = (await res.json()) as { answers?: ApiAnswer[] };
+    const data = (await res.json()) as { answers?: ApiAnswer[]; source?: string; fallback_reason?: string | null };
     let replaced = 0;
     const answers = template.map((t) => {
       const a = data.answers?.find((x) => x.question_id === t.questionId);
@@ -302,7 +323,7 @@ export async function aiPrep(c: PrepContext, questions: { id: string; text: stri
       replaced++;
       return { ...t, answer, points: points.length ? (points as PrepPoint[]) : t.points, gap: a.gap ? fillPlaceholders(a.gap, c.review) ?? t.gap : t.gap };
     });
-    return { answers, replaced };
+    return { answers, replaced, source: data.source ?? "template", reason: data.fallback_reason ?? null };
   } catch {
     return null;
   }
