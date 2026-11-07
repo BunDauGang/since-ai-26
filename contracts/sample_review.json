@@ -13,8 +13,8 @@
     "baseline_name": "Outsourced local laundry",
     "sensitivity": "base",
     "priority": "water",
-    "generated_at": "2026-11-06T20:00:00Z",
-    "data_notice": "100% synthetic/illustrative prototype data. Not audited or verified Lindström/customer claims."
+    "generated_at": "2026-11-07T09:33:56.037945+00:00",
+    "data_notice": "Synthetic, illustrative prototype data. Not an approved Lindström claim."
   },
   "metrics": [
     {
@@ -28,18 +28,133 @@
       },
       "unit": "sites",
       "status": "SYNTHETIC",
-      "formula": "COUNT(DISTINCT site_id)",
+      "formula": "COUNT(customer sites) | Live arithmetic (display rounded to 6 decimals; result in sites): COUNT selected customer sites = 24 = 24",
       "sources": [
         "Sites"
       ],
       "assumptions": [
         "A006"
       ],
-      "confidence": "High"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 1
+          },
+          {
+            "site_id": "S002",
+            "value": 1
+          },
+          {
+            "site_id": "S003",
+            "value": 1
+          },
+          {
+            "site_id": "S004",
+            "value": 1
+          },
+          {
+            "site_id": "S005",
+            "value": 1
+          },
+          {
+            "site_id": "S006",
+            "value": 1
+          },
+          {
+            "site_id": "S007",
+            "value": 1
+          },
+          {
+            "site_id": "S008",
+            "value": 1
+          },
+          {
+            "site_id": "S009",
+            "value": 1
+          },
+          {
+            "site_id": "S010",
+            "value": 1
+          },
+          {
+            "site_id": "S011",
+            "value": 1
+          },
+          {
+            "site_id": "S012",
+            "value": 1
+          },
+          {
+            "site_id": "S013",
+            "value": 1
+          },
+          {
+            "site_id": "S014",
+            "value": 1
+          },
+          {
+            "site_id": "S015",
+            "value": 1
+          },
+          {
+            "site_id": "S016",
+            "value": 1
+          },
+          {
+            "site_id": "S017",
+            "value": 1
+          },
+          {
+            "site_id": "S018",
+            "value": 1
+          },
+          {
+            "site_id": "S019",
+            "value": 1
+          },
+          {
+            "site_id": "S020",
+            "value": 1
+          },
+          {
+            "site_id": "S021",
+            "value": 1
+          },
+          {
+            "site_id": "S022",
+            "value": 1
+          },
+          {
+            "site_id": "S023",
+            "value": 1
+          },
+          {
+            "site_id": "S024",
+            "value": 1
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 24
+          },
+          {
+            "product_id": "P1002",
+            "value": 24
+          },
+          {
+            "product_id": "P1004",
+            "value": 24
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "wearers_min_est",
-      "label": "Active wearers (min deduplicated est., Dec)",
+      "label": "Wearers min est",
       "category": "scale",
       "value": {
         "low": 9607,
@@ -48,18 +163,133 @@
       },
       "unit": "wearers",
       "status": "ESTIMATE",
-      "formula": "SUM over sites of MAX(active_wearers across products in Dec)",
+      "formula": "SUM(site MAX(active_wearers across products) in latest reporting month) | Live arithmetic (display rounded to 6 decimals; result in wearers): site maxima: S001(645) + S002(508) + S003(101) + S004(167) + S005(262) + S006(643) + S007(601) + S008(624) + S009(519) + S010(325) + S011(431) + S012(414) + S013(472) + S014(549) + S015(321) + S016(555) + S017(388) + S018(265) + S019(299) + S020(298) + S021(506) + S022(122) + S023(398) + S024(194) = 9,607; stock month 2025-12",
       "sources": [
         "Service_Activity"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 645
+          },
+          {
+            "site_id": "S002",
+            "value": 508
+          },
+          {
+            "site_id": "S003",
+            "value": 101
+          },
+          {
+            "site_id": "S004",
+            "value": 167
+          },
+          {
+            "site_id": "S005",
+            "value": 262
+          },
+          {
+            "site_id": "S006",
+            "value": 643
+          },
+          {
+            "site_id": "S007",
+            "value": 601
+          },
+          {
+            "site_id": "S008",
+            "value": 624
+          },
+          {
+            "site_id": "S009",
+            "value": 519
+          },
+          {
+            "site_id": "S010",
+            "value": 325
+          },
+          {
+            "site_id": "S011",
+            "value": 431
+          },
+          {
+            "site_id": "S012",
+            "value": 414
+          },
+          {
+            "site_id": "S013",
+            "value": 472
+          },
+          {
+            "site_id": "S014",
+            "value": 549
+          },
+          {
+            "site_id": "S015",
+            "value": 321
+          },
+          {
+            "site_id": "S016",
+            "value": 555
+          },
+          {
+            "site_id": "S017",
+            "value": 388
+          },
+          {
+            "site_id": "S018",
+            "value": 265
+          },
+          {
+            "site_id": "S019",
+            "value": 299
+          },
+          {
+            "site_id": "S020",
+            "value": 298
+          },
+          {
+            "site_id": "S021",
+            "value": 506
+          },
+          {
+            "site_id": "S022",
+            "value": 122
+          },
+          {
+            "site_id": "S023",
+            "value": 398
+          },
+          {
+            "site_id": "S024",
+            "value": 194
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 9470
+          },
+          {
+            "product_id": "P1002",
+            "value": 9474
+          },
+          {
+            "product_id": "P1004",
+            "value": 9423
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "wearer_product_assignments",
-      "label": "Wearer-product assignments (Dec)",
+      "label": "Wearer product assignments",
       "category": "scale",
       "value": {
         "low": 28367,
@@ -68,18 +298,133 @@
       },
       "unit": "assignments",
       "status": "SYNTHETIC",
-      "formula": "SUM(active_wearers across all product rows in Dec)",
+      "formula": "SUM(active_wearers in latest reporting month) | Live arithmetic (display rounded to 6 decimals; result in assignments): SUM(active_wearers) over 72 selected rows = 28,367; stock month 2025-12",
       "sources": [
         "Service_Activity"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "High"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 1919
+          },
+          {
+            "site_id": "S002",
+            "value": 1510
+          },
+          {
+            "site_id": "S003",
+            "value": 301
+          },
+          {
+            "site_id": "S004",
+            "value": 494
+          },
+          {
+            "site_id": "S005",
+            "value": 778
+          },
+          {
+            "site_id": "S006",
+            "value": 1891
+          },
+          {
+            "site_id": "S007",
+            "value": 1760
+          },
+          {
+            "site_id": "S008",
+            "value": 1856
+          },
+          {
+            "site_id": "S009",
+            "value": 1551
+          },
+          {
+            "site_id": "S010",
+            "value": 960
+          },
+          {
+            "site_id": "S011",
+            "value": 1282
+          },
+          {
+            "site_id": "S012",
+            "value": 1228
+          },
+          {
+            "site_id": "S013",
+            "value": 1370
+          },
+          {
+            "site_id": "S014",
+            "value": 1639
+          },
+          {
+            "site_id": "S015",
+            "value": 939
+          },
+          {
+            "site_id": "S016",
+            "value": 1643
+          },
+          {
+            "site_id": "S017",
+            "value": 1135
+          },
+          {
+            "site_id": "S018",
+            "value": 786
+          },
+          {
+            "site_id": "S019",
+            "value": 877
+          },
+          {
+            "site_id": "S020",
+            "value": 881
+          },
+          {
+            "site_id": "S021",
+            "value": 1485
+          },
+          {
+            "site_id": "S022",
+            "value": 361
+          },
+          {
+            "site_id": "S023",
+            "value": 1156
+          },
+          {
+            "site_id": "S024",
+            "value": 565
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 9470
+          },
+          {
+            "product_id": "P1002",
+            "value": 9474
+          },
+          {
+            "product_id": "P1004",
+            "value": 9423
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "garments_allocated",
-      "label": "Garments allocated (Dec)",
+      "label": "Garments allocated",
       "category": "scale",
       "value": {
         "low": 31743,
@@ -88,18 +433,133 @@
       },
       "unit": "pieces",
       "status": "SYNTHETIC",
-      "formula": "SUM(allocated_pieces in Dec)",
+      "formula": "SUM(allocated_pieces in latest reporting month) | Live arithmetic (display rounded to 6 decimals; result in pieces): SUM(allocated_pieces) over 72 selected rows = 31,743; stock month 2025-12",
       "sources": [
         "Service_Activity"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "High"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 2207
+          },
+          {
+            "site_id": "S002",
+            "value": 1471
+          },
+          {
+            "site_id": "S003",
+            "value": 245
+          },
+          {
+            "site_id": "S004",
+            "value": 542
+          },
+          {
+            "site_id": "S005",
+            "value": 611
+          },
+          {
+            "site_id": "S006",
+            "value": 1961
+          },
+          {
+            "site_id": "S007",
+            "value": 2146
+          },
+          {
+            "site_id": "S008",
+            "value": 2391
+          },
+          {
+            "site_id": "S009",
+            "value": 1790
+          },
+          {
+            "site_id": "S010",
+            "value": 1011
+          },
+          {
+            "site_id": "S011",
+            "value": 1361
+          },
+          {
+            "site_id": "S012",
+            "value": 1413
+          },
+          {
+            "site_id": "S013",
+            "value": 1926
+          },
+          {
+            "site_id": "S014",
+            "value": 1914
+          },
+          {
+            "site_id": "S015",
+            "value": 946
+          },
+          {
+            "site_id": "S016",
+            "value": 2073
+          },
+          {
+            "site_id": "S017",
+            "value": 1178
+          },
+          {
+            "site_id": "S018",
+            "value": 790
+          },
+          {
+            "site_id": "S019",
+            "value": 728
+          },
+          {
+            "site_id": "S020",
+            "value": 938
+          },
+          {
+            "site_id": "S021",
+            "value": 1680
+          },
+          {
+            "site_id": "S022",
+            "value": 331
+          },
+          {
+            "site_id": "S023",
+            "value": 1540
+          },
+          {
+            "site_id": "S024",
+            "value": 550
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 10173
+          },
+          {
+            "product_id": "P1002",
+            "value": 10561
+          },
+          {
+            "product_id": "P1004",
+            "value": 11009
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "washed_kg",
-      "label": "Washed textile volume (2025)",
+      "label": "Washed kg",
       "category": "scale",
       "value": {
         "low": 502074.7,
@@ -108,38 +568,317 @@
       },
       "unit": "kg",
       "status": "SYNTHETIC",
-      "formula": "SUM(customer_washed_kg)",
+      "formula": "SUM(customer_washed_kg) | Live arithmetic (display rounded to 6 decimals; result in kg): SUM(customer_washed_kg) over 864 selected rows = 502,074.7",
       "sources": [
         "Service_Activity"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "High"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 36207.3
+          },
+          {
+            "site_id": "S002",
+            "value": 22614.0
+          },
+          {
+            "site_id": "S003",
+            "value": 3836.9
+          },
+          {
+            "site_id": "S004",
+            "value": 7889.2
+          },
+          {
+            "site_id": "S005",
+            "value": 9874.4
+          },
+          {
+            "site_id": "S006",
+            "value": 30082.1
+          },
+          {
+            "site_id": "S007",
+            "value": 34072.3
+          },
+          {
+            "site_id": "S008",
+            "value": 38379.2
+          },
+          {
+            "site_id": "S009",
+            "value": 26796.2
+          },
+          {
+            "site_id": "S010",
+            "value": 15797.8
+          },
+          {
+            "site_id": "S011",
+            "value": 20160.3
+          },
+          {
+            "site_id": "S012",
+            "value": 23569.5
+          },
+          {
+            "site_id": "S013",
+            "value": 29485.7
+          },
+          {
+            "site_id": "S014",
+            "value": 31449.3
+          },
+          {
+            "site_id": "S015",
+            "value": 15413.3
+          },
+          {
+            "site_id": "S016",
+            "value": 33468.2
+          },
+          {
+            "site_id": "S017",
+            "value": 18050.2
+          },
+          {
+            "site_id": "S018",
+            "value": 12348.1
+          },
+          {
+            "site_id": "S019",
+            "value": 11231.6
+          },
+          {
+            "site_id": "S020",
+            "value": 13625.8
+          },
+          {
+            "site_id": "S021",
+            "value": 25346.9
+          },
+          {
+            "site_id": "S022",
+            "value": 5982.0
+          },
+          {
+            "site_id": "S023",
+            "value": 26661.8
+          },
+          {
+            "site_id": "S024",
+            "value": 9732.6
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 206116.3
+          },
+          {
+            "product_id": "P1002",
+            "value": 152380.2
+          },
+          {
+            "product_id": "P1004",
+            "value": 143578.19999999998
+          }
+        ],
+        "by_month": [
+          {
+            "month": "2025-01",
+            "value": 42880.799999999996
+          },
+          {
+            "month": "2025-02",
+            "value": 45796.700000000004
+          },
+          {
+            "month": "2025-03",
+            "value": 49239.6
+          },
+          {
+            "month": "2025-04",
+            "value": 42496.5
+          },
+          {
+            "month": "2025-05",
+            "value": 41536.899999999994
+          },
+          {
+            "month": "2025-06",
+            "value": 39536.9
+          },
+          {
+            "month": "2025-07",
+            "value": 40256.5
+          },
+          {
+            "month": "2025-08",
+            "value": 35996.5
+          },
+          {
+            "month": "2025-09",
+            "value": 39808.3
+          },
+          {
+            "month": "2025-10",
+            "value": 39400.4
+          },
+          {
+            "month": "2025-11",
+            "value": 44137.1
+          },
+          {
+            "month": "2025-12",
+            "value": 40988.5
+          }
+        ]
+      }
     },
     {
       "id": "allocation_use_rate",
-      "label": "Active allocation utilization rate (Dec)",
+      "label": "Allocation use rate",
       "category": "allocation",
       "value": {
-        "low": 0.8352,
-        "base": 0.8352,
-        "high": 0.8352
+        "low": 0.8352392653498409,
+        "base": 0.8352392653498409,
+        "high": 0.8352392653498409
       },
       "unit": "ratio",
       "status": "CALCULATED",
-      "formula": "SUM(active_assets_scanned) / SUM(allocated_pieces)",
+      "formula": "SUM(active_assets_scanned) / SUM(allocated_pieces), latest reporting month | Live arithmetic (display rounded to 6 decimals; result in ratio): 26,513 scanned / 31,743 allocated = 0.835239; stock month 2025-12",
       "sources": [
         "Service_Activity"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "High"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 0.7621205256003625
+          },
+          {
+            "site_id": "S002",
+            "value": 0.7899388171312033
+          },
+          {
+            "site_id": "S003",
+            "value": 0.8367346938775511
+          },
+          {
+            "site_id": "S004",
+            "value": 0.8413284132841329
+          },
+          {
+            "site_id": "S005",
+            "value": 0.8887070376432079
+          },
+          {
+            "site_id": "S006",
+            "value": 0.827129015808261
+          },
+          {
+            "site_id": "S007",
+            "value": 0.8760484622553588
+          },
+          {
+            "site_id": "S008",
+            "value": 0.8042659974905897
+          },
+          {
+            "site_id": "S009",
+            "value": 0.8553072625698324
+          },
+          {
+            "site_id": "S010",
+            "value": 0.7556874381800198
+          },
+          {
+            "site_id": "S011",
+            "value": 0.8405584129316679
+          },
+          {
+            "site_id": "S012",
+            "value": 0.8046709129511678
+          },
+          {
+            "site_id": "S013",
+            "value": 0.8836967808930426
+          },
+          {
+            "site_id": "S014",
+            "value": 0.8605015673981191
+          },
+          {
+            "site_id": "S015",
+            "value": 0.8953488372093024
+          },
+          {
+            "site_id": "S016",
+            "value": 0.9054510371442354
+          },
+          {
+            "site_id": "S017",
+            "value": 0.8005093378607809
+          },
+          {
+            "site_id": "S018",
+            "value": 0.8151898734177215
+          },
+          {
+            "site_id": "S019",
+            "value": 0.8008241758241759
+          },
+          {
+            "site_id": "S020",
+            "value": 0.8368869936034116
+          },
+          {
+            "site_id": "S021",
+            "value": 0.8601190476190477
+          },
+          {
+            "site_id": "S022",
+            "value": 0.8368580060422961
+          },
+          {
+            "site_id": "S023",
+            "value": 0.8324675324675325
+          },
+          {
+            "site_id": "S024",
+            "value": 0.7854545454545454
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 0.815197090337167
+          },
+          {
+            "product_id": "P1002",
+            "value": 0.8504876432156045
+          },
+          {
+            "product_id": "P1004",
+            "value": 0.8391316195839768
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "idle_pieces",
-      "label": "Unscanned / idle allocated garments (Dec)",
+      "label": "Idle pieces",
       "category": "allocation",
       "value": {
         "low": 5230,
@@ -148,60 +887,405 @@
       },
       "unit": "pieces",
       "status": "CALCULATED",
-      "formula": "SUM(allocated_pieces - active_assets_scanned)",
+      "formula": "SUM(allocated_pieces - active_assets_scanned), latest reporting month | Live arithmetic (display rounded to 6 decimals; result in pieces): 31,743 allocated - 26,513 scanned = 5,230; stock month 2025-12",
       "sources": [
         "Service_Activity"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "Medium"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 525
+          },
+          {
+            "site_id": "S002",
+            "value": 309
+          },
+          {
+            "site_id": "S003",
+            "value": 40
+          },
+          {
+            "site_id": "S004",
+            "value": 86
+          },
+          {
+            "site_id": "S005",
+            "value": 68
+          },
+          {
+            "site_id": "S006",
+            "value": 339
+          },
+          {
+            "site_id": "S007",
+            "value": 266
+          },
+          {
+            "site_id": "S008",
+            "value": 468
+          },
+          {
+            "site_id": "S009",
+            "value": 259
+          },
+          {
+            "site_id": "S010",
+            "value": 247
+          },
+          {
+            "site_id": "S011",
+            "value": 217
+          },
+          {
+            "site_id": "S012",
+            "value": 276
+          },
+          {
+            "site_id": "S013",
+            "value": 224
+          },
+          {
+            "site_id": "S014",
+            "value": 267
+          },
+          {
+            "site_id": "S015",
+            "value": 99
+          },
+          {
+            "site_id": "S016",
+            "value": 196
+          },
+          {
+            "site_id": "S017",
+            "value": 235
+          },
+          {
+            "site_id": "S018",
+            "value": 146
+          },
+          {
+            "site_id": "S019",
+            "value": 145
+          },
+          {
+            "site_id": "S020",
+            "value": 153
+          },
+          {
+            "site_id": "S021",
+            "value": 235
+          },
+          {
+            "site_id": "S022",
+            "value": 54
+          },
+          {
+            "site_id": "S023",
+            "value": 258
+          },
+          {
+            "site_id": "S024",
+            "value": 118
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 1880
+          },
+          {
+            "product_id": "P1002",
+            "value": 1579
+          },
+          {
+            "product_id": "P1004",
+            "value": 1771
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "idle_value_eur",
-      "label": "Illustrative capital tied in idle stock",
+      "label": "Illustrative idle stock value",
       "category": "allocation",
       "value": {
-        "low": 178652.0,
-        "base": 223315.0,
-        "high": 267978.0
+        "low": 223315,
+        "base": 223315,
+        "high": 223315
       },
       "unit": "EUR",
       "status": "ESTIMATE",
-      "formula": "SUM(idle_pieces * synthetic_purchase_cost_eur)",
+      "formula": "SUM((allocated_pieces - active_assets_scanned) * synthetic_purchase_cost_eur), latest month; illustrative stock value | Live arithmetic (display rounded to 6 decimals; result in EUR): P1001: (10,173 - 8,293) * 54 EUR/piece + P1002: (10,561 - 8,982) * 39 EUR/piece + P1004: (11,009 - 9,238) * 34 EUR/piece; illustrative stock value, not savings = 223,315; stock month 2025-12",
       "sources": [
         "Service_Activity",
         "Products"
       ],
       "assumptions": [
         "A008",
-        "T002"
+        "T003"
       ],
-      "confidence": "Low"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 23395
+          },
+          {
+            "site_id": "S002",
+            "value": 12816
+          },
+          {
+            "site_id": "S003",
+            "value": 1630
+          },
+          {
+            "site_id": "S004",
+            "value": 3299
+          },
+          {
+            "site_id": "S005",
+            "value": 2937
+          },
+          {
+            "site_id": "S006",
+            "value": 13461
+          },
+          {
+            "site_id": "S007",
+            "value": 11859
+          },
+          {
+            "site_id": "S008",
+            "value": 18252
+          },
+          {
+            "site_id": "S009",
+            "value": 11381
+          },
+          {
+            "site_id": "S010",
+            "value": 10223
+          },
+          {
+            "site_id": "S011",
+            "value": 8938
+          },
+          {
+            "site_id": "S012",
+            "value": 11989
+          },
+          {
+            "site_id": "S013",
+            "value": 10931
+          },
+          {
+            "site_id": "S014",
+            "value": 12248
+          },
+          {
+            "site_id": "S015",
+            "value": 4391
+          },
+          {
+            "site_id": "S016",
+            "value": 9339
+          },
+          {
+            "site_id": "S017",
+            "value": 9450
+          },
+          {
+            "site_id": "S018",
+            "value": 6379
+          },
+          {
+            "site_id": "S019",
+            "value": 6055
+          },
+          {
+            "site_id": "S020",
+            "value": 6312
+          },
+          {
+            "site_id": "S021",
+            "value": 9520
+          },
+          {
+            "site_id": "S022",
+            "value": 2151
+          },
+          {
+            "site_id": "S023",
+            "value": 11437
+          },
+          {
+            "site_id": "S024",
+            "value": 4922
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 101520
+          },
+          {
+            "product_id": "P1002",
+            "value": 61581
+          },
+          {
+            "product_id": "P1004",
+            "value": 60214
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "wash_frequency",
-      "label": "Average washes per active piece per month",
+      "label": "Wash frequency",
       "category": "service",
       "value": {
-        "low": 2.35,
-        "base": 2.35,
-        "high": 2.35
+        "low": 2.3470087076364092,
+        "base": 2.3470087076364092,
+        "high": 2.3470087076364092
       },
-      "unit": "washes/month",
+      "unit": "washes/active asset/month",
       "status": "CALCULATED",
-      "formula": "SUM(washed_pieces) / SUM(active_assets_scanned)",
+      "formula": "SUM(washed_pieces) / SUM(active_assets_scanned), weighted across reporting months | Live arithmetic (display rounded to 6 decimals; result in washes/active asset/month): 749,306 washed pieces / 319,260 active-asset observations across months = 2.347009",
       "sources": [
         "Service_Activity"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "High"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 2.439224217737456
+          },
+          {
+            "site_id": "S002",
+            "value": 2.310077000334784
+          },
+          {
+            "site_id": "S003",
+            "value": 2.385191347753744
+          },
+          {
+            "site_id": "S004",
+            "value": 2.297771903323263
+          },
+          {
+            "site_id": "S005",
+            "value": 2.421189049084724
+          },
+          {
+            "site_id": "S006",
+            "value": 2.282457879088206
+          },
+          {
+            "site_id": "S007",
+            "value": 2.313697428558238
+          },
+          {
+            "site_id": "S008",
+            "value": 2.4069646785373346
+          },
+          {
+            "site_id": "S009",
+            "value": 2.294278537538376
+          },
+          {
+            "site_id": "S010",
+            "value": 2.2594262688285522
+          },
+          {
+            "site_id": "S011",
+            "value": 2.2898070408012963
+          },
+          {
+            "site_id": "S012",
+            "value": 2.3562517137373185
+          },
+          {
+            "site_id": "S013",
+            "value": 2.2998377557963052
+          },
+          {
+            "site_id": "S014",
+            "value": 2.435893392209431
+          },
+          {
+            "site_id": "S015",
+            "value": 2.30671120558761
+          },
+          {
+            "site_id": "S016",
+            "value": 2.3714749248461136
+          },
+          {
+            "site_id": "S017",
+            "value": 2.3670683407769446
+          },
+          {
+            "site_id": "S018",
+            "value": 2.3123681434599157
+          },
+          {
+            "site_id": "S019",
+            "value": 2.3492973120480283
+          },
+          {
+            "site_id": "S020",
+            "value": 2.1706987851728794
+          },
+          {
+            "site_id": "S021",
+            "value": 2.292190991414795
+          },
+          {
+            "site_id": "S022",
+            "value": 2.521347661922742
+          },
+          {
+            "site_id": "S023",
+            "value": 2.4475300902708126
+          },
+          {
+            "site_id": "S024",
+            "value": 2.4914022336465167
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 2.3695535339124656
+          },
+          {
+            "product_id": "P1002",
+            "value": 2.3199796107157016
+          },
+          {
+            "product_id": "P1004",
+            "value": 2.3520205433166645
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "service_requests",
-      "label": "Service requests logged (2025)",
+      "label": "Service requests",
       "category": "service",
       "value": {
         "low": 515,
@@ -210,58 +1294,403 @@
       },
       "unit": "requests",
       "status": "SYNTHETIC",
-      "formula": "SUM(service_requests)",
+      "formula": "SUM(service_requests) | Live arithmetic (display rounded to 6 decimals; result in requests): SUM(service_requests) over 864 selected rows = 515",
       "sources": [
         "Service_Activity"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "Medium"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 25
+          },
+          {
+            "site_id": "S002",
+            "value": 15
+          },
+          {
+            "site_id": "S003",
+            "value": 14
+          },
+          {
+            "site_id": "S004",
+            "value": 19
+          },
+          {
+            "site_id": "S005",
+            "value": 22
+          },
+          {
+            "site_id": "S006",
+            "value": 16
+          },
+          {
+            "site_id": "S007",
+            "value": 20
+          },
+          {
+            "site_id": "S008",
+            "value": 32
+          },
+          {
+            "site_id": "S009",
+            "value": 14
+          },
+          {
+            "site_id": "S010",
+            "value": 15
+          },
+          {
+            "site_id": "S011",
+            "value": 20
+          },
+          {
+            "site_id": "S012",
+            "value": 22
+          },
+          {
+            "site_id": "S013",
+            "value": 28
+          },
+          {
+            "site_id": "S014",
+            "value": 24
+          },
+          {
+            "site_id": "S015",
+            "value": 24
+          },
+          {
+            "site_id": "S016",
+            "value": 20
+          },
+          {
+            "site_id": "S017",
+            "value": 25
+          },
+          {
+            "site_id": "S018",
+            "value": 24
+          },
+          {
+            "site_id": "S019",
+            "value": 23
+          },
+          {
+            "site_id": "S020",
+            "value": 25
+          },
+          {
+            "site_id": "S021",
+            "value": 20
+          },
+          {
+            "site_id": "S022",
+            "value": 21
+          },
+          {
+            "site_id": "S023",
+            "value": 26
+          },
+          {
+            "site_id": "S024",
+            "value": 21
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 192
+          },
+          {
+            "product_id": "P1002",
+            "value": 175
+          },
+          {
+            "product_id": "P1004",
+            "value": 148
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "on_time_rate",
-      "label": "On-time service cycle rate",
+      "label": "On time rate",
       "category": "service",
       "value": {
-        "low": 0.9833,
-        "base": 0.9833,
-        "high": 0.9833
+        "low": 0.9832908275437516,
+        "base": 0.9832908275437516,
+        "high": 0.9832908275437516
       },
       "unit": "ratio",
       "status": "CALCULATED",
-      "formula": "COUNT(performance_flag == 'ON_TIME') / COUNT(all cycles)",
+      "formula": "COUNT(ON_TIME) / COUNT(cycles); period selected by pickup_timestamp | Live arithmetic (display rounded to 6 decimals; result in ratio): 11181 on-time cycles / 11371 cycles (pickup month) = 0.983291",
       "sources": [
         "Service_Cycles"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "High"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 0.9818511796733213
+          },
+          {
+            "site_id": "S002",
+            "value": 0.990521327014218
+          },
+          {
+            "site_id": "S003",
+            "value": 0.9828897338403042
+          },
+          {
+            "site_id": "S004",
+            "value": 0.9789719626168224
+          },
+          {
+            "site_id": "S005",
+            "value": 0.9783132530120482
+          },
+          {
+            "site_id": "S006",
+            "value": 0.9936575052854123
+          },
+          {
+            "site_id": "S007",
+            "value": 0.9868073878627969
+          },
+          {
+            "site_id": "S008",
+            "value": 0.9721627408993576
+          },
+          {
+            "site_id": "S009",
+            "value": 0.983402489626556
+          },
+          {
+            "site_id": "S010",
+            "value": 0.9913232104121475
+          },
+          {
+            "site_id": "S011",
+            "value": 0.9943502824858758
+          },
+          {
+            "site_id": "S012",
+            "value": 0.9811965811965812
+          },
+          {
+            "site_id": "S013",
+            "value": 0.981404958677686
+          },
+          {
+            "site_id": "S014",
+            "value": 0.9771689497716894
+          },
+          {
+            "site_id": "S015",
+            "value": 0.9828850855745721
+          },
+          {
+            "site_id": "S016",
+            "value": 0.9869888475836431
+          },
+          {
+            "site_id": "S017",
+            "value": 0.9866156787762906
+          },
+          {
+            "site_id": "S018",
+            "value": 0.9824561403508771
+          },
+          {
+            "site_id": "S019",
+            "value": 0.9788732394366197
+          },
+          {
+            "site_id": "S020",
+            "value": 0.9813519813519813
+          },
+          {
+            "site_id": "S021",
+            "value": 0.9832285115303984
+          },
+          {
+            "site_id": "S022",
+            "value": 0.9781818181818182
+          },
+          {
+            "site_id": "S023",
+            "value": 0.9822616407982262
+          },
+          {
+            "site_id": "S024",
+            "value": 0.9849906191369606
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 0.9839804507195221
+          },
+          {
+            "product_id": "P1002",
+            "value": 0.9849774661992989
+          },
+          {
+            "product_id": "P1004",
+            "value": 0.9807796426637791
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "median_cycle_hours",
-      "label": "Median turnaround cycle time",
+      "label": "Median cycle hours",
       "category": "service",
       "value": {
-        "low": 82.0,
-        "base": 82.0,
-        "high": 82.0
+        "low": 82,
+        "base": 82,
+        "high": 82
       },
       "unit": "hours",
       "status": "CALCULATED",
-      "formula": "MEDIAN(cycle_hours)",
+      "formula": "MEDIAN(cycle_hours); period selected by pickup_timestamp | Live arithmetic (display rounded to 6 decimals; result in hours): 11371 sorted cycle-hour observations; middle value(s): 82 = 82",
       "sources": [
         "Service_Cycles"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "High"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 82
+          },
+          {
+            "site_id": "S002",
+            "value": 82.5
+          },
+          {
+            "site_id": "S003",
+            "value": 81.0
+          },
+          {
+            "site_id": "S004",
+            "value": 83.5
+          },
+          {
+            "site_id": "S005",
+            "value": 83
+          },
+          {
+            "site_id": "S006",
+            "value": 80
+          },
+          {
+            "site_id": "S007",
+            "value": 81
+          },
+          {
+            "site_id": "S008",
+            "value": 84
+          },
+          {
+            "site_id": "S009",
+            "value": 81.0
+          },
+          {
+            "site_id": "S010",
+            "value": 82
+          },
+          {
+            "site_id": "S011",
+            "value": 82.0
+          },
+          {
+            "site_id": "S012",
+            "value": 82
+          },
+          {
+            "site_id": "S013",
+            "value": 82.0
+          },
+          {
+            "site_id": "S014",
+            "value": 83.0
+          },
+          {
+            "site_id": "S015",
+            "value": 81
+          },
+          {
+            "site_id": "S016",
+            "value": 81.5
+          },
+          {
+            "site_id": "S017",
+            "value": 82
+          },
+          {
+            "site_id": "S018",
+            "value": 82.0
+          },
+          {
+            "site_id": "S019",
+            "value": 82.0
+          },
+          {
+            "site_id": "S020",
+            "value": 83
+          },
+          {
+            "site_id": "S021",
+            "value": 82
+          },
+          {
+            "site_id": "S022",
+            "value": 82.0
+          },
+          {
+            "site_id": "S023",
+            "value": 83
+          },
+          {
+            "site_id": "S024",
+            "value": 81
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 82
+          },
+          {
+            "product_id": "P1002",
+            "value": 82.0
+          },
+          {
+            "product_id": "P1004",
+            "value": 82.0
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "repairs_total",
-      "label": "Completed garment repairs (2025)",
+      "label": "Repairs total",
       "category": "repair",
       "value": {
         "low": 15233,
@@ -270,27 +1699,213 @@
       },
       "unit": "repairs",
       "status": "SYNTHETIC",
-      "formula": "SUM(repair_count)",
+      "formula": "SUM(repair_count) | Live arithmetic (display rounded to 6 decimals; result in repairs): SUM(repair_count) over 2500 selected rows = 15,233",
       "sources": [
         "Repairs"
       ],
       "assumptions": [
         "A008"
       ],
-      "confidence": "Medium"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 1017
+          },
+          {
+            "site_id": "S002",
+            "value": 667
+          },
+          {
+            "site_id": "S003",
+            "value": 100
+          },
+          {
+            "site_id": "S004",
+            "value": 236
+          },
+          {
+            "site_id": "S005",
+            "value": 286
+          },
+          {
+            "site_id": "S006",
+            "value": 925
+          },
+          {
+            "site_id": "S007",
+            "value": 1055
+          },
+          {
+            "site_id": "S008",
+            "value": 1146
+          },
+          {
+            "site_id": "S009",
+            "value": 851
+          },
+          {
+            "site_id": "S010",
+            "value": 462
+          },
+          {
+            "site_id": "S011",
+            "value": 612
+          },
+          {
+            "site_id": "S012",
+            "value": 726
+          },
+          {
+            "site_id": "S013",
+            "value": 922
+          },
+          {
+            "site_id": "S014",
+            "value": 1056
+          },
+          {
+            "site_id": "S015",
+            "value": 462
+          },
+          {
+            "site_id": "S016",
+            "value": 1011
+          },
+          {
+            "site_id": "S017",
+            "value": 569
+          },
+          {
+            "site_id": "S018",
+            "value": 342
+          },
+          {
+            "site_id": "S019",
+            "value": 334
+          },
+          {
+            "site_id": "S020",
+            "value": 410
+          },
+          {
+            "site_id": "S021",
+            "value": 796
+          },
+          {
+            "site_id": "S022",
+            "value": 166
+          },
+          {
+            "site_id": "S023",
+            "value": 805
+          },
+          {
+            "site_id": "S024",
+            "value": 277
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 5816
+          },
+          {
+            "product_id": "P1002",
+            "value": 5168
+          },
+          {
+            "product_id": "P1004",
+            "value": 4249
+          }
+        ],
+        "by_month": [
+          {
+            "month": "2025-01",
+            "value": 1329
+          },
+          {
+            "month": "2025-02",
+            "value": 1403
+          },
+          {
+            "month": "2025-03",
+            "value": 1461
+          },
+          {
+            "month": "2025-04",
+            "value": 1317
+          },
+          {
+            "month": "2025-05",
+            "value": 1250
+          },
+          {
+            "month": "2025-06",
+            "value": 1169
+          },
+          {
+            "month": "2025-07",
+            "value": 1234
+          },
+          {
+            "month": "2025-08",
+            "value": 1072
+          },
+          {
+            "month": "2025-09",
+            "value": 1227
+          },
+          {
+            "month": "2025-10",
+            "value": 1173
+          },
+          {
+            "month": "2025-11",
+            "value": 1364
+          },
+          {
+            "month": "2025-12",
+            "value": 1234
+          }
+        ],
+        "by_repair_type": [
+          {
+            "repair_type": "BUTTON",
+            "value": 3110
+          },
+          {
+            "repair_type": "DARNING / PATCHING",
+            "value": 2936
+          },
+          {
+            "repair_type": "OTHER ACCESSORIES",
+            "value": 3266
+          },
+          {
+            "repair_type": "OTHER SEAM STITCHING",
+            "value": 2959
+          },
+          {
+            "repair_type": "ZIPPER",
+            "value": 2962
+          }
+        ]
+      }
     },
     {
       "id": "repair_rate_per_1000",
-      "label": "Repairs per 1,000 washed pieces",
+      "label": "Repair rate per 1000",
       "category": "repair",
       "value": {
-        "low": 20.33,
-        "base": 20.33,
-        "high": 20.33
+        "low": 20.32947821050412,
+        "base": 20.32947821050412,
+        "high": 20.32947821050412
       },
-      "unit": "per 1,000 washes",
+      "unit": "repairs/1000 washed pieces",
       "status": "CALCULATED",
-      "formula": "SUM(repair_count) / SUM(washed_pieces) * 1000",
+      "formula": "SUM(repair_count) / SUM(washed_pieces) * 1000 | Live arithmetic (display rounded to 6 decimals; result in repairs/1000 washed pieces): 15,233 repairs / 749,306 washed pieces * 1,000 = 20.329478",
       "sources": [
         "Repairs",
         "Service_Activity"
@@ -298,20 +1913,135 @@
       "assumptions": [
         "A008"
       ],
-      "confidence": "Medium"
+      "confidence": "Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 19.299011328918155
+          },
+          {
+            "site_id": "S002",
+            "value": 19.33277296310252
+          },
+          {
+            "site_id": "S003",
+            "value": 17.439832577607255
+          },
+          {
+            "site_id": "S004",
+            "value": 19.39354096474649
+          },
+          {
+            "site_id": "S005",
+            "value": 19.135554663455107
+          },
+          {
+            "site_id": "S006",
+            "value": 21.13947482688484
+          },
+          {
+            "site_id": "S007",
+            "value": 21.050741265438873
+          },
+          {
+            "site_id": "S008",
+            "value": 19.761687158352157
+          },
+          {
+            "site_id": "S009",
+            "value": 20.704588584497106
+          },
+          {
+            "site_id": "S010",
+            "value": 19.617834394904456
+          },
+          {
+            "site_id": "S011",
+            "value": 19.68415297031295
+          },
+          {
+            "site_id": "S012",
+            "value": 21.121228871497976
+          },
+          {
+            "site_id": "S013",
+            "value": 20.981726327287625
+          },
+          {
+            "site_id": "S014",
+            "value": 22.789071604298847
+          },
+          {
+            "site_id": "S015",
+            "value": 20.27382833070037
+          },
+          {
+            "site_id": "S016",
+            "value": 20.342461618946057
+          },
+          {
+            "site_id": "S017",
+            "value": 20.256318974724103
+          },
+          {
+            "site_id": "S018",
+            "value": 19.50162513542795
+          },
+          {
+            "site_id": "S019",
+            "value": 19.39830410036009
+          },
+          {
+            "site_id": "S020",
+            "value": 19.61159475748589
+          },
+          {
+            "site_id": "S021",
+            "value": 20.420204715117624
+          },
+          {
+            "site_id": "S022",
+            "value": 19.122220942287754
+          },
+          {
+            "site_id": "S023",
+            "value": 20.618292651691725
+          },
+          {
+            "site_id": "S024",
+            "value": 19.709691191119965
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 23.98419748198917
+          },
+          {
+            "product_id": "P1002",
+            "value": 21.027447980665166
+          },
+          {
+            "product_id": "P1004",
+            "value": 16.277261252150062
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "replacements_postponed",
-      "label": "Estimated garment replacements postponed",
+      "label": "Replacements postponed",
       "category": "repair",
       "value": {
-        "low": 7616,
-        "base": 15233,
-        "high": 15233
+        "low": 7616.5,
+        "base": 15233.0,
+        "high": 15233.0
       },
-      "unit": "garments",
+      "unit": "events",
       "status": "ESTIMATE",
-      "formula": "SUM(repair_count) * repair_replacement_factor",
+      "formula": "SUM(repair_count) * repair_factor | Live arithmetic (display rounded to 6 decimals; result in events): 15,233 repairs * 1 repair factor = 15,233; scenario=base; baseline=B_LOCAL",
       "sources": [
         "Repairs"
       ],
@@ -319,11 +2049,126 @@
         "A002",
         "T001"
       ],
-      "confidence": "Low-Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 1017.0
+          },
+          {
+            "site_id": "S002",
+            "value": 667.0
+          },
+          {
+            "site_id": "S003",
+            "value": 100.0
+          },
+          {
+            "site_id": "S004",
+            "value": 236.0
+          },
+          {
+            "site_id": "S005",
+            "value": 286.0
+          },
+          {
+            "site_id": "S006",
+            "value": 925.0
+          },
+          {
+            "site_id": "S007",
+            "value": 1055.0
+          },
+          {
+            "site_id": "S008",
+            "value": 1146.0
+          },
+          {
+            "site_id": "S009",
+            "value": 851.0
+          },
+          {
+            "site_id": "S010",
+            "value": 462.0
+          },
+          {
+            "site_id": "S011",
+            "value": 612.0
+          },
+          {
+            "site_id": "S012",
+            "value": 726.0
+          },
+          {
+            "site_id": "S013",
+            "value": 922.0
+          },
+          {
+            "site_id": "S014",
+            "value": 1056.0
+          },
+          {
+            "site_id": "S015",
+            "value": 462.0
+          },
+          {
+            "site_id": "S016",
+            "value": 1011.0
+          },
+          {
+            "site_id": "S017",
+            "value": 569.0
+          },
+          {
+            "site_id": "S018",
+            "value": 342.0
+          },
+          {
+            "site_id": "S019",
+            "value": 334.0
+          },
+          {
+            "site_id": "S020",
+            "value": 410.0
+          },
+          {
+            "site_id": "S021",
+            "value": 796.0
+          },
+          {
+            "site_id": "S022",
+            "value": 166.0
+          },
+          {
+            "site_id": "S023",
+            "value": 805.0
+          },
+          {
+            "site_id": "S024",
+            "value": 277.0
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 5816.0
+          },
+          {
+            "product_id": "P1002",
+            "value": 5168.0
+          },
+          {
+            "product_id": "P1004",
+            "value": 4249.0
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "avoided_product_co2e_kg",
-      "label": "Estimated avoided new-garment footprint from repairs",
+      "label": "Avoided product co2e kg",
       "category": "repair",
       "value": {
         "low": 112126.1,
@@ -332,7 +2177,7 @@
       },
       "unit": "kgCO2e",
       "status": "ESTIMATE",
-      "formula": "SUM(replacements_postponed * synthetic_product_footprint_kgco2e)",
+      "formula": "SUM(repair_count * synthetic_product_footprint_kgco2e) * repair_factor | Live arithmetic (display rounded to 6 decimals; result in kgCO2e): (P1001: 5,816 repairs * 18.5 kgCO2e/product + P1002: 5,168 repairs * 13.2 kgCO2e/product + P1004: 4,249 repairs * 11.4 kgCO2e/product) * 1 repair factor = 224,252.2; scenario=base; baseline=B_LOCAL",
       "sources": [
         "Repairs",
         "Products"
@@ -342,191 +2187,1336 @@
         "A005",
         "T001"
       ],
-      "confidence": "Low"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 15283.9
+          },
+          {
+            "site_id": "S002",
+            "value": 9642.8
+          },
+          {
+            "site_id": "S003",
+            "value": 1464.0
+          },
+          {
+            "site_id": "S004",
+            "value": 3323.2
+          },
+          {
+            "site_id": "S005",
+            "value": 4109.7
+          },
+          {
+            "site_id": "S006",
+            "value": 14141.9
+          },
+          {
+            "site_id": "S007",
+            "value": 15896.7
+          },
+          {
+            "site_id": "S008",
+            "value": 16652.6
+          },
+          {
+            "site_id": "S009",
+            "value": 12145.3
+          },
+          {
+            "site_id": "S010",
+            "value": 6791.6
+          },
+          {
+            "site_id": "S011",
+            "value": 8563.6
+          },
+          {
+            "site_id": "S012",
+            "value": 10883.9
+          },
+          {
+            "site_id": "S013",
+            "value": 13812.1
+          },
+          {
+            "site_id": "S014",
+            "value": 15663.5
+          },
+          {
+            "site_id": "S015",
+            "value": 6900.7
+          },
+          {
+            "site_id": "S016",
+            "value": 14922.5
+          },
+          {
+            "site_id": "S017",
+            "value": 8035.5
+          },
+          {
+            "site_id": "S018",
+            "value": 5391.5
+          },
+          {
+            "site_id": "S019",
+            "value": 4777.4
+          },
+          {
+            "site_id": "S020",
+            "value": 5801.9
+          },
+          {
+            "site_id": "S021",
+            "value": 11238.9
+          },
+          {
+            "site_id": "S022",
+            "value": 2536.2
+          },
+          {
+            "site_id": "S023",
+            "value": 12062.5
+          },
+          {
+            "site_id": "S024",
+            "value": 4210.3
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 107596.0
+          },
+          {
+            "product_id": "P1002",
+            "value": 68217.59999999999
+          },
+          {
+            "product_id": "P1004",
+            "value": 48438.6
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "customer_water_l",
-      "label": "Allocated fresh water consumption",
+      "label": "Customer water l",
       "category": "footprint",
       "value": {
-        "low": 3363226.9,
-        "base": 3363226.9,
-        "high": 3363226.9
+        "low": 3363089.3596561695,
+        "base": 3363089.3596561695,
+        "high": 3363089.3596561695
       },
       "unit": "L",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(customer_washed_kg * laundry_fresh_water_l_per_kg)",
+      "formula": "SUM(customer_washed_kg * fresh_water_l / laundry washed_kg) | Live arithmetic (display rounded to 6 decimals; result in L): 502,074.7 kg * 6.698384 effective weighted amount/kg = 3,363,089.359656; effective intensity is derived from the sum of row allocations, not a uniform source factor",
       "sources": [
         "Service_Activity",
-        "Laundry_Resources",
-        "Customer_Impacts"
+        "Laundry_Resources"
       ],
       "assumptions": [
         "A003"
       ],
-      "confidence": "Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 243844.7963335539
+          },
+          {
+            "site_id": "S002",
+            "value": 151788.86136848238
+          },
+          {
+            "site_id": "S003",
+            "value": 25650.247811267964
+          },
+          {
+            "site_id": "S004",
+            "value": 52960.69983972074
+          },
+          {
+            "site_id": "S005",
+            "value": 66461.85958321994
+          },
+          {
+            "site_id": "S006",
+            "value": 204165.1160521051
+          },
+          {
+            "site_id": "S007",
+            "value": 228493.12394001003
+          },
+          {
+            "site_id": "S008",
+            "value": 257199.31202291217
+          },
+          {
+            "site_id": "S009",
+            "value": 180811.5145412742
+          },
+          {
+            "site_id": "S010",
+            "value": 106397.47190853117
+          },
+          {
+            "site_id": "S011",
+            "value": 134619.77514523405
+          },
+          {
+            "site_id": "S012",
+            "value": 156434.12267634258
+          },
+          {
+            "site_id": "S013",
+            "value": 190834.7870017216
+          },
+          {
+            "site_id": "S014",
+            "value": 204689.58697970363
+          },
+          {
+            "site_id": "S015",
+            "value": 102005.72937468873
+          },
+          {
+            "site_id": "S016",
+            "value": 217803.73212159204
+          },
+          {
+            "site_id": "S017",
+            "value": 116858.4044066614
+          },
+          {
+            "site_id": "S018",
+            "value": 81267.97974902252
+          },
+          {
+            "site_id": "S019",
+            "value": 77674.93694262797
+          },
+          {
+            "site_id": "S020",
+            "value": 94059.48518451142
+          },
+          {
+            "site_id": "S021",
+            "value": 175429.2731536759
+          },
+          {
+            "site_id": "S022",
+            "value": 41555.70212305518
+          },
+          {
+            "site_id": "S023",
+            "value": 185453.68771618648
+          },
+          {
+            "site_id": "S024",
+            "value": 66629.15368006867
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 1378709.2219386492
+          },
+          {
+            "product_id": "P1002",
+            "value": 1018666.9780171794
+          },
+          {
+            "product_id": "P1004",
+            "value": 965713.1597003413
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "customer_energy_kwh",
-      "label": "Allocated process energy consumption",
+      "label": "Customer energy kwh",
       "category": "footprint",
       "value": {
-        "low": 355533.8,
-        "base": 355533.8,
-        "high": 355533.8
+        "low": 355537.12771304644,
+        "base": 355537.12771304644,
+        "high": 355537.12771304644
       },
       "unit": "kWh",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(customer_washed_kg * laundry_energy_kwh_per_kg)",
+      "formula": "SUM(customer_washed_kg * process_energy_kwh / laundry washed_kg) | Live arithmetic (display rounded to 6 decimals; result in kWh): 502,074.7 kg * 0.708136 effective weighted amount/kg = 355,537.127713; effective intensity is derived from the sum of row allocations, not a uniform source factor",
       "sources": [
         "Service_Activity",
-        "Laundry_Resources",
-        "Customer_Impacts"
+        "Laundry_Resources"
       ],
       "assumptions": [
         "A003"
       ],
-      "confidence": "Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 25421.865742538008
+          },
+          {
+            "site_id": "S002",
+            "value": 15733.829834681741
+          },
+          {
+            "site_id": "S003",
+            "value": 2694.502529238695
+          },
+          {
+            "site_id": "S004",
+            "value": 5478.650140026057
+          },
+          {
+            "site_id": "S005",
+            "value": 6820.263586547982
+          },
+          {
+            "site_id": "S006",
+            "value": 21041.067496046384
+          },
+          {
+            "site_id": "S007",
+            "value": 23731.191846444297
+          },
+          {
+            "site_id": "S008",
+            "value": 26576.724718191286
+          },
+          {
+            "site_id": "S009",
+            "value": 18638.947768278267
+          },
+          {
+            "site_id": "S010",
+            "value": 10971.936187728537
+          },
+          {
+            "site_id": "S011",
+            "value": 14019.593291321018
+          },
+          {
+            "site_id": "S012",
+            "value": 16429.325287288448
+          },
+          {
+            "site_id": "S013",
+            "value": 21375.10898391178
+          },
+          {
+            "site_id": "S014",
+            "value": 22543.22713922111
+          },
+          {
+            "site_id": "S015",
+            "value": 11123.69126513367
+          },
+          {
+            "site_id": "S016",
+            "value": 24161.27885201929
+          },
+          {
+            "site_id": "S017",
+            "value": 13051.28645908675
+          },
+          {
+            "site_id": "S018",
+            "value": 8909.998929379268
+          },
+          {
+            "site_id": "S019",
+            "value": 8063.261293147075
+          },
+          {
+            "site_id": "S020",
+            "value": 9806.222207250918
+          },
+          {
+            "site_id": "S021",
+            "value": 18179.65773653441
+          },
+          {
+            "site_id": "S022",
+            "value": 4347.396897166029
+          },
+          {
+            "site_id": "S023",
+            "value": 19305.360607164643
+          },
+          {
+            "site_id": "S024",
+            "value": 7112.738914700801
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 146693.97742541708
+          },
+          {
+            "product_id": "P1002",
+            "value": 107523.41609018754
+          },
+          {
+            "product_id": "P1004",
+            "value": 101319.73419744184
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "customer_co2e_kg",
-      "label": "Allocated process & delivery emissions",
+      "label": "Customer co2e kg",
       "category": "footprint",
       "value": {
-        "low": 73785.1,
-        "base": 73785.1,
-        "high": 73785.1
+        "low": 73785.24389474289,
+        "base": 73785.24389474289,
+        "high": 73785.24389474289
       },
       "unit": "kgCO2e",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(allocated_process_kgco2e + allocated_delivery_kgco2e)",
+      "formula": "SUM(customer_washed_kg * (process_emissions_kgco2e + delivery_emissions_kgco2e) / laundry washed_kg) | Live arithmetic (display rounded to 6 decimals; result in kgCO2e): 50,000.513955 allocated process kgCO2e + 23,784.72994 allocated delivery kgCO2e = 73,785.243895",
       "sources": [
         "Service_Activity",
-        "Laundry_Resources",
-        "Customer_Impacts"
+        "Laundry_Resources"
       ],
       "assumptions": [
         "A003"
       ],
-      "confidence": "Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 3994.268072390621
+          },
+          {
+            "site_id": "S002",
+            "value": 2469.484487242402
+          },
+          {
+            "site_id": "S003",
+            "value": 422.43666835475113
+          },
+          {
+            "site_id": "S004",
+            "value": 859.5875204711166
+          },
+          {
+            "site_id": "S005",
+            "value": 1070.4471828884282
+          },
+          {
+            "site_id": "S006",
+            "value": 3292.948267571386
+          },
+          {
+            "site_id": "S007",
+            "value": 3722.1043320810973
+          },
+          {
+            "site_id": "S008",
+            "value": 4196.8624470465265
+          },
+          {
+            "site_id": "S009",
+            "value": 2920.83214746976
+          },
+          {
+            "site_id": "S010",
+            "value": 1726.0627153315136
+          },
+          {
+            "site_id": "S011",
+            "value": 2192.4308968537844
+          },
+          {
+            "site_id": "S012",
+            "value": 2571.5959416600667
+          },
+          {
+            "site_id": "S013",
+            "value": 2458.268405683009
+          },
+          {
+            "site_id": "S014",
+            "value": 2581.4867656536426
+          },
+          {
+            "site_id": "S015",
+            "value": 1258.7539885104363
+          },
+          {
+            "site_id": "S016",
+            "value": 2720.205276961843
+          },
+          {
+            "site_id": "S017",
+            "value": 1494.6443295202755
+          },
+          {
+            "site_id": "S018",
+            "value": 1007.2509898983972
+          },
+          {
+            "site_id": "S019",
+            "value": 3955.9450880590157
+          },
+          {
+            "site_id": "S020",
+            "value": 4811.359221016808
+          },
+          {
+            "site_id": "S021",
+            "value": 8945.612400245234
+          },
+          {
+            "site_id": "S022",
+            "value": 2131.8362354761716
+          },
+          {
+            "site_id": "S023",
+            "value": 9489.7060492914
+          },
+          {
+            "site_id": "S024",
+            "value": 3491.114465065197
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 30150.686547250734
+          },
+          {
+            "product_id": "P1002",
+            "value": 22264.753934237924
+          },
+          {
+            "product_id": "P1004",
+            "value": 21369.803413254227
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "textile_waste_kg",
-      "label": "Allocated end-of-life textile waste",
+      "label": "Textile waste kg",
       "category": "footprint",
       "value": {
-        "low": 16797.11,
-        "base": 16797.11,
-        "high": 16797.11
+        "low": 16798.673198,
+        "base": 16798.673198,
+        "high": 16798.673198
       },
       "unit": "kg",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(customer_washed_kg * laundry_waste_kg_per_washed_kg)",
+      "formula": "SUM(customer_washed_kg * waste_kg_per_washed_kg) | Live arithmetic (display rounded to 6 decimals; result in kg): 502,074.7 kg * 0.033459 effective weighted amount/kg = 16,798.673198; effective intensity is derived from the sum of row allocations, not a uniform source factor",
       "sources": [
         "Service_Activity",
-        "Waste_Circularity",
-        "Customer_Impacts"
+        "Waste_Circularity"
       ],
       "assumptions": [
         "A003"
       ],
-      "confidence": "Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 952.25199
+          },
+          {
+            "site_id": "S002",
+            "value": 594.7482
+          },
+          {
+            "site_id": "S003",
+            "value": 100.91047
+          },
+          {
+            "site_id": "S004",
+            "value": 207.48596
+          },
+          {
+            "site_id": "S005",
+            "value": 259.69672
+          },
+          {
+            "site_id": "S006",
+            "value": 791.15923
+          },
+          {
+            "site_id": "S007",
+            "value": 896.10149
+          },
+          {
+            "site_id": "S008",
+            "value": 1009.37296
+          },
+          {
+            "site_id": "S009",
+            "value": 704.74006
+          },
+          {
+            "site_id": "S010",
+            "value": 415.48214
+          },
+          {
+            "site_id": "S011",
+            "value": 530.2158900000001
+          },
+          {
+            "site_id": "S012",
+            "value": 619.87785
+          },
+          {
+            "site_id": "S013",
+            "value": 1245.475968
+          },
+          {
+            "site_id": "S014",
+            "value": 1328.418432
+          },
+          {
+            "site_id": "S015",
+            "value": 651.0577920000001
+          },
+          {
+            "site_id": "S016",
+            "value": 1413.696768
+          },
+          {
+            "site_id": "S017",
+            "value": 762.440448
+          },
+          {
+            "site_id": "S018",
+            "value": 521.583744
+          },
+          {
+            "site_id": "S019",
+            "value": 460.27096800000004
+          },
+          {
+            "site_id": "S020",
+            "value": 558.3852840000001
+          },
+          {
+            "site_id": "S021",
+            "value": 1038.715962
+          },
+          {
+            "site_id": "S022",
+            "value": 245.14236000000002
+          },
+          {
+            "site_id": "S023",
+            "value": 1092.600564
+          },
+          {
+            "site_id": "S024",
+            "value": 398.841948
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 6875.943412
+          },
+          {
+            "product_id": "P1002",
+            "value": 5178.201704
+          },
+          {
+            "product_id": "P1004",
+            "value": 4744.528082
+          }
+        ],
+        "by_month": [],
+        "by_route": [
+          {
+            "route": "recycling_kg",
+            "value": 12279.01317148411
+          },
+          {
+            "route": "reuse_kg",
+            "value": 818.9227623170357
+          },
+          {
+            "route": "energy_recovery_kg",
+            "value": 3243.288793945356
+          },
+          {
+            "route": "incineration_kg",
+            "value": 455.289562906368
+          }
+        ]
+      }
     },
     {
       "id": "circular_waste_share",
-      "label": "Share of textile waste recycled or reused",
+      "label": "Circular waste share",
       "category": "footprint",
       "value": {
-        "low": 0.7797,
-        "base": 0.7797,
-        "high": 0.7797
+        "low": 0.7797006215562635,
+        "base": 0.7797006215562635,
+        "high": 0.7797006215562635
       },
       "unit": "ratio",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "SUM(recycling_kg + reuse_kg) / SUM(textile_waste_total_kg)",
+      "formula": "SUM(allocated recycling_kg + allocated reuse_kg) / SUM(allocated textile_waste_kg) | Live arithmetic (display rounded to 6 decimals; result in ratio): (12,279.013171 recycling kg + 818.922762 reuse kg) / 16,798.673198 attributed waste kg = 0.779701",
       "sources": [
+        "Service_Activity",
         "Waste_Circularity"
       ],
       "assumptions": [
         "A003",
         "A004"
       ],
-      "confidence": "Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 0.8657516123629361
+          },
+          {
+            "site_id": "S002",
+            "value": 0.8657503463770104
+          },
+          {
+            "site_id": "S003",
+            "value": 0.8657504312870169
+          },
+          {
+            "site_id": "S004",
+            "value": 0.8657506855497495
+          },
+          {
+            "site_id": "S005",
+            "value": 0.8657508156325242
+          },
+          {
+            "site_id": "S006",
+            "value": 0.8657514816570313
+          },
+          {
+            "site_id": "S007",
+            "value": 0.86575015452904
+          },
+          {
+            "site_id": "S008",
+            "value": 0.865750364762947
+          },
+          {
+            "site_id": "S009",
+            "value": 0.8657510359046482
+          },
+          {
+            "site_id": "S010",
+            "value": 0.8657509015453512
+          },
+          {
+            "site_id": "S011",
+            "value": 0.865750727422803
+          },
+          {
+            "site_id": "S012",
+            "value": 0.8657508031144161
+          },
+          {
+            "site_id": "S013",
+            "value": 0.7477953956411311
+          },
+          {
+            "site_id": "S014",
+            "value": 0.7478049363292084
+          },
+          {
+            "site_id": "S015",
+            "value": 0.7477653636099933
+          },
+          {
+            "site_id": "S016",
+            "value": 0.7478065609635942
+          },
+          {
+            "site_id": "S017",
+            "value": 0.7478155347586224
+          },
+          {
+            "site_id": "S018",
+            "value": 0.747798621749661
+          },
+          {
+            "site_id": "S019",
+            "value": 0.6688735929054922
+          },
+          {
+            "site_id": "S020",
+            "value": 0.6688742124501417
+          },
+          {
+            "site_id": "S021",
+            "value": 0.6688716009384194
+          },
+          {
+            "site_id": "S022",
+            "value": 0.6688750394721401
+          },
+          {
+            "site_id": "S023",
+            "value": 0.6688749510061573
+          },
+          {
+            "site_id": "S024",
+            "value": 0.668873482792655
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 0.7810059973963458
+          },
+          {
+            "product_id": "P1002",
+            "value": 0.7759236034634304
+          },
+          {
+            "product_id": "P1004",
+            "value": 0.781931079661612
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "water_saving_l",
-      "label": "Water saving vs outsourced local laundry",
+      "label": "Water saving l",
       "category": "handprint",
       "value": {
-        "low": 452540.8,
-        "base": 1406482.6,
-        "high": 2360424.7
+        "low": 452678.3603438311,
+        "base": 1406620.2903438308,
+        "high": 2360562.2203438305
       },
       "unit": "L",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "customer_washed_kg * B.water_l_per_kg - customer_water_l",
+      "formula": "SUM(customer_washed_kg) * B.water_l_per_kg * baseline_factor - customer_water_l | Live arithmetic (display rounded to 6 decimals; result in L): 502,074.7 kg * 9.5 baseline/kg * 1 baseline multiplier - 3,363,089.359656 customer footprint = 1,406,620.290344; scenario=base; baseline=B_LOCAL",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
-        "Baselines",
-        "Customer_Impacts"
+        "Baselines"
       ],
       "assumptions": [
         "A001",
         "A003",
         "T002"
       ],
-      "confidence": "Low-Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 100124.55366644613
+          },
+          {
+            "site_id": "S002",
+            "value": 63044.13863151762
+          },
+          {
+            "site_id": "S003",
+            "value": 10800.30218873204
+          },
+          {
+            "site_id": "S004",
+            "value": 21986.70016027925
+          },
+          {
+            "site_id": "S005",
+            "value": 27344.940416780068
+          },
+          {
+            "site_id": "S006",
+            "value": 81614.83394789492
+          },
+          {
+            "site_id": "S007",
+            "value": 95193.72605999
+          },
+          {
+            "site_id": "S008",
+            "value": 107403.0879770878
+          },
+          {
+            "site_id": "S009",
+            "value": 73752.3854587258
+          },
+          {
+            "site_id": "S010",
+            "value": 43681.62809146884
+          },
+          {
+            "site_id": "S011",
+            "value": 56903.07485476596
+          },
+          {
+            "site_id": "S012",
+            "value": 67476.12732365742
+          },
+          {
+            "site_id": "S013",
+            "value": 89279.36299827843
+          },
+          {
+            "site_id": "S014",
+            "value": 94078.76302029635
+          },
+          {
+            "site_id": "S015",
+            "value": 44420.620625311276
+          },
+          {
+            "site_id": "S016",
+            "value": 100144.16787840793
+          },
+          {
+            "site_id": "S017",
+            "value": 54618.49559333859
+          },
+          {
+            "site_id": "S018",
+            "value": 36038.97025097748
+          },
+          {
+            "site_id": "S019",
+            "value": 29025.263057372023
+          },
+          {
+            "site_id": "S020",
+            "value": 35385.614815488574
+          },
+          {
+            "site_id": "S021",
+            "value": 65366.27684632412
+          },
+          {
+            "site_id": "S022",
+            "value": 15273.297876944816
+          },
+          {
+            "site_id": "S023",
+            "value": 67833.41228381352
+          },
+          {
+            "site_id": "S024",
+            "value": 25830.546319931324
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 579395.6280613507
+          },
+          {
+            "product_id": "P1002",
+            "value": 428944.9219828207
+          },
+          {
+            "product_id": "P1004",
+            "value": 398279.7402996586
+          }
+        ],
+        "by_month": [
+          {
+            "month": "2025-01",
+            "value": 172225.19750009477
+          },
+          {
+            "month": "2025-02",
+            "value": 118006.75585863285
+          },
+          {
+            "month": "2025-03",
+            "value": 132724.82347760204
+          },
+          {
+            "month": "2025-04",
+            "value": 75079.57722065656
+          },
+          {
+            "month": "2025-05",
+            "value": 156166.1277058506
+          },
+          {
+            "month": "2025-06",
+            "value": 117217.88025778905
+          },
+          {
+            "month": "2025-07",
+            "value": 97049.49784425145
+          },
+          {
+            "month": "2025-08",
+            "value": 84705.38779403002
+          },
+          {
+            "month": "2025-09",
+            "value": 102507.77464354178
+          },
+          {
+            "month": "2025-10",
+            "value": 130514.98893060943
+          },
+          {
+            "month": "2025-11",
+            "value": 96454.45074179798
+          },
+          {
+            "month": "2025-12",
+            "value": 123967.82836897374
+          }
+        ]
+      }
     },
     {
       "id": "energy_saving_kwh",
-      "label": "Energy saving vs outsourced local laundry",
+      "label": "Energy saving kwh",
       "category": "handprint",
       "value": {
-        "low": 66208.9,
-        "base": 171643.1,
-        "high": 277080.3
+        "low": 66205.62028695364,
+        "base": 171641.3072869536,
+        "high": 277076.99428695365
       },
       "unit": "kWh",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "customer_washed_kg * B.energy_kwh_per_kg - customer_energy_kwh",
+      "formula": "SUM(customer_washed_kg) * B.energy_kwh_per_kg * baseline_factor - customer_energy_kwh | Live arithmetic (display rounded to 6 decimals; result in kWh): 502,074.7 kg * 1.05 baseline/kg * 1 baseline multiplier - 355,537.127713 customer footprint = 171,641.307287; scenario=base; baseline=B_LOCAL",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
-        "Baselines",
-        "Customer_Impacts"
+        "Baselines"
       ],
       "assumptions": [
         "A001",
         "A003",
         "T002"
       ],
-      "confidence": "Low-Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 12595.799257462
+          },
+          {
+            "site_id": "S002",
+            "value": 8010.87016531826
+          },
+          {
+            "site_id": "S003",
+            "value": 1334.2424707613054
+          },
+          {
+            "site_id": "S004",
+            "value": 2805.009859973943
+          },
+          {
+            "site_id": "S005",
+            "value": 3547.8564134520184
+          },
+          {
+            "site_id": "S006",
+            "value": 10545.137503953614
+          },
+          {
+            "site_id": "S007",
+            "value": 12044.723153555711
+          },
+          {
+            "site_id": "S008",
+            "value": 13721.43528180871
+          },
+          {
+            "site_id": "S009",
+            "value": 9497.062231721735
+          },
+          {
+            "site_id": "S010",
+            "value": 5615.753812271461
+          },
+          {
+            "site_id": "S011",
+            "value": 7148.721708678981
+          },
+          {
+            "site_id": "S012",
+            "value": 8318.649712711554
+          },
+          {
+            "site_id": "S013",
+            "value": 9584.87601608822
+          },
+          {
+            "site_id": "S014",
+            "value": 10478.537860778888
+          },
+          {
+            "site_id": "S015",
+            "value": 5060.27373486633
+          },
+          {
+            "site_id": "S016",
+            "value": 10980.331147980709
+          },
+          {
+            "site_id": "S017",
+            "value": 5901.4235409132525
+          },
+          {
+            "site_id": "S018",
+            "value": 4055.506070620733
+          },
+          {
+            "site_id": "S019",
+            "value": 3729.9187068529254
+          },
+          {
+            "site_id": "S020",
+            "value": 4500.867792749083
+          },
+          {
+            "site_id": "S021",
+            "value": 8434.587263465593
+          },
+          {
+            "site_id": "S022",
+            "value": 1933.7031028339716
+          },
+          {
+            "site_id": "S023",
+            "value": 8689.529392835357
+          },
+          {
+            "site_id": "S024",
+            "value": 3106.4910852992007
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 69728.13757458291
+          },
+          {
+            "product_id": "P1002",
+            "value": 52475.79390981248
+          },
+          {
+            "product_id": "P1004",
+            "value": 49437.37580255815
+          }
+        ],
+        "by_month": []
+      }
     },
     {
       "id": "co2e_saving_kg",
-      "label": "Process & delivery CO2e saving vs outsourced local laundry",
+      "label": "Co2e saving kg",
       "category": "handprint",
       "value": {
-        "low": 189302.0,
-        "base": 255073.1,
-        "high": 320845.6
+        "low": 189301.89890525714,
+        "base": 255073.68460525715,
+        "high": 320845.4703052571
       },
       "unit": "kgCO2e",
       "status": "ALLOCATED_ESTIMATE",
-      "formula": "customer_washed_kg * (B.process_kgco2e_per_kg + B.delivery_kgco2e_per_kg) - customer_co2e_kg",
+      "formula": "SUM(customer_washed_kg) * (B.process_kgco2e_per_kg + B.delivery_kgco2e_per_kg) * baseline_factor - customer_co2e_kg | Live arithmetic (display rounded to 6 decimals; result in kgCO2e): 502,074.7 kg * (0.62 process + 0.035 delivery) baseline/kg * 1 baseline multiplier - 73,785.243895 customer footprint = 255,073.684605; scenario=base; baseline=B_LOCAL",
       "sources": [
         "Service_Activity",
         "Laundry_Resources",
-        "Baselines",
-        "Customer_Impacts"
+        "Baselines"
       ],
       "assumptions": [
         "A001",
         "A003",
         "T002"
       ],
-      "confidence": "Low-Medium"
+      "confidence": "Low-Medium",
+      "breakdown": {
+        "by_site": [
+          {
+            "site_id": "S001",
+            "value": 19721.513427609385
+          },
+          {
+            "site_id": "S002",
+            "value": 12342.685512757598
+          },
+          {
+            "site_id": "S003",
+            "value": 2090.732831645249
+          },
+          {
+            "site_id": "S004",
+            "value": 4307.838479528884
+          },
+          {
+            "site_id": "S005",
+            "value": 5397.284817111572
+          },
+          {
+            "site_id": "S006",
+            "value": 16410.827232428615
+          },
+          {
+            "site_id": "S007",
+            "value": 18595.252167918905
+          },
+          {
+            "site_id": "S008",
+            "value": 20941.513552953475
+          },
+          {
+            "site_id": "S009",
+            "value": 14630.678852530242
+          },
+          {
+            "site_id": "S010",
+            "value": 8621.496284668487
+          },
+          {
+            "site_id": "S011",
+            "value": 11012.565603146215
+          },
+          {
+            "site_id": "S012",
+            "value": 12866.426558339934
+          },
+          {
+            "site_id": "S013",
+            "value": 16854.865094316992
+          },
+          {
+            "site_id": "S014",
+            "value": 18017.804734346355
+          },
+          {
+            "site_id": "S015",
+            "value": 8836.957511489563
+          },
+          {
+            "site_id": "S016",
+            "value": 19201.465723038156
+          },
+          {
+            "site_id": "S017",
+            "value": 10328.236670479726
+          },
+          {
+            "site_id": "S018",
+            "value": 7080.754510101603
+          },
+          {
+            "site_id": "S019",
+            "value": 3400.7529119409846
+          },
+          {
+            "site_id": "S020",
+            "value": 4113.539778983191
+          },
+          {
+            "site_id": "S021",
+            "value": 7656.607099754769
+          },
+          {
+            "site_id": "S022",
+            "value": 1786.3737645238284
+          },
+          {
+            "site_id": "S023",
+            "value": 7973.772950708599
+          },
+          {
+            "site_id": "S024",
+            "value": 2883.7385349348033
+          }
+        ],
+        "by_product": [
+          {
+            "product_id": "P1001",
+            "value": 104855.48995274927
+          },
+          {
+            "product_id": "P1002",
+            "value": 77544.27706576209
+          },
+          {
+            "product_id": "P1004",
+            "value": 72673.91758674577
+          }
+        ],
+        "by_month": [
+          {
+            "month": "2025-01",
+            "value": 21104.6183942861
+          },
+          {
+            "month": "2025-02",
+            "value": 23101.99156036148
+          },
+          {
+            "month": "2025-03",
+            "value": 24569.166031938163
+          },
+          {
+            "month": "2025-04",
+            "value": 21801.554163096014
+          },
+          {
+            "month": "2025-05",
+            "value": 21475.831753787512
+          },
+          {
+            "month": "2025-06",
+            "value": 18940.652581357182
+          },
+          {
+            "month": "2025-07",
+            "value": 21062.06282573525
+          },
+          {
+            "month": "2025-08",
+            "value": 18595.188357496456
+          },
+          {
+            "month": "2025-09",
+            "value": 19590.349979935057
+          },
+          {
+            "month": "2025-10",
+            "value": 20334.159445913167
+          },
+          {
+            "month": "2025-11",
+            "value": 23447.064871464085
+          },
+          {
+            "month": "2025-12",
+            "value": 21051.04463988667
+          }
+        ]
+      }
     }
   ],
   "sites": [
@@ -538,20 +3528,33 @@
       "site_type": "Office & Operations",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 645,
+        "wearer_product_assignments": 1919,
         "garments_allocated": 2207,
-        "allocation_use_rate": 0.7621,
+        "allocation_use_rate": 0.7621205256003625,
         "idle_pieces": 525,
+        "idle_value_eur": 23395,
         "washed_kg": 36207.3,
-        "repairs_total": 1017,
-        "repair_rate_per_1000": 19.3,
-        "on_time_rate": 0.9819,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.439224217737456,
         "service_requests": 25,
-        "water_saving_l": 100109.7,
-        "co2e_saving_kg": 19721.5
+        "on_time_rate": 0.9818511796733213,
+        "median_cycle_hours": 82,
+        "repairs_total": 1017,
+        "repair_rate_per_1000": 19.299011328918155,
+        "customer_water_l": 243844.7963335539,
+        "customer_energy_kwh": 25421.865742538008,
+        "customer_co2e_kg": 3994.268072390621,
+        "textile_waste_kg": 952.25199,
+        "circular_waste_share": 0.8657516123629361,
+        "replacements_postponed": 1017.0,
+        "avoided_product_co2e_kg": 15283.9,
+        "water_saving_l": 100124.55366644613,
+        "energy_saving_kwh": 12595.799257462,
+        "co2e_saving_kg": 19721.513427609385
       },
       "flags": [
+        "R3_LATE_CYCLES",
         "R1_LOW_ALLOCATION_USE"
       ]
     },
@@ -563,18 +3566,30 @@
       "site_type": "Production Plant",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 508,
+        "wearer_product_assignments": 1510,
         "garments_allocated": 1471,
-        "allocation_use_rate": 0.7899,
+        "allocation_use_rate": 0.7899388171312033,
         "idle_pieces": 309,
+        "idle_value_eur": 12816,
         "washed_kg": 22614.0,
-        "repairs_total": 667,
-        "repair_rate_per_1000": 19.33,
-        "on_time_rate": 0.9905,
-        "median_cycle_hours": 82.5,
+        "wash_frequency": 2.310077000334784,
         "service_requests": 15,
-        "water_saving_l": 63041.5,
-        "co2e_saving_kg": 12342.7
+        "on_time_rate": 0.990521327014218,
+        "median_cycle_hours": 82.5,
+        "repairs_total": 667,
+        "repair_rate_per_1000": 19.33277296310252,
+        "customer_water_l": 151788.86136848238,
+        "customer_energy_kwh": 15733.829834681741,
+        "customer_co2e_kg": 2469.484487242402,
+        "textile_waste_kg": 594.7482,
+        "circular_waste_share": 0.8657503463770104,
+        "replacements_postponed": 667.0,
+        "avoided_product_co2e_kg": 9642.8,
+        "water_saving_l": 63044.13863151762,
+        "energy_saving_kwh": 8010.87016531826,
+        "co2e_saving_kg": 12342.685512757598
       },
       "flags": [
         "R1_LOW_ALLOCATION_USE"
@@ -588,20 +3603,35 @@
       "site_type": "Distribution Center",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 101,
+        "wearer_product_assignments": 301,
         "garments_allocated": 245,
-        "allocation_use_rate": 0.8367,
+        "allocation_use_rate": 0.8367346938775511,
         "idle_pieces": 40,
+        "idle_value_eur": 1630,
         "washed_kg": 3836.9,
-        "repairs_total": 100,
-        "repair_rate_per_1000": 17.44,
-        "on_time_rate": 0.9829,
-        "median_cycle_hours": 81.0,
+        "wash_frequency": 2.385191347753744,
         "service_requests": 14,
-        "water_saving_l": 10799.6,
-        "co2e_saving_kg": 2090.9
+        "on_time_rate": 0.9828897338403042,
+        "median_cycle_hours": 81.0,
+        "repairs_total": 100,
+        "repair_rate_per_1000": 17.439832577607255,
+        "customer_water_l": 25650.247811267964,
+        "customer_energy_kwh": 2694.502529238695,
+        "customer_co2e_kg": 422.43666835475113,
+        "textile_waste_kg": 100.91047,
+        "circular_waste_share": 0.8657504312870169,
+        "replacements_postponed": 100.0,
+        "avoided_product_co2e_kg": 1464.0,
+        "water_saving_l": 10800.30218873204,
+        "energy_saving_kwh": 1334.2424707613054,
+        "co2e_saving_kg": 2090.732831645249
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES",
+        "R4_SERVICE_REQUESTS"
+      ]
     },
     {
       "site_id": "S004",
@@ -611,20 +3641,35 @@
       "site_type": "Office & Operations",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 167,
+        "wearer_product_assignments": 494,
         "garments_allocated": 542,
-        "allocation_use_rate": 0.8413,
+        "allocation_use_rate": 0.8413284132841329,
         "idle_pieces": 86,
+        "idle_value_eur": 3299,
         "washed_kg": 7889.2,
-        "repairs_total": 236,
-        "repair_rate_per_1000": 19.39,
-        "on_time_rate": 0.979,
-        "median_cycle_hours": 83.5,
+        "wash_frequency": 2.297771903323263,
         "service_requests": 19,
-        "water_saving_l": 21985.7,
-        "co2e_saving_kg": 4307.9
+        "on_time_rate": 0.9789719626168224,
+        "median_cycle_hours": 83.5,
+        "repairs_total": 236,
+        "repair_rate_per_1000": 19.39354096474649,
+        "customer_water_l": 52960.69983972074,
+        "customer_energy_kwh": 5478.650140026057,
+        "customer_co2e_kg": 859.5875204711166,
+        "textile_waste_kg": 207.48596,
+        "circular_waste_share": 0.8657506855497495,
+        "replacements_postponed": 236.0,
+        "avoided_product_co2e_kg": 3323.2,
+        "water_saving_l": 21986.70016027925,
+        "energy_saving_kwh": 2805.009859973943,
+        "co2e_saving_kg": 4307.838479528884
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES",
+        "R4_SERVICE_REQUESTS"
+      ]
     },
     {
       "site_id": "S005",
@@ -634,20 +3679,34 @@
       "site_type": "Office & Operations",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 262,
+        "wearer_product_assignments": 778,
         "garments_allocated": 611,
-        "allocation_use_rate": 0.8887,
+        "allocation_use_rate": 0.8887070376432079,
         "idle_pieces": 68,
+        "idle_value_eur": 2937,
         "washed_kg": 9874.4,
-        "repairs_total": 286,
-        "repair_rate_per_1000": 19.14,
-        "on_time_rate": 0.9783,
-        "median_cycle_hours": 83.0,
+        "wash_frequency": 2.421189049084724,
         "service_requests": 22,
-        "water_saving_l": 27342.2,
-        "co2e_saving_kg": 5397.1
+        "on_time_rate": 0.9783132530120482,
+        "median_cycle_hours": 83,
+        "repairs_total": 286,
+        "repair_rate_per_1000": 19.135554663455107,
+        "customer_water_l": 66461.85958321994,
+        "customer_energy_kwh": 6820.263586547982,
+        "customer_co2e_kg": 1070.4471828884282,
+        "textile_waste_kg": 259.69672,
+        "circular_waste_share": 0.8657508156325242,
+        "replacements_postponed": 286.0,
+        "avoided_product_co2e_kg": 4109.7,
+        "water_saving_l": 27344.940416780068,
+        "energy_saving_kwh": 3547.8564134520184,
+        "co2e_saving_kg": 5397.284817111572
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES"
+      ]
     },
     {
       "site_id": "S006",
@@ -657,22 +3716,32 @@
       "site_type": "Production Plant",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 643,
+        "wearer_product_assignments": 1891,
         "garments_allocated": 1961,
-        "allocation_use_rate": 0.8271,
+        "allocation_use_rate": 0.827129015808261,
         "idle_pieces": 339,
+        "idle_value_eur": 13461,
         "washed_kg": 30082.1,
-        "repairs_total": 925,
-        "repair_rate_per_1000": 21.14,
-        "on_time_rate": 0.9937,
-        "median_cycle_hours": 80.0,
+        "wash_frequency": 2.282457879088206,
         "service_requests": 16,
-        "water_saving_l": 81602.8,
-        "co2e_saving_kg": 16410.5
+        "on_time_rate": 0.9936575052854123,
+        "median_cycle_hours": 80,
+        "repairs_total": 925,
+        "repair_rate_per_1000": 21.13947482688484,
+        "customer_water_l": 204165.1160521051,
+        "customer_energy_kwh": 21041.067496046384,
+        "customer_co2e_kg": 3292.948267571386,
+        "textile_waste_kg": 791.15923,
+        "circular_waste_share": 0.8657514816570313,
+        "replacements_postponed": 925.0,
+        "avoided_product_co2e_kg": 14141.9,
+        "water_saving_l": 81614.83394789492,
+        "energy_saving_kwh": 10545.137503953614,
+        "co2e_saving_kg": 16410.827232428615
       },
-      "flags": [
-        "R2_HIGH_REPAIR_RATE"
-      ]
+      "flags": []
     },
     {
       "site_id": "S007",
@@ -682,22 +3751,32 @@
       "site_type": "Production Plant",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 601,
+        "wearer_product_assignments": 1760,
         "garments_allocated": 2146,
-        "allocation_use_rate": 0.876,
+        "allocation_use_rate": 0.8760484622553588,
         "idle_pieces": 266,
+        "idle_value_eur": 11859,
         "washed_kg": 34072.3,
-        "repairs_total": 1055,
-        "repair_rate_per_1000": 21.05,
-        "on_time_rate": 0.9868,
-        "median_cycle_hours": 81.0,
+        "wash_frequency": 2.313697428558238,
         "service_requests": 20,
-        "water_saving_l": 95192.1,
-        "co2e_saving_kg": 18595.1
+        "on_time_rate": 0.9868073878627969,
+        "median_cycle_hours": 81,
+        "repairs_total": 1055,
+        "repair_rate_per_1000": 21.050741265438873,
+        "customer_water_l": 228493.12394001003,
+        "customer_energy_kwh": 23731.191846444297,
+        "customer_co2e_kg": 3722.1043320810973,
+        "textile_waste_kg": 896.10149,
+        "circular_waste_share": 0.86575015452904,
+        "replacements_postponed": 1055.0,
+        "avoided_product_co2e_kg": 15896.7,
+        "water_saving_l": 95193.72605999,
+        "energy_saving_kwh": 12044.723153555711,
+        "co2e_saving_kg": 18595.252167918905
       },
-      "flags": [
-        "R2_HIGH_REPAIR_RATE"
-      ]
+      "flags": []
     },
     {
       "site_id": "S008",
@@ -707,20 +3786,34 @@
       "site_type": "Distribution Center",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 624,
+        "wearer_product_assignments": 1856,
         "garments_allocated": 2391,
-        "allocation_use_rate": 0.8043,
+        "allocation_use_rate": 0.8042659974905897,
         "idle_pieces": 468,
+        "idle_value_eur": 18252,
         "washed_kg": 38379.2,
-        "repairs_total": 1146,
-        "repair_rate_per_1000": 19.76,
-        "on_time_rate": 0.9722,
-        "median_cycle_hours": 84.0,
+        "wash_frequency": 2.4069646785373346,
         "service_requests": 32,
-        "water_saving_l": 107402.5,
-        "co2e_saving_kg": 20941.5
+        "on_time_rate": 0.9721627408993576,
+        "median_cycle_hours": 84,
+        "repairs_total": 1146,
+        "repair_rate_per_1000": 19.761687158352157,
+        "customer_water_l": 257199.31202291217,
+        "customer_energy_kwh": 26576.724718191286,
+        "customer_co2e_kg": 4196.8624470465265,
+        "textile_waste_kg": 1009.37296,
+        "circular_waste_share": 0.865750364762947,
+        "replacements_postponed": 1146.0,
+        "avoided_product_co2e_kg": 16652.6,
+        "water_saving_l": 107403.0879770878,
+        "energy_saving_kwh": 13721.43528180871,
+        "co2e_saving_kg": 20941.513552953475
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES"
+      ]
     },
     {
       "site_id": "S009",
@@ -730,18 +3823,30 @@
       "site_type": "Production Plant",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 519,
+        "wearer_product_assignments": 1551,
         "garments_allocated": 1790,
-        "allocation_use_rate": 0.8553,
+        "allocation_use_rate": 0.8553072625698324,
         "idle_pieces": 259,
+        "idle_value_eur": 11381,
         "washed_kg": 26796.2,
-        "repairs_total": 851,
-        "repair_rate_per_1000": 20.7,
-        "on_time_rate": 0.9834,
-        "median_cycle_hours": 81.0,
+        "wash_frequency": 2.294278537538376,
         "service_requests": 14,
-        "water_saving_l": 73742.6,
-        "co2e_saving_kg": 14630.4
+        "on_time_rate": 0.983402489626556,
+        "median_cycle_hours": 81.0,
+        "repairs_total": 851,
+        "repair_rate_per_1000": 20.704588584497106,
+        "customer_water_l": 180811.5145412742,
+        "customer_energy_kwh": 18638.947768278267,
+        "customer_co2e_kg": 2920.83214746976,
+        "textile_waste_kg": 704.74006,
+        "circular_waste_share": 0.8657510359046482,
+        "replacements_postponed": 851.0,
+        "avoided_product_co2e_kg": 12145.3,
+        "water_saving_l": 73752.3854587258,
+        "energy_saving_kwh": 9497.062231721735,
+        "co2e_saving_kg": 14630.678852530242
       },
       "flags": []
     },
@@ -753,18 +3858,30 @@
       "site_type": "Office & Operations",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 325,
+        "wearer_product_assignments": 960,
         "garments_allocated": 1011,
-        "allocation_use_rate": 0.7557,
+        "allocation_use_rate": 0.7556874381800198,
         "idle_pieces": 247,
+        "idle_value_eur": 10223,
         "washed_kg": 15797.8,
-        "repairs_total": 462,
-        "repair_rate_per_1000": 19.62,
-        "on_time_rate": 0.9913,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.2594262688285522,
         "service_requests": 15,
-        "water_saving_l": 43676.4,
-        "co2e_saving_kg": 8621.0
+        "on_time_rate": 0.9913232104121475,
+        "median_cycle_hours": 82,
+        "repairs_total": 462,
+        "repair_rate_per_1000": 19.617834394904456,
+        "customer_water_l": 106397.47190853117,
+        "customer_energy_kwh": 10971.936187728537,
+        "customer_co2e_kg": 1726.0627153315136,
+        "textile_waste_kg": 415.48214,
+        "circular_waste_share": 0.8657509015453512,
+        "replacements_postponed": 462.0,
+        "avoided_product_co2e_kg": 6791.6,
+        "water_saving_l": 43681.62809146884,
+        "energy_saving_kwh": 5615.753812271461,
+        "co2e_saving_kg": 8621.496284668487
       },
       "flags": [
         "R1_LOW_ALLOCATION_USE"
@@ -778,18 +3895,30 @@
       "site_type": "Production Plant",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 431,
+        "wearer_product_assignments": 1282,
         "garments_allocated": 1361,
-        "allocation_use_rate": 0.8406,
+        "allocation_use_rate": 0.8405584129316679,
         "idle_pieces": 217,
+        "idle_value_eur": 8938,
         "washed_kg": 20160.3,
-        "repairs_total": 612,
-        "repair_rate_per_1000": 19.68,
-        "on_time_rate": 0.9944,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.2898070408012963,
         "service_requests": 20,
-        "water_saving_l": 56894.4,
-        "co2e_saving_kg": 11012.6
+        "on_time_rate": 0.9943502824858758,
+        "median_cycle_hours": 82.0,
+        "repairs_total": 612,
+        "repair_rate_per_1000": 19.68415297031295,
+        "customer_water_l": 134619.77514523405,
+        "customer_energy_kwh": 14019.593291321018,
+        "customer_co2e_kg": 2192.4308968537844,
+        "textile_waste_kg": 530.2158900000001,
+        "circular_waste_share": 0.865750727422803,
+        "replacements_postponed": 612.0,
+        "avoided_product_co2e_kg": 8563.6,
+        "water_saving_l": 56903.07485476596,
+        "energy_saving_kwh": 7148.721708678981,
+        "co2e_saving_kg": 11012.565603146215
       },
       "flags": []
     },
@@ -801,21 +3930,33 @@
       "site_type": "Distribution Center",
       "laundry_id": "L001",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 414,
+        "wearer_product_assignments": 1228,
         "garments_allocated": 1413,
-        "allocation_use_rate": 0.8047,
+        "allocation_use_rate": 0.8046709129511678,
         "idle_pieces": 276,
+        "idle_value_eur": 11989,
         "washed_kg": 23569.5,
-        "repairs_total": 726,
-        "repair_rate_per_1000": 21.12,
-        "on_time_rate": 0.9812,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.3562517137373185,
         "service_requests": 22,
-        "water_saving_l": 67467.0,
-        "co2e_saving_kg": 12866.5
+        "on_time_rate": 0.9811965811965812,
+        "median_cycle_hours": 82,
+        "repairs_total": 726,
+        "repair_rate_per_1000": 21.121228871497976,
+        "customer_water_l": 156434.12267634258,
+        "customer_energy_kwh": 16429.325287288448,
+        "customer_co2e_kg": 2571.5959416600667,
+        "textile_waste_kg": 619.87785,
+        "circular_waste_share": 0.8657508031144161,
+        "replacements_postponed": 726.0,
+        "avoided_product_co2e_kg": 10883.9,
+        "water_saving_l": 67476.12732365742,
+        "energy_saving_kwh": 8318.649712711554,
+        "co2e_saving_kg": 12866.426558339934
       },
       "flags": [
-        "R2_HIGH_REPAIR_RATE"
+        "R3_LATE_CYCLES"
       ]
     },
     {
@@ -826,20 +3967,35 @@
       "site_type": "Office & Operations",
       "laundry_id": "L003",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 472,
+        "wearer_product_assignments": 1370,
         "garments_allocated": 1926,
-        "allocation_use_rate": 0.8837,
+        "allocation_use_rate": 0.8836967808930426,
         "idle_pieces": 224,
+        "idle_value_eur": 10931,
         "washed_kg": 29485.7,
-        "repairs_total": 922,
-        "repair_rate_per_1000": 20.98,
-        "on_time_rate": 0.9814,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.2998377557963052,
         "service_requests": 28,
-        "water_saving_l": 89283.4,
-        "co2e_saving_kg": 16854.6
+        "on_time_rate": 0.981404958677686,
+        "median_cycle_hours": 82.0,
+        "repairs_total": 922,
+        "repair_rate_per_1000": 20.981726327287625,
+        "customer_water_l": 190834.7870017216,
+        "customer_energy_kwh": 21375.10898391178,
+        "customer_co2e_kg": 2458.268405683009,
+        "textile_waste_kg": 1245.475968,
+        "circular_waste_share": 0.7477953956411311,
+        "replacements_postponed": 922.0,
+        "avoided_product_co2e_kg": 13812.1,
+        "water_saving_l": 89279.36299827843,
+        "energy_saving_kwh": 9584.87601608822,
+        "co2e_saving_kg": 16854.865094316992
       },
-      "flags": []
+      "flags": [
+        "DQ4",
+        "R3_LATE_CYCLES"
+      ]
     },
     {
       "site_id": "S014",
@@ -849,21 +4005,34 @@
       "site_type": "Office & Operations",
       "laundry_id": "L003",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 549,
+        "wearer_product_assignments": 1639,
         "garments_allocated": 1914,
-        "allocation_use_rate": 0.8605,
+        "allocation_use_rate": 0.8605015673981191,
         "idle_pieces": 267,
+        "idle_value_eur": 12248,
         "washed_kg": 31449.3,
-        "repairs_total": 1056,
-        "repair_rate_per_1000": 22.79,
-        "on_time_rate": 0.9772,
-        "median_cycle_hours": 83.0,
+        "wash_frequency": 2.435893392209431,
         "service_requests": 24,
-        "water_saving_l": 94086.3,
-        "co2e_saving_kg": 18017.8
+        "on_time_rate": 0.9771689497716894,
+        "median_cycle_hours": 83.0,
+        "repairs_total": 1056,
+        "repair_rate_per_1000": 22.789071604298847,
+        "customer_water_l": 204689.58697970363,
+        "customer_energy_kwh": 22543.22713922111,
+        "customer_co2e_kg": 2581.4867656536426,
+        "textile_waste_kg": 1328.418432,
+        "circular_waste_share": 0.7478049363292084,
+        "replacements_postponed": 1056.0,
+        "avoided_product_co2e_kg": 15663.5,
+        "water_saving_l": 94078.76302029635,
+        "energy_saving_kwh": 10478.537860778888,
+        "co2e_saving_kg": 18017.804734346355
       },
       "flags": [
-        "R2_HIGH_REPAIR_RATE"
+        "DQ4",
+        "R3_LATE_CYCLES"
       ]
     },
     {
@@ -874,20 +4043,35 @@
       "site_type": "Distribution Center",
       "laundry_id": "L003",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 321,
+        "wearer_product_assignments": 939,
         "garments_allocated": 946,
-        "allocation_use_rate": 0.8953,
+        "allocation_use_rate": 0.8953488372093024,
         "idle_pieces": 99,
+        "idle_value_eur": 4391,
         "washed_kg": 15413.3,
-        "repairs_total": 462,
-        "repair_rate_per_1000": 20.27,
-        "on_time_rate": 0.9829,
-        "median_cycle_hours": 81.0,
+        "wash_frequency": 2.30671120558761,
         "service_requests": 24,
-        "water_saving_l": 44422.2,
-        "co2e_saving_kg": 8837.1
+        "on_time_rate": 0.9828850855745721,
+        "median_cycle_hours": 81,
+        "repairs_total": 462,
+        "repair_rate_per_1000": 20.27382833070037,
+        "customer_water_l": 102005.72937468873,
+        "customer_energy_kwh": 11123.69126513367,
+        "customer_co2e_kg": 1258.7539885104363,
+        "textile_waste_kg": 651.0577920000001,
+        "circular_waste_share": 0.7477653636099933,
+        "replacements_postponed": 462.0,
+        "avoided_product_co2e_kg": 6900.7,
+        "water_saving_l": 44420.620625311276,
+        "energy_saving_kwh": 5060.27373486633,
+        "co2e_saving_kg": 8836.957511489563
       },
-      "flags": []
+      "flags": [
+        "DQ4",
+        "R3_LATE_CYCLES"
+      ]
     },
     {
       "site_id": "S016",
@@ -897,20 +4081,34 @@
       "site_type": "Production Plant",
       "laundry_id": "L003",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 555,
+        "wearer_product_assignments": 1643,
         "garments_allocated": 2073,
-        "allocation_use_rate": 0.9055,
+        "allocation_use_rate": 0.9054510371442354,
         "idle_pieces": 196,
+        "idle_value_eur": 9339,
         "washed_kg": 33468.2,
-        "repairs_total": 1011,
-        "repair_rate_per_1000": 20.34,
-        "on_time_rate": 0.987,
-        "median_cycle_hours": 81.5,
+        "wash_frequency": 2.3714749248461136,
         "service_requests": 20,
-        "water_saving_l": 100142.3,
-        "co2e_saving_kg": 19201.2
+        "on_time_rate": 0.9869888475836431,
+        "median_cycle_hours": 81.5,
+        "repairs_total": 1011,
+        "repair_rate_per_1000": 20.342461618946057,
+        "customer_water_l": 217803.73212159204,
+        "customer_energy_kwh": 24161.27885201929,
+        "customer_co2e_kg": 2720.205276961843,
+        "textile_waste_kg": 1413.696768,
+        "circular_waste_share": 0.7478065609635942,
+        "replacements_postponed": 1011.0,
+        "avoided_product_co2e_kg": 14922.5,
+        "water_saving_l": 100144.16787840793,
+        "energy_saving_kwh": 10980.331147980709,
+        "co2e_saving_kg": 19201.465723038156
       },
-      "flags": []
+      "flags": [
+        "DQ4"
+      ]
     },
     {
       "site_id": "S017",
@@ -920,20 +4118,33 @@
       "site_type": "Office & Operations",
       "laundry_id": "L003",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 388,
+        "wearer_product_assignments": 1135,
         "garments_allocated": 1178,
-        "allocation_use_rate": 0.8005,
+        "allocation_use_rate": 0.8005093378607809,
         "idle_pieces": 235,
+        "idle_value_eur": 9450,
         "washed_kg": 18050.2,
-        "repairs_total": 569,
-        "repair_rate_per_1000": 20.26,
-        "on_time_rate": 0.9866,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.3670683407769446,
         "service_requests": 25,
-        "water_saving_l": 54620.3,
-        "co2e_saving_kg": 10328.0
+        "on_time_rate": 0.9866156787762906,
+        "median_cycle_hours": 82,
+        "repairs_total": 569,
+        "repair_rate_per_1000": 20.256318974724103,
+        "customer_water_l": 116858.4044066614,
+        "customer_energy_kwh": 13051.28645908675,
+        "customer_co2e_kg": 1494.6443295202755,
+        "textile_waste_kg": 762.440448,
+        "circular_waste_share": 0.7478155347586224,
+        "replacements_postponed": 569.0,
+        "avoided_product_co2e_kg": 8035.5,
+        "water_saving_l": 54618.49559333859,
+        "energy_saving_kwh": 5901.4235409132525,
+        "co2e_saving_kg": 10328.236670479726
       },
       "flags": [
+        "DQ4",
         "R1_LOW_ALLOCATION_USE"
       ]
     },
@@ -945,20 +4156,36 @@
       "site_type": "Production Plant",
       "laundry_id": "L003",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 265,
+        "wearer_product_assignments": 786,
         "garments_allocated": 790,
-        "allocation_use_rate": 0.8152,
+        "allocation_use_rate": 0.8151898734177215,
         "idle_pieces": 146,
+        "idle_value_eur": 6379,
         "washed_kg": 12348.1,
-        "repairs_total": 342,
-        "repair_rate_per_1000": 19.5,
-        "on_time_rate": 0.9825,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.3123681434599157,
         "service_requests": 24,
-        "water_saving_l": 36038.9,
-        "co2e_saving_kg": 7080.7
+        "on_time_rate": 0.9824561403508771,
+        "median_cycle_hours": 82.0,
+        "repairs_total": 342,
+        "repair_rate_per_1000": 19.50162513542795,
+        "customer_water_l": 81267.97974902252,
+        "customer_energy_kwh": 8909.998929379268,
+        "customer_co2e_kg": 1007.2509898983972,
+        "textile_waste_kg": 521.583744,
+        "circular_waste_share": 0.747798621749661,
+        "replacements_postponed": 342.0,
+        "avoided_product_co2e_kg": 5391.5,
+        "water_saving_l": 36038.97025097748,
+        "energy_saving_kwh": 4055.506070620733,
+        "co2e_saving_kg": 7080.754510101603
       },
-      "flags": []
+      "flags": [
+        "DQ4",
+        "R3_LATE_CYCLES",
+        "R4_SERVICE_REQUESTS"
+      ]
     },
     {
       "site_id": "S019",
@@ -968,20 +4195,34 @@
       "site_type": "Office & Operations",
       "laundry_id": "L004",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 299,
+        "wearer_product_assignments": 877,
         "garments_allocated": 728,
-        "allocation_use_rate": 0.8008,
+        "allocation_use_rate": 0.8008241758241759,
         "idle_pieces": 145,
+        "idle_value_eur": 6055,
         "washed_kg": 11231.6,
-        "repairs_total": 334,
-        "repair_rate_per_1000": 19.4,
-        "on_time_rate": 0.9789,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.3492973120480283,
         "service_requests": 23,
-        "water_saving_l": 29014.2,
-        "co2e_saving_kg": 3400.7
+        "on_time_rate": 0.9788732394366197,
+        "median_cycle_hours": 82.0,
+        "repairs_total": 334,
+        "repair_rate_per_1000": 19.39830410036009,
+        "customer_water_l": 77674.93694262797,
+        "customer_energy_kwh": 8063.261293147075,
+        "customer_co2e_kg": 3955.9450880590157,
+        "textile_waste_kg": 460.27096800000004,
+        "circular_waste_share": 0.6688735929054922,
+        "replacements_postponed": 334.0,
+        "avoided_product_co2e_kg": 4777.4,
+        "water_saving_l": 29025.263057372023,
+        "energy_saving_kwh": 3729.9187068529254,
+        "co2e_saving_kg": 3400.7529119409846
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES"
+      ]
     },
     {
       "site_id": "S020",
@@ -991,20 +4232,34 @@
       "site_type": "Office & Operations",
       "laundry_id": "L004",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 298,
+        "wearer_product_assignments": 881,
         "garments_allocated": 938,
-        "allocation_use_rate": 0.8369,
+        "allocation_use_rate": 0.8368869936034116,
         "idle_pieces": 153,
+        "idle_value_eur": 6312,
         "washed_kg": 13625.8,
-        "repairs_total": 410,
-        "repair_rate_per_1000": 19.61,
-        "on_time_rate": 0.9814,
-        "median_cycle_hours": 83.0,
+        "wash_frequency": 2.1706987851728794,
         "service_requests": 25,
-        "water_saving_l": 35376.4,
-        "co2e_saving_kg": 4114.0
+        "on_time_rate": 0.9813519813519813,
+        "median_cycle_hours": 83,
+        "repairs_total": 410,
+        "repair_rate_per_1000": 19.61159475748589,
+        "customer_water_l": 94059.48518451142,
+        "customer_energy_kwh": 9806.222207250918,
+        "customer_co2e_kg": 4811.359221016808,
+        "textile_waste_kg": 558.3852840000001,
+        "circular_waste_share": 0.6688742124501417,
+        "replacements_postponed": 410.0,
+        "avoided_product_co2e_kg": 5801.9,
+        "water_saving_l": 35385.614815488574,
+        "energy_saving_kwh": 4500.867792749083,
+        "co2e_saving_kg": 4113.539778983191
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES"
+      ]
     },
     {
       "site_id": "S021",
@@ -1014,20 +4269,34 @@
       "site_type": "Distribution Center",
       "laundry_id": "L004",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 506,
+        "wearer_product_assignments": 1485,
         "garments_allocated": 1680,
-        "allocation_use_rate": 0.8601,
+        "allocation_use_rate": 0.8601190476190477,
         "idle_pieces": 235,
+        "idle_value_eur": 9520,
         "washed_kg": 25346.9,
-        "repairs_total": 796,
-        "repair_rate_per_1000": 20.42,
-        "on_time_rate": 0.9832,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.292190991414795,
         "service_requests": 20,
-        "water_saving_l": 65349.7,
-        "co2e_saving_kg": 7657.2
+        "on_time_rate": 0.9832285115303984,
+        "median_cycle_hours": 82,
+        "repairs_total": 796,
+        "repair_rate_per_1000": 20.420204715117624,
+        "customer_water_l": 175429.2731536759,
+        "customer_energy_kwh": 18179.65773653441,
+        "customer_co2e_kg": 8945.612400245234,
+        "textile_waste_kg": 1038.715962,
+        "circular_waste_share": 0.6688716009384194,
+        "replacements_postponed": 796.0,
+        "avoided_product_co2e_kg": 11238.9,
+        "water_saving_l": 65366.27684632412,
+        "energy_saving_kwh": 8434.587263465593,
+        "co2e_saving_kg": 7656.607099754769
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES"
+      ]
     },
     {
       "site_id": "S022",
@@ -1037,20 +4306,35 @@
       "site_type": "Office & Operations",
       "laundry_id": "L004",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 122,
+        "wearer_product_assignments": 361,
         "garments_allocated": 331,
-        "allocation_use_rate": 0.8369,
+        "allocation_use_rate": 0.8368580060422961,
         "idle_pieces": 54,
+        "idle_value_eur": 2151,
         "washed_kg": 5982.0,
-        "repairs_total": 166,
-        "repair_rate_per_1000": 19.12,
-        "on_time_rate": 0.9782,
-        "median_cycle_hours": 82.0,
+        "wash_frequency": 2.521347661922742,
         "service_requests": 21,
-        "water_saving_l": 15267.3,
-        "co2e_saving_kg": 1786.4
+        "on_time_rate": 0.9781818181818182,
+        "median_cycle_hours": 82.0,
+        "repairs_total": 166,
+        "repair_rate_per_1000": 19.122220942287754,
+        "customer_water_l": 41555.70212305518,
+        "customer_energy_kwh": 4347.396897166029,
+        "customer_co2e_kg": 2131.8362354761716,
+        "textile_waste_kg": 245.14236000000002,
+        "circular_waste_share": 0.6688750394721401,
+        "replacements_postponed": 166.0,
+        "avoided_product_co2e_kg": 2536.2,
+        "water_saving_l": 15273.297876944816,
+        "energy_saving_kwh": 1933.7031028339716,
+        "co2e_saving_kg": 1786.3737645238284
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES",
+        "R4_SERVICE_REQUESTS"
+      ]
     },
     {
       "site_id": "S023",
@@ -1060,20 +4344,34 @@
       "site_type": "Distribution Center",
       "laundry_id": "L004",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 398,
+        "wearer_product_assignments": 1156,
         "garments_allocated": 1540,
-        "allocation_use_rate": 0.8325,
+        "allocation_use_rate": 0.8324675324675325,
         "idle_pieces": 258,
+        "idle_value_eur": 11437,
         "washed_kg": 26661.8,
-        "repairs_total": 805,
-        "repair_rate_per_1000": 20.62,
-        "on_time_rate": 0.9823,
-        "median_cycle_hours": 83.0,
+        "wash_frequency": 2.4475300902708126,
         "service_requests": 26,
-        "water_saving_l": 67802.7,
-        "co2e_saving_kg": 7974.0
+        "on_time_rate": 0.9822616407982262,
+        "median_cycle_hours": 83,
+        "repairs_total": 805,
+        "repair_rate_per_1000": 20.618292651691725,
+        "customer_water_l": 185453.68771618648,
+        "customer_energy_kwh": 19305.360607164643,
+        "customer_co2e_kg": 9489.7060492914,
+        "textile_waste_kg": 1092.600564,
+        "circular_waste_share": 0.6688749510061573,
+        "replacements_postponed": 805.0,
+        "avoided_product_co2e_kg": 12062.5,
+        "water_saving_l": 67833.41228381352,
+        "energy_saving_kwh": 8689.529392835357,
+        "co2e_saving_kg": 7973.772950708599
       },
-      "flags": []
+      "flags": [
+        "R3_LATE_CYCLES"
+      ]
     },
     {
       "site_id": "S024",
@@ -1083,20 +4381,33 @@
       "site_type": "Office & Operations",
       "laundry_id": "L004",
       "metrics": {
+        "delivery_sites": 1,
         "wearers_min_est": 194,
+        "wearer_product_assignments": 565,
         "garments_allocated": 550,
-        "allocation_use_rate": 0.7855,
+        "allocation_use_rate": 0.7854545454545454,
         "idle_pieces": 118,
+        "idle_value_eur": 4922,
         "washed_kg": 9732.6,
-        "repairs_total": 277,
-        "repair_rate_per_1000": 19.71,
-        "on_time_rate": 0.985,
-        "median_cycle_hours": 81.0,
+        "wash_frequency": 2.4914022336465167,
         "service_requests": 21,
-        "water_saving_l": 25822.4,
-        "co2e_saving_kg": 2883.7
+        "on_time_rate": 0.9849906191369606,
+        "median_cycle_hours": 81,
+        "repairs_total": 277,
+        "repair_rate_per_1000": 19.709691191119965,
+        "customer_water_l": 66629.15368006867,
+        "customer_energy_kwh": 7112.738914700801,
+        "customer_co2e_kg": 3491.114465065197,
+        "textile_waste_kg": 398.841948,
+        "circular_waste_share": 0.668873482792655,
+        "replacements_postponed": 277.0,
+        "avoided_product_co2e_kg": 4210.3,
+        "water_saving_l": 25830.546319931324,
+        "energy_saving_kwh": 3106.4910852992007,
+        "co2e_saving_kg": 2883.7385349348033
       },
       "flags": [
+        "R4_SERVICE_REQUESTS",
         "R1_LOW_ALLOCATION_USE"
       ]
     }
@@ -1107,10 +4418,30 @@
       "product_name": "Work Jacket Standard",
       "product_group": "Jackets",
       "metrics": {
+        "delivery_sites": 24,
+        "wearers_min_est": 9470,
+        "wearer_product_assignments": 9470,
         "garments_allocated": 10173,
+        "allocation_use_rate": 0.815197090337167,
+        "idle_pieces": 1880,
+        "idle_value_eur": 101520,
         "washed_kg": 206116.3,
+        "wash_frequency": 2.3695535339124656,
+        "service_requests": 192,
+        "on_time_rate": 0.9839804507195221,
+        "median_cycle_hours": 82,
         "repairs_total": 5816,
-        "avoided_product_co2e_kg": 107596.0
+        "repair_rate_per_1000": 23.98419748198917,
+        "customer_water_l": 1378709.2219386492,
+        "customer_energy_kwh": 146693.97742541708,
+        "customer_co2e_kg": 30150.686547250734,
+        "textile_waste_kg": 6875.943412,
+        "circular_waste_share": 0.7810059973963458,
+        "replacements_postponed": 5816.0,
+        "avoided_product_co2e_kg": 107596.0,
+        "water_saving_l": 579395.6280613507,
+        "energy_saving_kwh": 69728.13757458291,
+        "co2e_saving_kg": 104855.48995274927
       }
     },
     {
@@ -1118,10 +4449,30 @@
       "product_name": "Work Trouser Standard",
       "product_group": "Trousers",
       "metrics": {
+        "delivery_sites": 24,
+        "wearers_min_est": 9474,
+        "wearer_product_assignments": 9474,
         "garments_allocated": 10561,
+        "allocation_use_rate": 0.8504876432156045,
+        "idle_pieces": 1579,
+        "idle_value_eur": 61581,
         "washed_kg": 152380.2,
+        "wash_frequency": 2.3199796107157016,
+        "service_requests": 175,
+        "on_time_rate": 0.9849774661992989,
+        "median_cycle_hours": 82.0,
         "repairs_total": 5168,
-        "avoided_product_co2e_kg": 68217.6
+        "repair_rate_per_1000": 21.027447980665166,
+        "customer_water_l": 1018666.9780171794,
+        "customer_energy_kwh": 107523.41609018754,
+        "customer_co2e_kg": 22264.753934237924,
+        "textile_waste_kg": 5178.201704,
+        "circular_waste_share": 0.7759236034634304,
+        "replacements_postponed": 5168.0,
+        "avoided_product_co2e_kg": 68217.59999999999,
+        "water_saving_l": 428944.9219828207,
+        "energy_saving_kwh": 52475.79390981248,
+        "co2e_saving_kg": 77544.27706576209
       }
     },
     {
@@ -1129,10 +4480,30 @@
       "product_name": "Food Industry Coat",
       "product_group": "Food Industry",
       "metrics": {
+        "delivery_sites": 24,
+        "wearers_min_est": 9423,
+        "wearer_product_assignments": 9423,
         "garments_allocated": 11009,
-        "washed_kg": 143578.2,
+        "allocation_use_rate": 0.8391316195839768,
+        "idle_pieces": 1771,
+        "idle_value_eur": 60214,
+        "washed_kg": 143578.19999999998,
+        "wash_frequency": 2.3520205433166645,
+        "service_requests": 148,
+        "on_time_rate": 0.9807796426637791,
+        "median_cycle_hours": 82.0,
         "repairs_total": 4249,
-        "avoided_product_co2e_kg": 48438.6
+        "repair_rate_per_1000": 16.277261252150062,
+        "customer_water_l": 965713.1597003413,
+        "customer_energy_kwh": 101319.73419744184,
+        "customer_co2e_kg": 21369.803413254227,
+        "textile_waste_kg": 4744.528082,
+        "circular_waste_share": 0.781931079661612,
+        "replacements_postponed": 4249.0,
+        "avoided_product_co2e_kg": 48438.6,
+        "water_saving_l": 398279.7402996586,
+        "energy_saving_kwh": 49437.37580255815,
+        "co2e_saving_kg": 72673.91758674577
       }
     }
   ],
@@ -1140,11 +4511,11 @@
     "washed_kg": [
       {
         "month": "2025-01",
-        "value": 42880.8
+        "value": 42880.799999999996
       },
       {
         "month": "2025-02",
-        "value": 45796.7
+        "value": 45796.700000000004
       },
       {
         "month": "2025-03",
@@ -1156,7 +4527,7 @@
       },
       {
         "month": "2025-05",
-        "value": 41536.9
+        "value": 41536.899999999994
       },
       {
         "month": "2025-06",
@@ -1190,101 +4561,101 @@
     "water_saving_l": [
       {
         "month": "2025-01",
-        "value": 172104.9
+        "value": 172225.19750009477
       },
       {
         "month": "2025-02",
-        "value": 117880.8
+        "value": 118006.75585863285
       },
       {
         "month": "2025-03",
-        "value": 132644.8
+        "value": 132724.82347760204
       },
       {
         "month": "2025-04",
-        "value": 75093.8
+        "value": 75079.57722065656
       },
       {
         "month": "2025-05",
-        "value": 156073.6
+        "value": 156166.1277058506
       },
       {
         "month": "2025-06",
-        "value": 117249.2
+        "value": 117217.88025778905
       },
       {
         "month": "2025-07",
-        "value": 97184.2
+        "value": 97049.49784425145
       },
       {
         "month": "2025-08",
-        "value": 84599.3
+        "value": 84705.38779403002
       },
       {
         "month": "2025-09",
-        "value": 102619.1
+        "value": 102507.77464354178
       },
       {
         "month": "2025-10",
-        "value": 130496.3
+        "value": 130514.98893060943
       },
       {
         "month": "2025-11",
-        "value": 96436.4
+        "value": 96454.45074179798
       },
       {
         "month": "2025-12",
-        "value": 124100.2
+        "value": 123967.82836897374
       }
     ],
     "co2e_saving_kg": [
       {
         "month": "2025-01",
-        "value": 21104.7
+        "value": 21104.6183942861
       },
       {
         "month": "2025-02",
-        "value": 23102.0
+        "value": 23101.99156036148
       },
       {
         "month": "2025-03",
-        "value": 24569.5
+        "value": 24569.166031938163
       },
       {
         "month": "2025-04",
-        "value": 21800.8
+        "value": 21801.554163096014
       },
       {
         "month": "2025-05",
-        "value": 21475.8
+        "value": 21475.831753787512
       },
       {
         "month": "2025-06",
-        "value": 18940.5
+        "value": 18940.652581357182
       },
       {
         "month": "2025-07",
-        "value": 21062.0
+        "value": 21062.06282573525
       },
       {
         "month": "2025-08",
-        "value": 18595.6
+        "value": 18595.188357496456
       },
       {
         "month": "2025-09",
-        "value": 19590.4
+        "value": 19590.349979935057
       },
       {
         "month": "2025-10",
-        "value": 20334.3
+        "value": 20334.159445913167
       },
       {
         "month": "2025-11",
-        "value": 23446.8
+        "value": 23447.064871464085
       },
       {
         "month": "2025-12",
-        "value": 21050.7
+        "value": 21051.04463988667
       }
     ],
     "repairs_total": [
@@ -1336,56 +4707,6 @@
         "month": "2025-12",
         "value": 1234
       }
-    ],
-    "service_requests": [
-      {
-        "month": "2025-01",
-        "value": 38
-      },
-      {
-        "month": "2025-02",
-        "value": 33
-      },
-      {
-        "month": "2025-03",
-        "value": 51
-      },
-      {
-        "month": "2025-04",
-        "value": 48
-      },
-      {
-        "month": "2025-05",
-        "value": 42
-      },
-      {
-        "month": "2025-06",
-        "value": 40
-      },
-      {
-        "month": "2025-07",
-        "value": 40
-      },
-      {
-        "month": "2025-08",
-        "value": 39
-      },
-      {
-        "month": "2025-09",
-        "value": 42
-      },
-      {
-        "month": "2025-10",
-        "value": 40
-      },
-      {
-        "month": "2025-11",
-        "value": 50
-      },
-      {
-        "month": "2025-12",
-        "value": 52
-      }
     ]
   },
   "baseline_comparison": [
@@ -1393,57 +4714,57 @@
       "baseline_id": "B_LOCAL",
       "name": "Outsourced local laundry",
       "water_saving_l": {
-        "low": 452540.8,
-        "base": 1406482.8,
-        "high": 2360424.7
+        "low": 452678.3603438311,
+        "base": 1406620.2903438308,
+        "high": 2360562.2203438305
       },
       "energy_saving_kwh": {
-        "low": 66208.9,
-        "base": 171644.6,
-        "high": 277080.3
+        "low": 66205.62028695364,
+        "base": 171641.3072869536,
+        "high": 277076.99428695365
       },
       "co2e_saving_kg": {
-        "low": 189302.0,
-        "base": 255073.8,
-        "high": 320845.6
+        "low": 189301.89890525714,
+        "base": 255073.68460525715,
+        "high": 320845.4703052571
       }
     },
     {
       "baseline_id": "B_HOME",
       "name": "Home washing",
       "water_saving_l": {
-        "low": 4669968.3,
-        "base": 6678267.1,
-        "high": 8686565.9
+        "low": 4670105.840343831,
+        "base": 6678404.64034383,
+        "high": 8686703.440343829
       },
       "energy_saving_kwh": {
-        "low": 118424.7,
-        "base": 236914.3,
-        "high": 355404.0
+        "low": 118421.38908695354,
+        "base": 236911.0182869535,
+        "high": 355400.6474869535
       },
       "co2e_saving_kg": {
-        "low": 239509.5,
-        "base": 317833.2,
-        "high": 396156.8
+        "low": 239509.3689052571,
+        "base": 317833.02210525714,
+        "high": 396156.6753052571
       }
     },
     {
       "baseline_id": "B_INHOUSE",
       "name": "In-house customer laundry",
       "water_saving_l": {
-        "low": 1657520.1,
-        "base": 2912706.9,
-        "high": 4167893.6
+        "low": 1657657.6403438305,
+        "base": 2912844.3903438305,
+        "high": 4168031.1403438305
       },
       "energy_saving_kwh": {
-        "low": 94325.1,
-        "base": 206789.9,
-        "high": 319254.6
+        "low": 94321.80348695366,
+        "base": 206786.53628695366,
+        "high": 319251.26908695366
       },
       "co2e_saving_kg": {
-        "low": 205368.4,
-        "base": 275156.8,
-        "high": 344945.2
+        "low": 205368.28930525717,
+        "base": 275156.67260525713,
+        "high": 344945.0559052571
       }
     }
   ],
@@ -1453,9 +4774,7 @@
       "water_saving_l",
       "customer_water_l",
       "washed_kg",
-      "co2e_saving_kg",
-      "on_time_rate",
-      "allocation_use_rate"
+      "co2e_saving_kg"
     ],
     "industry_rules": [
       "Food & Beverage #1: Hygiene and compliance — Show service continuity, food-industry garment control and hygiene-related performance.",
@@ -1466,35 +4785,84 @@
   "observations": [
     {
       "id": "OBS1",
-      "title": "1.41M litres of estimated water savings vs outsourced local laundry",
-      "observation": "Across 502,074.7 kg of washed textiles in 2025, NorthStar Foods Group achieved an allocated estimate of 1,406,482.6 L in fresh-water savings (sensitivity range: 499,886 L to 2,313,079 L) and 255,073.1 kgCO2e in process and delivery emission reductions compared with the outsourced local laundry baseline.",
-      "recommended_action": "Use the allocated water and Scope 3 emission evidence in the annual steering review, and validate laundry-specific meter factors with Lindström sustainability specialists before external reporting.",
+      "title": "Water value against the selected baseline",
+      "observation": "Water savings are allocated estimates against the selected baseline, with low/base/high uncertainty. Evidence: water_saving_l: Low 452,678.36 / Base 1,406,620.29 / High 2,360,562.22 L. Highest washed_kg: S008: 38,379.2 kg; S001: 36,207.3 kg; S007: 34,072.3 kg.",
+      "recommended_action": "Validate laundry intensity and the comparison baseline before external use.",
       "owner": "Both",
-      "steering_question": "Should we align our 2026 water-intensity targets around outsourced local laundry or in-house laundry as the primary benchmark?",
+      "steering_question": "Which baseline best represents the customer alternative?",
       "metric_ids": [
         "water_saving_l",
-        "co2e_saving_kg",
         "washed_kg"
       ],
       "site_ids": [
+        "S008",
         "S001",
-        "S002",
-        "S016"
+        "S007"
       ],
-      "status": "AI_GENERATED_FROM_CALCULATED_DATA",
+      "status": "RULE_GENERATED_FROM_CALCULATED_DATA",
       "confidence": "Low-Medium"
     },
     {
       "id": "OBS2",
-      "title": "Garment allocation optimization opportunity across lowest-utilization sites",
-      "observation": "In December 2025, 31,743 garments were allocated across 24 sites with an overall active scan utilization of 83.5% (5230 unscanned pieces). The lowest-utilization sites (NorthStar Kotka at 75.6% and NorthStar Helsinki at 76.2%) hold excess buffer stock.",
-      "recommended_action": "Right-size locker allocations at the 5 lowest-utilization sites during Q1 2026 to reduce idle stock and improve circulation efficiency.",
-      "owner": "Lindström & Customer Site Ops",
-      "steering_question": "Can we pilot an allocation rebalance at the 5 lowest-utilization sites without affecting shift availability?",
+      "title": "Review service continuity at late-cycle sites",
+      "observation": "These sites fall below the customer on-time benchmark. Evidence: on_time_rate: S008: 97.22%; S014: 97.72%; S022: 97.82%. Benchmark: customer_on_time_rate: 98.33%.",
+      "recommended_action": "Review pickup schedules and late-cycle causes with the service team.",
+      "owner": "Lindström",
+      "steering_question": "Which schedule changes could improve service continuity?",
+      "metric_ids": [
+        "on_time_rate"
+      ],
+      "site_ids": [
+        "S008",
+        "S014",
+        "S022",
+        "S005",
+        "S019",
+        "S004",
+        "S012",
+        "S020",
+        "S013",
+        "S001",
+        "S023",
+        "S018",
+        "S015",
+        "S003",
+        "S021"
+      ],
+      "status": "RULE_GENERATED_FROM_CALCULATED_DATA",
+      "confidence": "Low-Medium"
+    },
+    {
+      "id": "OBS3",
+      "title": "Investigate high service-request intensity",
+      "observation": "Service requests per estimated minimum wearer exceed the site-median threshold. The denominator is an estimate. Evidence: service_requests per 1,000 wearers: S022: 172.13; S003: 138.61; S004: 113.77. Benchmark: customer_site_median: 56.23.",
+      "recommended_action": "Obtain request categories and resolution times before assigning causes.",
+      "owner": "Both",
+      "steering_question": "Which request categories should the teams address first?",
+      "metric_ids": [
+        "service_requests",
+        "wearers_min_est"
+      ],
+      "site_ids": [
+        "S022",
+        "S003",
+        "S004",
+        "S024",
+        "S018"
+      ],
+      "status": "RULE_GENERATED_FROM_CALCULATED_DATA",
+      "confidence": "Low-Medium"
+    },
+    {
+      "id": "OBS4",
+      "title": "Review allocation at the lowest-use sites",
+      "observation": "Lowest-use sites warrant an allocation review; unscanned stock is not proof of waste. Evidence: allocation_use_rate: S010: 75.57%; S001: 76.21%; S024: 78.55%.",
+      "recommended_action": "Review locker buffers and shift requirements before rebalancing garments.",
+      "owner": "Customer",
+      "steering_question": "Where can we pilot an allocation review while maintaining garment availability?",
       "metric_ids": [
         "allocation_use_rate",
-        "idle_pieces",
-        "garments_allocated"
+        "idle_pieces"
       ],
       "site_ids": [
         "S010",
@@ -1503,68 +4871,202 @@
         "S002",
         "S017"
       ],
-      "status": "AI_GENERATED_FROM_CALCULATED_DATA",
-      "confidence": "High"
-    },
-    {
-      "id": "OBS3",
-      "title": "15,233 repairs extended garment life and avoided new-product emissions",
-      "observation": "Lindström completed 15,233 garment repairs in 2025 (20.33 repairs per 1,000 washes). Under prototype assumption A002 (0.5 to 1.0 postponed replacements per repair), this postponed 7,617 to 15,233 new garment replacements and avoided an estimated 113,182 to 226,363 kgCO2e in new-product footprint.",
-      "recommended_action": "Review high-repair production sites to check whether mechanical wear on Food Industry Coats and Work Trousers can be reduced through garment specification updates.",
-      "owner": "Lindström Account Team",
-      "steering_question": "Which production lines drive the highest zipper and patching repair rates at our top-repair plants?",
-      "metric_ids": [
-        "repairs_total",
-        "replacements_postponed",
-        "avoided_product_co2e_kg"
-      ],
-      "site_ids": [
-        "S014",
-        "S006",
-        "S012",
-        "S007"
-      ],
-      "status": "AI_GENERATED_FROM_CALCULATED_DATA",
+      "status": "RULE_GENERATED_FROM_CALCULATED_DATA",
       "confidence": "Low-Medium"
     },
     {
-      "id": "OBS4",
-      "title": "Data-readiness actions to move from synthetic prototype to audit-grade reporting",
-      "observation": "While service delivery achieved a 98.3% on-time rate across 11,371 tracked cycles, key production data gaps remain: wearer counts are summed across product rows (28,367 assignments vs ~12,078 deduplicated minimum wearers), service-request root causes are uncategorized, and Swedish laundry L003 shows a laundry-vs-customer volume reconciliation warning.",
-      "recommended_action": "Connect eLindström wearer master data, service-request category exports, and validated WWS laundry volume feeds in Phase 2.",
-      "owner": "Lindström Data & IT",
-      "steering_question": "Which data feeds should be prioritized first to support NorthStar's upcoming CSRD Scope 3 disclosures?",
+      "id": "OBS5",
+      "title": "Resolve evidence gaps before external reporting",
+      "observation": "Data-quality warnings and missing production sources limit the conclusions. Sources to resolve: Customer hierarchy is synthetic; Unique wearer count; Service-request details; Cost and time evidence; Product footprints; Baseline ranges; Laundry volume for L003; Industry trends and regulations. Checks: DQ1, DQ1, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, DQ4, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, PACK_DATA_STATUS, DQ5_WEARER_MULTI_PRODUCT_SUM.",
+      "recommended_action": "Reconcile laundry volumes and link approved wearer and service-request sources.",
+      "owner": "Both",
+      "steering_question": "Which missing production source should we connect first?",
       "metric_ids": [
         "wearers_min_est",
-        "wearer_product_assignments",
-        "on_time_rate",
-        "service_requests"
+        "service_requests",
+        "customer_water_l"
       ],
-      "site_ids": [
-        "S013",
-        "S014",
-        "S015"
-      ],
-      "status": "AI_GENERATED_FROM_CALCULATED_DATA",
-      "confidence": "High"
+      "site_ids": [],
+      "status": "RULE_GENERATED_FROM_CALCULATED_DATA",
+      "confidence": "Low-Medium"
     }
   ],
   "data_quality": [
     {
-      "check_id": "DQ4_LAUNDRY_SHARE_SUM",
-      "dataset": "Customer_Impacts vs Laundry_Resources",
-      "severity": "warning",
-      "message": "For Laundry L003 (Nordic Malmö WWS), the sum of customer_washed_kg across customers (~28,000 kg/month) exceeds the reported laundry total washed_kg (~2,500 kg/month), making share_of_laundry_washed_kg sum to ~1,000%.",
-      "affected_rows": 288,
-      "treatment": "Calculate customer footprint using laundry per-kg resource intensity multiplied by customer_washed_kg (matches Customer_Impacts values) and flag L003 for WWS Washed Kg report reconciliation."
+      "check_id": "DQ1",
+      "dataset": "Sample_Output",
+      "severity": "WARNING",
+      "message": "Blank cells in source rows.",
+      "affected_rows": 3,
+      "treatment": "Retain rows; report missing inputs explicitly before calculating affected metrics."
+    },
+    {
+      "check_id": "DQ1",
+      "dataset": "Data_Dictionary",
+      "severity": "WARNING",
+      "message": "Blank cells in source rows.",
+      "affected_rows": 112,
+      "treatment": "Retain rows; report missing inputs explicitly before calculating affected metrics."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-01: customer shares total 1125.1% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-02: customer shares total 1258.1% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-03: customer shares total 1122.1% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-04: customer shares total 1085.2% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-05: customer shares total 1118.1% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-06: customer shares total 997.7% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-07: customer shares total 1241.6% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-08: customer shares total 1056.8% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-09: customer shares total 964.3% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-10: customer shares total 1062.2% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-11: customer shares total 1051.2% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "DQ4",
+      "dataset": "Laundry_Resources",
+      "severity": "WARNING",
+      "message": "Laundry L003 2025-12: customer shares total 963.6% (>100%).",
+      "affected_rows": 42,
+      "treatment": "Use laundry resource intensity per kg × customer washed kg; retain discrepancy flag."
+    },
+    {
+      "check_id": "PACK_DATA_STATUS",
+      "dataset": "Customers",
+      "severity": "info",
+      "affected_rows": 0,
+      "message": "SYNTHETIC: Complete fictional master data",
+      "treatment": "Retain source evidence labels; confidence: High"
+    },
+    {
+      "check_id": "PACK_DATA_STATUS",
+      "dataset": "Service_Activity",
+      "severity": "info",
+      "affected_rows": 0,
+      "message": "SYNTHETIC_STRUCTURAL: Patterns informed by available Tableau structures",
+      "treatment": "Retain source evidence labels; confidence: Medium"
+    },
+    {
+      "check_id": "PACK_DATA_STATUS",
+      "dataset": "Service_Cycles",
+      "severity": "info",
+      "affected_rows": 0,
+      "message": "SYNTHETIC_STRUCTURAL: No personal or real asset identifiers",
+      "treatment": "Retain source evidence labels; confidence: Medium"
+    },
+    {
+      "check_id": "PACK_DATA_STATUS",
+      "dataset": "Repairs",
+      "severity": "info",
+      "affected_rows": 0,
+      "message": "SYNTHETIC_STRUCTURAL: Granularity validated by report structure",
+      "treatment": "Retain source evidence labels; confidence: Medium"
+    },
+    {
+      "check_id": "PACK_DATA_STATUS",
+      "dataset": "Laundry_Resources",
+      "severity": "info",
+      "affected_rows": 0,
+      "message": "SYNTHETIC_FACTOR: Scenario values patterned on calculator structure",
+      "treatment": "Retain source evidence labels; confidence: Medium"
+    },
+    {
+      "check_id": "PACK_DATA_STATUS",
+      "dataset": "Waste_Circularity",
+      "severity": "info",
+      "affected_rows": 0,
+      "message": "SYNTHETIC_STRUCTURAL: Laundry-level allocation logic retained",
+      "treatment": "Retain source evidence labels; confidence: Medium"
+    },
+    {
+      "check_id": "PACK_DATA_STATUS",
+      "dataset": "Customer_Impacts",
+      "severity": "info",
+      "affected_rows": 0,
+      "message": "CALCULATED_ESTIMATE: Depends on baseline and allocation assumptions",
+      "treatment": "Retain source evidence labels; confidence: Low-Medium"
     },
     {
       "check_id": "DQ5_WEARER_MULTI_PRODUCT_SUM",
       "dataset": "Service_Activity",
       "severity": "info",
-      "message": "active_wearers is reported per site-product row. Summing across products (28,367 in Dec 2025) double-counts wearers assigned multiple garment types (e.g., jacket + trousers).",
       "affected_rows": 864,
-      "treatment": "Report both 'wearer_product_assignments' (28,367 sum) and 'wearers_min_est' (12,078 sum of per-site max across products) until unique wearer IDs are linked from eLindström."
+      "message": "Product-level wearer sums can count a person repeatedly.",
+      "treatment": "Show latest-month sum of site maxima as a minimum estimate, alongside wearer-product assignments."
     }
   ],
   "assumptions": [
@@ -1642,53 +5144,72 @@
     },
     {
       "id": "T001",
-      "assumption": "Repair replacement sensitivity range",
-      "value_or_rule": "Low = 0.5 replacements postponed per repair; Base = 1.0; High = 1.0",
-      "rationale": "Data pack Assumption A002 specifies 1 repair = 1 postponed replacement as a prototype rule requiring sensitivity testing.",
-      "category": "Handprint",
-      "confidence": "Low-Medium",
-      "source": "TEAM"
+      "assumption": "Repair-factor sensitivity",
+      "value_or_rule": "low=0.5; base=1.0; high=1.0",
+      "rationale": "Illustrative range; requires challenge-contact confirmation.",
+      "category": "repair",
+      "confidence": "Low",
+      "source": "Team assumption"
     },
     {
       "id": "T002",
-      "assumption": "Baseline factor sensitivity band",
-      "value_or_rule": "Low = -20% on baseline water/energy/CO2e factors; Base = pack factor; High = +20%",
-      "rationale": "Provides transparent low/base/high range around single-point baseline factors in the starter pack.",
-      "category": "Baseline",
-      "confidence": "Low-Medium",
-      "source": "TEAM"
+      "assumption": "Baseline-factor sensitivity",
+      "value_or_rule": "low=0.8 × baseline; base=baseline; high=1.2 × baseline",
+      "rationale": "Illustrative range; requires challenge-contact confirmation.",
+      "category": "baseline",
+      "confidence": "Low",
+      "source": "Team assumption"
+    },
+    {
+      "id": "T003",
+      "assumption": "Illustrative idle stock valuation",
+      "value_or_rule": "Latest-month idle pieces × synthetic product purchase cost; no extra sensitivity factor",
+      "rationale": "A stock value is not a cost-saving promise.",
+      "category": "Cost",
+      "confidence": "Low",
+      "source": "Team assumption"
     }
   ],
   "data_gaps": [
     {
-      "gap": "Enterprise customer & site hierarchy",
-      "impact": "Parent-child account roll-up is currently synthetic",
-      "future_source": "Lindström ERP / Customer Master Data"
+      "gap": "Customer hierarchy is synthetic",
+      "impact": "Parent/site roll-up needs production master data",
+      "future_source": "Lindström customer master data"
     },
     {
-      "gap": "Deduplicated unique wearer IDs",
-      "impact": "Wearers holding multiple products are summed across product rows",
-      "future_source": "eLindström Wearer Roster export"
+      "gap": "Unique wearer count",
+      "impact": "Per-product wearer counts cannot identify unique people",
+      "future_source": "eLindström wearer data"
     },
     {
-      "gap": "Service-request root-cause categories & resolution SLA",
-      "impact": "Only monthly request counts are available; cannot compute request-free days or root causes",
-      "future_source": "eLindström Service Request ticket table"
+      "gap": "Service-request details",
+      "impact": "Cannot calculate causes or request-free days",
+      "future_source": "Service-request system export"
     },
     {
-      "gap": "Verified contract pricing & total cost of ownership (TCO)",
-      "impact": "Idle garment capital value uses illustrative purchase costs only",
-      "future_source": "Commercial contract & invoicing system"
+      "gap": "Cost and time evidence",
+      "impact": "Idle stock values are illustrative, not savings promises",
+      "future_source": "Contract and invoice data"
     },
     {
-      "gap": "Approved product LCA footprints",
-      "impact": "Product kgCO2e values in Products sheet are synthetic placeholders (A005)",
-      "future_source": "Lindström approved LCA database / Workwear Environmental Impact Calculator"
+      "gap": "Product footprints",
+      "impact": "Synthetic factors require replacement",
+      "future_source": "Approved product LCA data"
     },
     {
-      "gap": "Laundry L003 total washed-kg reconciliation",
-      "impact": "Customer washed kg at L003 exceeds laundry total in starter pack",
-      "future_source": "WWS Washed Kg 2025 production report"
+      "gap": "Baseline ranges",
+      "impact": "Team sensitivity assumptions require confirmation",
+      "future_source": "Approved Lindström calculator"
+    },
+    {
+      "gap": "Laundry volume for L003",
+      "impact": "Customer volume exceeds laundry volume",
+      "future_source": "WWS Washed Kg report"
+    },
+    {
+      "gap": "Industry trends and regulations",
+      "impact": "No public-reference sheet in supplied workbook",
+      "future_source": "Curated public references"
     }
   ]
 }

@@ -29,7 +29,8 @@ def test_sample_observations_match_contract_without_mutation(review):
     assert all(set(o['metric_ids']) <= {m['id'] for m in review['metrics']} for o in result)
     assert all(set(o['site_ids']) <= {s['site_id'] for s in review['sites']} for o in result)
     assert all(o['owner'] in ('Customer', 'Lindström', 'Both') for o in result)
-    assert '1,406,482.6' in result[0]['observation']
+    water = next(m['value']['base'] for m in review['metrics'] if m['id'] == 'water_saving_l')
+    assert f'{water:,.2f}'.rstrip('0').rstrip('.') in result[0]['observation']
     assert not any('12,078' in o['observation'] for o in result)
 
 
@@ -113,7 +114,8 @@ def test_valid_llm_words_retain_deterministic_evidence(review, monkeypatch):
     with patch.object(llm, '_request', return_value=rows):
         outputs = generate_observations(review)
     assert outputs[0]['status'] == 'AI_GENERATED_FROM_CALCULATED_DATA'
-    assert '1,406,482.6' in outputs[0]['observation']
+    water = next(m['value']['base'] for m in review['metrics'] if m['id'] == 'water_saving_l')
+    assert f'{water:,.2f}'.rstrip('0').rstrip('.') in outputs[0]['observation']
     assert outputs[0]['metric_ids'] == generate_observations(review, False)[0]['metric_ids']
 
 

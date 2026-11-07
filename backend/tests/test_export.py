@@ -24,7 +24,8 @@ def test_powerpoint_has_nine_slides_evidence_and_source_notes(review, tmp_path):
     assert len(deck.slides) == 9
     texts = ['\n'.join(s.text for s in slide.shapes if s.has_text_frame) for slide in deck.slides]
     assert all(FOOTER in t for t in texts)
-    assert '1,406,482.6' in texts[1]
+    water = next(m['value']['base'] for m in review['metrics'] if m['id'] == 'water_saving_l')
+    assert f'{water:,.2f}'.rstrip('0').rstrip('.') in texts[1]
     assert 'R1' not in texts[1]  # summary uses metrics, not existing observation prose
     assert 'L003' in texts[-1]
     assert '0.5' in texts[-1]
@@ -44,7 +45,8 @@ def test_pdf_has_matching_pages_footer_and_lossless_source(review, tmp_path):
         text = page.extract_text()
         assert title in text
         assert FOOTER in text
-    assert '1,406,482.6' in reader.pages[1].extract_text()
+    water = next(m['value']['base'] for m in review['metrics'] if m['id'] == 'water_saving_l')
+    assert f'{water:,.2f}'.rstrip('0').rstrip('.') in reader.pages[1].extract_text()
     assert 'L003' in reader.pages[-1].extract_text()
     assert json.loads(reader.attachments['review.json'][0]) == review
     assert review == before
