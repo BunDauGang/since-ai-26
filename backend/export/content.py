@@ -4,6 +4,31 @@ from backend.insights.generate import generate_observations
 from backend.insights.formatting import fmt
 
 FOOTER = 'Synthetic, illustrative data. Not audited. Not an approved Lindström claim.'
+def compact(value, unit):
+    """Big-number form for KPI tiles; the exact value stays on the tile's detail line."""
+    if unit == 'ratio':
+        return f"{value * 100:.1f}%"
+    if unit == 'kgCO2e' and abs(value) >= 1000:  # tonnes read better on a tile (display only)
+        return f"{value / 1000:,.1f} t CO2e"
+    a = abs(value)
+    number = (f"{value / 1e6:.2f}M" if a >= 1e6 else f"{value / 1e3:.1f}k" if a >= 1e4
+              else f"{value:,.0f}" if a >= 100 else fmt(value))
+    return f"€{number}" if unit == 'EUR' else f"{number} {unit}"
+
+
+def kpi_block(metric, case='base'):
+    """A KPI tile in the style of the managerial dashboard mockups."""
+    v, unit = metric['value'], metric['unit']
+    exact = f"{v[case] * 100:.2f}%" if unit == 'ratio' else f"{fmt(v[case])} {unit}"
+    return (metric['label'], {
+        'kpi': True, 'id': metric['id'],
+        'value': compact(v[case], unit),
+        'detail': f"{exact} | {case.upper()} case | {metric['id']}",
+        'range': (f"Range {compact(v['low'], unit)} to {compact(v['high'], unit)}" if v['high'] > v['low'] else 'Single value'),
+        'status': metric['status'], 'confidence': metric['confidence'],
+    })
+
+
 def pct(value):
     return f"{value * 100:.1f}%" if isinstance(value, (int, float)) else 'N/A'
 
@@ -111,19 +136,23 @@ def build_pages(review):
         pages.append((title, blocks))
     def blocks(ids):
         return [metric_block(metrics[i], case) for i in ids if i in metrics]
+    def tiles(ids):
+        return [kpi_block(metrics[i], case) for i in ids if i in metrics]
     emphasized_ids = list(dict.fromkeys(review.get('priority_view', {}).get('emphasized_metric_ids', [])))
     # Slide 1 is an executive one-pager: who/what/which baseline, then the three-step story.
-    page('Customer value & sustainability review', [
-        (meta['customer_name'], f"{meta['industry']}\n{meta['period']['from']} to {meta['period']['to']}\n"
-         f"Baseline: {meta.get('baseline_name', meta['baseline_id'])}\nPriority: {meta['priority'].title()}\nSensitivity: {case}"),
-        ('SYNTHETIC DATA – PROTOTYPE', 'Decision-support demonstration with illustrative inputs.\n'
-         'Base case shown; ranges stay visible. Costs are illustrative, not promised savings.'),
-    ] + story_blocks(observations, metrics, emphasized_ids, case))
-    page('Executive summary', blocks(['delivery_sites', 'wearers_min_est', 'washed_kg', 'repairs_total', 'water_saving_l', 'co2e_saving_kg']))
+    # Headline tiles, then the three-step story (customer, period and baseline sit in the subtitle).
+    page('Customer value & sustainability review',
+         tiles(['washed_kg', 'water_saving_l', 'co2e_saving_kg', 'repairs_total'])
+         + story_blocks(observations, metrics, emphasized_ids, case))
+    page('Executive summary', tiles(['delivery_sites', 'wearers_min_est', 'washed_kg', 'repairs_total', 'water_saving_l', 'co2e_saving_kg']) + [
+        ('How to read these numbers', 'Every value carries its evidence status. SYNTHETIC: taken from the data pack. '
+         'CALCULATED: computed directly from source rows. ALLOCATED_ESTIMATE: laundry-level use shared by your washed kg. '
+         'ESTIMATE: depends on a stated assumption.\nSavings show the Base case with a Low to High range; quote Base and name the comparison baseline.\n'
+         'Wearers are a minimum estimate: per-product counts double-count people with several garments.')])
     priority = meta['priority']
     # Shared contract is authoritative for both dashboard and deck.
     emphasized = list(dict.fromkeys(review.get('priority_view', {}).get('emphasized_metric_ids', [])))
-    spotlight = blocks(emphasized)
+    spotlight = tiles(emphasized)
     unavailable = [i for i in emphasized if i not in metrics]
     if unavailable:
         spotlight.append(('Unavailable spotlight indicators', ', '.join(unavailable) + '\nNo value supplied; see data gaps.'))
@@ -191,7 +220,7 @@ def build_pages(review):
                                '; '.join(str(row[dimension]) + ': ' + fmt(row['value']) for row in entries))
         breakdown_lines.append(metric['status'] + ' | Confidence: ' + metric['confidence'])
     breakdown_lines.append('Repair effects are estimates; no avoided purchase is established. Circular share covers reuse + recycling.')
-    page('Circularity & repair handprint', blocks(['repairs_total', 'replacements_postponed', 'avoided_product_co2e_kg', 'textile_waste_kg', 'circular_waste_share']) + [
+    page('Circularity & repair handprint', tiles(['repairs_total', 'replacements_postponed', 'avoided_product_co2e_kg', 'textile_waste_kg', 'circular_waste_share']) + [
         ('Repair types & waste routes', '\n'.join(breakdown_lines))])
     def observation_card(o):
         # Customer-readable: finding, its evidence, the action and its owner. The industry context is on slide 1,
