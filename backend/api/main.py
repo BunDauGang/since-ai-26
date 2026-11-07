@@ -34,6 +34,29 @@ from backend.insights.rules import annotate_site_flags
 
 LOG = logging.getLogger(__name__)
 
+
+def _load_dotenv(path: Path) -> None:
+    """Read KEY=VALUE lines from the repo's git-ignored .env (e.g. GEMINI_API_KEY) without overriding the shell."""
+    import os
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key, value = key.strip(), value.strip().strip('"').strip("'")
+        if re.fullmatch(r"[A-Z_][A-Z0-9_]*", key) and key not in os.environ:
+            os.environ[key] = value
+
+
+# Tests must stay offline and deterministic, so they never pick up a developer's real key.
+import sys as _sys
+if "pytest" not in _sys.modules:
+    _load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
 ROOT_DIR = Path(__file__).resolve().parents[2]
 SAMPLE_REVIEW_PATH = ROOT_DIR / "contracts" / "sample_review.json"
 DEFAULT_DATA_PATH = ROOT_DIR / "data" / "Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx"

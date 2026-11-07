@@ -31,6 +31,8 @@ export interface PrepAnswer {
   points: PrepPoint[];
   /** What the data cannot answer yet, or what to ask the customer. */
   gap?: string;
+  /** AI framing for this audience (validated, number-free); the evidence points stay deterministic. */
+  aiNote?: string;
 }
 
 export const STEERCO_QUESTIONS = [
@@ -182,6 +184,17 @@ function q4(c: PrepContext): PrepAnswer {
   };
 }
 
+// Approved generic sentences the optional AI wording puts in front of an observation's own question.
+const GENERIC_QUESTIONS = ["which action should the account team prioritize", "who should confirm the evidence and follow-up"];
+
+/** The observation's own (most specific) steering question. */
+export function specificQuestion(text: string): string {
+  const parts = text.split("?").map((x) => x.trim()).filter(Boolean);
+  // The last question is the observation-specific one ("Where can we pilot ..."); earlier ones are shared.
+  const own = [...parts].reverse().find((x) => !GENERIC_QUESTIONS.includes(x.toLowerCase())) ?? parts[0] ?? text;
+  return `${own}?`;
+}
+
 function q5(c: PrepContext): PrepAnswer {
   const { review: r, meeting } = c;
   const q = STEERCO_QUESTIONS[4];
@@ -191,7 +204,7 @@ function q5(c: PrepContext): PrepAnswer {
     ...r.observations
       .filter((o) => !agreed.some((a) => a.text === o.title))
       .slice(0, 4)
-      .map((o) => ({ text: `To decide: ${o.steering_question.split("?")[0]}? Proposed owner: ${o.owner}.`, metricIds: o.metric_ids.slice(0, 1), siteIds: o.site_ids.slice(0, 3) })),
+      .map((o) => ({ text: `To decide: ${specificQuestion(o.steering_question)} Proposed owner: ${o.owner}.`, metricIds: o.metric_ids.slice(0, 1), siteIds: o.site_ids.slice(0, 3) })),
   ];
   const overdue = meeting.previousActions.filter((a) => isOverdue(a));
   if (overdue.length) points.unshift({ text: `Re-plan ${overdue.length} overdue commitment${overdue.length === 1 ? "" : "s"} from the last meeting: new owner or new date?` });
@@ -318,10 +331,13 @@ export async function aiPrep(c: PrepContext, questions: { id: string; text: stri
       const a = data.answers?.find((x) => x.question_id === t.questionId);
       if (!a) return t;
       const answer = fillPlaceholders(a.answer, c.review);
-      const points = (a.points ?? []).map((p) => ({ text: fillPlaceholders(p.text, c.review), metricIds: (p.metric_ids ?? []).filter((id) => m(c.review, id)) }));
-      if (answer == null || points.some((p) => p.text == null)) return t;
+      if (answer == null || !answer.trim()) return t;
       replaced++;
-      return { ...t, answer, points: points.length ? (points as PrepPoint[]) : t.points, gap: a.gap ? fillPlaceholders(a.gap, c.review) ?? t.gap : t.gap };
+      // The AI frames the answer for this audience; the specific, deterministic evidence points
+      // (named sites, overdue commitments, targets) are computed from the same review and stay.
+      const extraIds = (a.points ?? []).flatMap((p) => p.metric_ids ?? []).filter((id) => m(c.review, id));
+      const points = t.points.length ? t.points : extraIds.map((id) => ({ text: `${m(c.review, id)!.label}: ${sayValue(m(c.review, id)!)}`, metricIds: [id] }));
+      return { ...t, aiNote: answer, points };
     });
     return { answers, replaced, source: data.source ?? "template", reason: data.fallback_reason ?? null };
   } catch {

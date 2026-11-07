@@ -177,7 +177,7 @@ export function MeetingPrepAI({ review, meeting, comparison, onAudience, onOpenM
               </p>
             )}
             {ai && ai.key === aiKey && (
-              <p className="mb-3 text-[12px] text-emerald-700">AI wording applied to {ai.replaced} of {answers.length} answers; numbers were filled in from the review, not written by the AI.</p>
+              <p className="mb-3 text-[12px] text-emerald-700">AI framing added to {ai.replaced} of {answers.length} answers (marked with a spark). The AI chooses wording only; every number and evidence point comes from the review.</p>
             )}
             <ol className="space-y-4">
               {answers.map((a, i) => (
@@ -239,6 +239,12 @@ function AnswerCard({ a, index, review, onOpenMetric, onOpenSite }: {
         </h3>
         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${r.cls}`}>{r.label}</span>
       </div>
+      {a.aiNote && (
+        <p className="mt-2 flex gap-1.5 rounded-lg bg-navy-50/70 px-3 py-2 text-[13px] leading-relaxed text-navy-900">
+          <Sparkles size={13} className="mt-0.5 shrink-0 text-amber-500" aria-label="AI framing" />
+          <span>{a.aiNote}</span>
+        </p>
+      )}
       <p className="mt-2 text-[13.5px] leading-relaxed text-slate-700">{a.answer}</p>
       {a.points.length > 0 && (
         <ul className="mt-2 space-y-1.5">

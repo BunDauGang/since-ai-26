@@ -325,3 +325,26 @@ def test_finite_inputs_with_overflowing_derived_rule_facts_reject(review):
     with patch.object(prep, '_request_prep', side_effect=AssertionError('network forbidden')):
         with pytest.raises(ValueError, match='finite|numeric bounds'):
             prep.generate_prep(review, use_llm=False)
+
+
+def test_model_answer_validated_against_the_options_it_was_sent(review):
+    """The model may pick a different persona; its evidence is still checked against the lists it was given,
+    and an over-long but valid selection is trimmed to four instead of discarding the whole answer."""
+    captured = {}
+
+    def fake(payload, key):
+        captured['payload'] = payload
+        answers = []
+        for q in payload['questions']:
+            answers.append(dict(question_id=q['question_id'], text=q['text_options'][0],
+                                metric_ids=list(q['metric_ids']), observation_ids=list(q['observation_ids']),
+                                context_ids=list(q['context_ids'])))
+        other = next(p for p in payload['personas'] if p != prep.map_audience('Head of Procurement', '')[0])
+        return dict(persona=other, priority=payload['priorities'][0], emphasized_metric_ids=list(payload['available_metrics'])[:6],
+                    answers=answers, opening=payload['opening_options'][0], ask=payload['ask_options'][0])
+
+    with patch.dict('os.environ', {'GEMINI_API_KEY': 'test-placeholder'}), patch.object(prep, '_request_prep', side_effect=fake):
+        result = prep.generate_prep(review, audience_role='Head of Procurement')
+    assert result['source'] == 'gemini', result['fallback_reason']
+    assert len(result['audience_mapping']['emphasized_metric_ids']) == 4
+    assert all(len(a['metric_ids']) <= 4 and len(a['observation_ids']) <= 4 for a in result['answers'])

@@ -230,27 +230,37 @@ def _request_prep(payload, key):
         'Return JSON with EXACTLY persona, priority, emphasized_metric_ids, answers, opening, ask. '
         'persona and priority must be from the allowed lists. emphasized_metric_ids must contain up to four existing IDs. '
         'answers must cover every question once, in order, with EXACTLY question_id, text, metric_ids, observation_ids, context_ids. '
-        'Copy text verbatim from that question text_options; choose IDs only from its permitted lists. '
+        'Copy text verbatim from that question text_options; choose IDs only from its permitted lists, '
+        'at most four IDs in each of metric_ids, observation_ids and context_ids. '
         'Copy opening and ask verbatim from supplied options. IDs may contain digits; prose may not. '
         'No markup, extra keys or unsupported promises. Values are filled by the dashboard from source evidence, never by you.')
     return _request(payload, key, instruction=instruction)
 
 
-def _validate_model(output, questions, metrics, observations, context, states):
+def _trim(values, allowed, maximum=4):
+    """Over-long but otherwise valid selections keep their first IDs; anything unknown still fails closed."""
+    # Duplicates still fail closed (a sign of a malformed answer); only distinct, valid IDs are trimmed.
+    if (isinstance(values, list) and len(values) > maximum and len(set(map(str, values))) == len(values)
+            and all(isinstance(x, str) and x in allowed for x in values)):
+        values = values[:maximum]
+    return _ids(values, allowed, maximum)
+
+
+def _validate_model(output, questions, metrics, observations, context, states, sent_answers, sent_permissions):
     if not isinstance(output, dict) or set(output) != {'persona', 'priority', 'emphasized_metric_ids', 'answers', 'opening', 'ask'}:
         raise ValueError('Invalid prep response structure')
     persona, priority = output['persona'], output['priority']
     if not isinstance(persona, str) or persona not in PERSONAS or not isinstance(priority, str) or priority not in PRIORITY_EMPHASIS:
         raise ValueError('Unknown conversation lens')
-    emphasized = _ids(output['emphasized_metric_ids'], metrics)
+    emphasized = _trim(output['emphasized_metric_ids'], metrics)
     if metrics and not emphasized:
         raise ValueError('Empty emphasized evidence')
     for field, choices in [('opening', OPENINGS), ('ask', ASKS)]:
         text = output[field]
         if not isinstance(text, str) or UNSAFE.search(text) or text not in choices:
             raise ValueError('Unsupported framing or numeric prose')
-    ordered = _ordered_metrics(metrics, persona, priority)
-    answers, permissions = _answers(questions, metrics, observations, context, states, ordered)
+    # Validate against exactly the options the model was given; its chosen persona must not change them.
+    answers, permissions = deepcopy(sent_answers), sent_permissions
     if not isinstance(output['answers'], list) or len(output['answers']) != len(answers):
         raise ValueError('Incomplete prep answers')
     for base, row in zip(answers, output['answers']):
@@ -261,7 +271,7 @@ def _validate_model(output, questions, metrics, observations, context, states):
         permission = permissions[base['question_id']]
         if not isinstance(row['text'], str) or UNSAFE.search(row['text']) or row['text'] not in permission['text_options']:
             raise ValueError('Unsupported claim or numeric prose')
-        refs = {kind: _ids(row[kind], permission[kind]) for kind in ('metric_ids', 'observation_ids', 'context_ids')}
+        refs = {kind: _trim(row[kind], permission[kind]) for kind in ('metric_ids', 'observation_ids', 'context_ids')}
         if base['readiness'] != 'data_gap' and not any(refs.values()):
             raise ValueError('Claim lost its required evidence')
         base.update(_claim(row['text'], **refs))
@@ -319,7 +329,8 @@ def generate_prep(review: dict, audience_role='CEO', goal='', minutes=15, questi
                 fallback_reason = 'provider_error'
             else:
                 try:
-                    persona, priority, emphasized, answers = _validate_model(output, questions, metrics, observations, context, states)
+                    persona, priority, emphasized, answers = _validate_model(output, questions, metrics, observations, context, states,
+                                                                             answers, permissions)
                     opening, ask, source = output['opening'], output['ask'], 'gemini'
                     fallback_reason, reason = None, 'AI selected a validated conversation lens and evidence IDs; confirm the emphasis with the KAM.'
                 except (ValueError, TypeError, KeyError):

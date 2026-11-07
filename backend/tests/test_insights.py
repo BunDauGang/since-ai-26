@@ -286,3 +286,27 @@ def test_story_endpoint_discovers_worker_b_hook_without_an_api_change(review, mo
     assert response.json()['status'] == 'TEMPLATE_FROM_REVIEW'
     assert '15,233' in str(response.json()['points'])
     assert '0 systematic repairs' not in str(response.json())
+
+
+def test_gemini_request_falls_back_to_next_model_when_overloaded(monkeypatch):
+    import io
+    import urllib.error
+    from backend.insights import llm
+    monkeypatch.setenv('GEMINI_MODEL', 'primary-model')
+    monkeypatch.setenv('GEMINI_FALLBACK_MODELS', 'backup-model')
+    calls = []
+
+    def fake_urlopen(request, timeout=None):
+        calls.append(request.full_url)
+        if 'primary-model' in request.full_url:
+            raise urllib.error.HTTPError(request.full_url, 503, 'busy', {}, io.BytesIO(b'{}'))
+        body = json.dumps({'candidates': [{'content': {'parts': [{'text': '{"ok": true}'}]}}]}).encode()
+        return io.BytesIO(body)
+
+    monkeypatch.setattr(llm.urllib.request, 'urlopen', fake_urlopen)
+    assert llm._request({'x': 1}, 'test-placeholder') == {'ok': True}
+    assert ['primary-model' in u for u in calls] == [True, False]
+    monkeypatch.setattr(llm.urllib.request, 'urlopen', lambda r, timeout=None: (_ for _ in ()).throw(
+        urllib.error.HTTPError(r.full_url, 400, 'bad', {}, io.BytesIO(b'{}'))))
+    with pytest.raises(urllib.error.HTTPError):  # a real request error is not retried
+        llm._request({'x': 1}, 'test-placeholder')

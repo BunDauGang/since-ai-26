@@ -44,8 +44,11 @@ select a different priority merely because it came from the customer master.
 
 ## Optional Gemini
 
-Set `GEMINI_API_KEY` securely in the process environment; never commit it.
-`GEMINI_MODEL` defaults to `gemini-2.5-flash`. The only remote destination is
+Set `GEMINI_API_KEY` securely in the process environment, or in the repo-root `.env`
+(git-ignored; the API reads it at startup and never overrides the shell). Never commit it.
+`GEMINI_MODEL` defaults to `gemini-3.5-flash-lite` (`gemini-2.5-flash` is no longer offered
+to new API users). Optional `GEMINI_FALLBACK_MODELS` (comma-separated) are tried in order
+when a model is retired, rate-limited or overloaded (HTTP 404/429/500/503). The only remote destination is
 `generativelanguage.googleapis.com`. No key is required for offline operation.
 No workbook, full review, arbitrary user prompt, or secrets are sent in the
 model's facts payload. Requests have a ten-second timeout. The API key travels

@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import urllib.error
 import urllib.request
 
 log = logging.getLogger(__name__)
@@ -17,19 +18,38 @@ INSTRUCTION = ("Select wording using ONLY the supplied facts. Return a JSON arra
                + json.dumps(APPROVED_PROSE) + ". The application appends immutable evidence and action plans.")
 
 
+# gemini-2.5-flash is no longer offered to new API users; a fast lite model keeps the prep responsive.
+DEFAULT_MODEL = 'gemini-3.5-flash-lite'
+RETRY_STATUS = {404, 429, 500, 503}  # retired, rate-limited or overloaded model: try the next one
+
+
+def _models():
+    names = [os.getenv('GEMINI_MODEL', DEFAULT_MODEL)]
+    names += [m.strip() for m in os.getenv('GEMINI_FALLBACK_MODELS', '').split(',') if m.strip()]
+    for model in names:
+        if not re.fullmatch(r'[a-zA-Z0-9._-]+', model):
+            raise ValueError('Invalid Gemini model name')
+    return list(dict.fromkeys(names))
+
+
 def _request(facts, key, instruction=INSTRUCTION):
-    model = os.getenv('GEMINI_MODEL', 'gemini-2.5-flash')
-    if not re.fullmatch(r'[a-zA-Z0-9._-]+', model):
-        raise ValueError('Invalid Gemini model name')
     payload = {'systemInstruction': {'parts': [{'text': instruction}]},
                'contents': [{'role': 'user', 'parts': [{'text': json.dumps(facts)}]}],
                'generationConfig': {'responseMimeType': 'application/json', 'temperature': 0}}
-    request = urllib.request.Request(
-        f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
-        data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json', 'x-goog-api-key': key})
-    with urllib.request.urlopen(request, timeout=10) as response:
-        data = json.load(response)
-    return json.loads(data['candidates'][0]['content']['parts'][0]['text'])
+    models = _models()
+    for i, model in enumerate(models):
+        request = urllib.request.Request(
+            f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
+            data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json', 'x-goog-api-key': key})
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                data = json.load(response)
+        except urllib.error.HTTPError as exc:
+            # Never log the response body or headers (may echo credentials); only move on or re-raise.
+            if exc.code in RETRY_STATUS and i < len(models) - 1:
+                continue
+            raise
+        return json.loads(data['candidates'][0]['content']['parts'][0]['text'])
 
 
 # Reject spelled-out quantities too. Fail closed; deterministic fallback is always available.
