@@ -200,3 +200,26 @@ def test_export_accepts_optional_meeting_block():
         assert r.status_code == 200
         assert len(r.content) > 1000
 
+
+
+def test_story_follows_baseline_and_case_without_forbidden_claims():
+    import json as _json
+    sample = _json.loads(api.SAMPLE_REVIEW_PATH.read_text(encoding="utf-8"))
+    home = {**sample, "meta": {**sample["meta"], "baseline_name": "Home washing"}}
+    cfo = client.post("/api/story", json={"persona": "cfo", "use_llm": False, "review": home}).json()
+    text = _json.dumps(cfo, ensure_ascii=False)
+    assert "Compared with home washing" in cfo["points"][0]["text"]
+    assert "typical local laundry" not in text and "Home washing is modelled without a repair service" in text
+    low = {**sample, "meta": {**sample["meta"], "sensitivity": "low"}}
+    low_cfo = client.post("/api/story", json={"persona": "cfo", "use_llm": False, "review": low}).json()
+    postponed = next(m for m in sample["metrics"] if m["id"] == "replacements_postponed")["value"]
+    assert f"{round(postponed['low']):,}" in low_cfo["points"][0]["text"]
+    for persona in ("ceo", "cfo", "operations", "sustainability"):
+        r = client.post("/api/story", json={"persona": persona, "use_llm": False, "review": sample}).json()
+        body = _json.dumps({k: r[k] for k in ("opening", "points", "ask")}, ensure_ascii=False).lower()
+        assert not any(w in body for w in ("audited", "audit-ready", "verified", "certified", "measured")), persona
+        assert "top q1" not in _json.dumps(r).lower()
+        assert all(o["readiness"] != "evidence" for o in r["likely_objections"] if o["id"] == "obj_idle_garments")
+    missing = {**sample, "metrics": [m for m in sample["metrics"] if m["id"] not in ("co2e_saving_kg", "water_saving_l")]}
+    r = client.post("/api/story", json={"persona": "ceo", "use_llm": False, "review": missing}).json()
+    assert "~unavailable" not in _json.dumps(r, ensure_ascii=False)
