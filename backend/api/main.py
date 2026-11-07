@@ -166,6 +166,9 @@ def _apply_dynamic_overrides(review: dict, req: ReviewRequest, resolved_priority
                 m["value"] = matching_baseline[m["id"]]
                 m["label"] = f"{m['id'].replace('_saving_l', ' saving').replace('_saving_kwh', ' saving').replace('_saving_kg', ' saving').replace('_', ' ').capitalize()} vs {matching_baseline['name'].lower()}"
 
+    expected_sites = int(cmeta.get("sites_count", len(out.get("sites", []))))
+    if len(out.get("sites", [])) > expected_sites:
+        out["sites"] = out["sites"][:expected_sites]
     return out
 
 
