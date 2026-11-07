@@ -29,10 +29,10 @@ export function CompetitorCompare({ review, onOpenMetric }: { review: Review; on
 
       <section className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-[13px]">
+          <table className="w-full min-w-[920px] text-[13px]">
             <thead>
               <tr className="border-b border-line text-left">
-                <th className="w-[22%] px-4 py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted">Compared on</th>
+                <th className="w-[18%] px-4 py-3 text-[11.5px] font-semibold uppercase tracking-wide text-muted">Compared on</th>
                 {PROVIDERS.map((p) => (
                   <th key={p.id} className={`px-3 py-3 align-bottom ${p.id === "lindstrom" ? "bg-navy text-white" : ""}`}>
                     <div className="text-[14px] font-semibold">{p.name}</div>
@@ -82,7 +82,7 @@ export function CompetitorCompare({ review, onOpenMetric }: { review: Review; on
           <span className="inline-flex items-center gap-1">
             <Check size={12} className="text-emerald-600" /> best of the compared providers
           </span>
-          <span>Competitors are anonymised archetypes, not real companies.</span>
+          <span>Competitors are anonymised category archetypes, not real companies.</span>
         </div>
       </section>
 

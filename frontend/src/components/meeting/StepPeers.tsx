@@ -28,7 +28,7 @@ export function StepPeers({ review, onOpenSite, onOpenMetric }: { review: Review
       <StepHeader
         kicker="Peer review"
         title="Why Lindström stands out against the alternatives"
-        sub="The same service compared with a competing rental provider, a wash-only local laundry and washing in-house. Every cell shows where its number comes from."
+        sub="The same service compared with two competing rental providers, a wash-only local laundry and washing in-house. Every cell shows where its number comes from."
         right={toggle}
       />
       <CompetitorCompare review={review} onOpenMetric={onOpenMetric} />

@@ -11,15 +11,16 @@ import type { Review } from "./types";
 export type Source = "review" | "pack" | "mock";
 
 export interface Provider {
-  id: "lindstrom" | "rental" | "local" | "inhouse";
+  id: "lindstrom" | "rental" | "nordic" | "local" | "inhouse";
   name: string;
   kind: string;
 }
 
 export const PROVIDERS: Provider[] = [
   { id: "lindstrom", name: "Lindström", kind: "Textile service: rental, laundry, repair, RFID tracking" },
-  { id: "rental", name: "Competitor A", kind: "National workwear rental provider" },
-  { id: "local", name: "Competitor B", kind: "Local commercial laundry (wash only)" },
+  { id: "rental", name: "Pan-European rental group", kind: "Multi-country workwear and linen rental provider" },
+  { id: "nordic", name: "Nordic regional textile service", kind: "Regional workwear rental and laundry provider" },
+  { id: "local", name: "Local commercial laundry", kind: "Wash-only laundry serving nearby businesses" },
   { id: "inhouse", name: "In-house laundry", kind: "Customer washes its own garments" },
 ];
 
@@ -53,6 +54,7 @@ const PACK = {
 // Illustrative mock values: plausible archetypes, not real companies or market data.
 const MOCK = {
   rental: { onTime: 0.955, cycle: 96, water: 8.0, energy: 0.85, co2e: 0.32, circular: 0.45 },
+  nordic: { onTime: 0.962, cycle: 90, water: 7.4, energy: 0.79, co2e: 0.27, circular: 0.55 },
   local: { onTime: 0.93, cycle: 120 },
 };
 
@@ -79,6 +81,7 @@ export function compareRows(r: Review): CompareRow[] {
       cells: {
         lindstrom: num(base(r, "on_time_rate"), pctT, "review"),
         rental: num(MOCK.rental.onTime, pctT, "mock"),
+        nordic: num(MOCK.nordic.onTime, pctT, "mock"),
         local: num(MOCK.local.onTime, pctT, "mock"),
         inhouse: txt("Own staff", "pack"),
       },
@@ -91,6 +94,7 @@ export function compareRows(r: Review): CompareRow[] {
       cells: {
         lindstrom: num(base(r, "median_cycle_hours"), hT, "review"),
         rental: num(MOCK.rental.cycle, hT, "mock"),
+        nordic: num(MOCK.nordic.cycle, hT, "mock"),
         local: num(MOCK.local.cycle, hT, "mock"),
         inhouse: txt("Own staff", "pack"),
       },
@@ -103,6 +107,7 @@ export function compareRows(r: Review): CompareRow[] {
       cells: {
         lindstrom: txt(repairs != null ? `Included: ${n(repairs, 0)} repairs` : "Included", "review"),
         rental: txt("On request, charged per item", "mock"),
+        nordic: txt("Basic repairs, selected garments", "mock"),
         local: txt("None (worn garments replaced)", "pack"),
         inhouse: txt("None (worn garments replaced)", "pack"),
       },
@@ -115,6 +120,7 @@ export function compareRows(r: Review): CompareRow[] {
       cells: {
         lindstrom: txt(use != null ? `Per garment (RFID): ${n(use * 100, 1)}% in circulation visible` : "Per garment (RFID)", "review"),
         rental: txt("Barcode, per batch", "mock"),
+        nordic: txt("RFID on selected garments", "mock"),
         local: txt("None", "mock"),
         inhouse: txt("Manual counts", "mock"),
       },
@@ -127,6 +133,7 @@ export function compareRows(r: Review): CompareRow[] {
       cells: {
         lindstrom: num(per("customer_water_l"), lT, "review"),
         rental: num(MOCK.rental.water, lT, "mock"),
+        nordic: num(MOCK.nordic.water, lT, "mock"),
         local: num(PACK.local.water, lT, "pack"),
         inhouse: num(PACK.inhouse.water, lT, "pack"),
       },
@@ -139,6 +146,7 @@ export function compareRows(r: Review): CompareRow[] {
       cells: {
         lindstrom: num(per("customer_energy_kwh"), kwhT, "review"),
         rental: num(MOCK.rental.energy, kwhT, "mock"),
+        nordic: num(MOCK.nordic.energy, kwhT, "mock"),
         local: num(PACK.local.energy, kwhT, "pack"),
         inhouse: num(PACK.inhouse.energy, kwhT, "pack"),
       },
@@ -151,6 +159,7 @@ export function compareRows(r: Review): CompareRow[] {
       cells: {
         lindstrom: num(per("customer_co2e_kg"), co2T, "review"),
         rental: num(MOCK.rental.co2e, co2T, "mock"),
+        nordic: num(MOCK.nordic.co2e, co2T, "mock"),
         local: num(PACK.local.co2e, co2T, "pack"),
         inhouse: num(PACK.inhouse.co2e, co2T, "pack"),
       },
@@ -163,6 +172,7 @@ export function compareRows(r: Review): CompareRow[] {
       cells: {
         lindstrom: num(base(r, "circular_waste_share"), pctT, "review"),
         rental: num(MOCK.rental.circular, pctT, "mock"),
+        nordic: num(MOCK.nordic.circular, pctT, "mock"),
         local: num(0, pctT, "pack"),
         inhouse: num(0, pctT, "pack"),
       },
@@ -194,7 +204,7 @@ export function whyLindstrom(r: Review): Reason[] {
   if (rows.on_time && lindstromLeads(rows.on_time)) {
     out.push({
       title: "Reliable enough to plan production around",
-      text: `${c("on_time", "lindstrom")!.text} of cycles back on time, against ${c("on_time", "rental")!.text} and ${c("on_time", "local")!.text} for the competing providers.`,
+      text: `${c("on_time", "lindstrom")!.text} of cycles back on time, against ${c("on_time", "rental")!.text} and ${c("on_time", "nordic")!.text} for the competing rental providers and ${c("on_time", "local")!.text} for a local laundry.`,
       metricId: "on_time_rate",
     });
   }
@@ -202,7 +212,7 @@ export function whyLindstrom(r: Review): Reason[] {
   if (repairs != null && repairs > 0) {
     out.push({
       title: "Repairs are part of the service",
-      text: `${new Intl.NumberFormat("en-US").format(Math.round(repairs))} garments were repaired and kept in use. A wash-only laundry or an in-house laundry replaces worn garments instead.`,
+      text: `${new Intl.NumberFormat("en-US").format(Math.round(repairs))} garments were repaired and kept in use as part of the service. The rental competitors repair on request or only selected garments; a wash-only or in-house laundry replaces them.`,
       metricId: "repairs_total",
     });
   }
@@ -224,7 +234,7 @@ export function whyLindstrom(r: Review): Reason[] {
   if (rows.circular && lindstromLeads(rows.circular)) {
     out.push({
       title: "Worn textiles get a second life",
-      text: `${c("circular", "lindstrom")!.text} of textile waste is recycled, reused or recovered; the local and in-house alternatives treat it as mixed waste.`,
+      text: `${c("circular", "lindstrom")!.text} of textile waste is recycled, reused or recovered, against ${c("circular", "nordic")!.text} and ${c("circular", "rental")!.text} for the rental competitors; local and in-house laundries treat it as mixed waste.`,
       metricId: "circular_waste_share",
     });
   }
