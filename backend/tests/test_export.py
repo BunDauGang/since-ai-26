@@ -315,3 +315,43 @@ def test_engine_spotlight_and_breakdowns_in_both_exports(real_tables, monkeypatc
         assert 'not supplied' not in text
     assert json.loads(pdf.attachments['review.json'][0]) == review
     assert review == before
+
+
+MEETING = {
+    'persona': 'cfo', 'persona_label': 'Chief Financial Officer',
+    'targets': {'on_time_rate': 0.98, 'median_cycle_hours': 96},
+    'target_results': [
+        {'metric_id': 'on_time_rate', 'label': 'On-time delivery', 'target': 0.98, 'actual': 0.983, 'status': 'met', 'unit': 'ratio'},
+        {'metric_id': 'allocation_use_rate', 'label': 'Garments in circulation', 'target': 0.85, 'actual': 0.835, 'status': 'close', 'unit': 'ratio'},
+    ],
+    'satisfaction': {'score': 8, 'scale': 10, 'source': 'KAM input', 'comment': 'Faster size swaps'},
+    'rough_calc': {'label': 'ROUGH CALCULATION', 'inputs': {'baseline_id': 'B_LOCAL', 'water_eur_per_m3': 4, 'repair_share': 0.5}, 'result_eur': 356597,
+                   'range_eur': {'low': 336966, 'base': 356597, 'high': 376228}, 'lines': [{'label': 'Energy not used', 'eur': 25746}]},
+    'agreed_actions': ['Review allocation at Kotka (owner: Customer, by 2026-03-01)'],
+    'open_topics': ['What is causing our service requests?'],
+    'next_meeting': '2026-06-01', 'notes': '',
+}
+
+
+def test_meeting_block_adds_agreement_rough_calc_and_next_steps_slides(review, tmp_path):
+    plain = len(Presentation(export_pptx(review, str(tmp_path / 'plain.pptx'))).slides)
+    with_meeting = dict(review, meeting=MEETING)
+    before = copy.deepcopy(with_meeting)
+    deck = Presentation(export_pptx(with_meeting, str(tmp_path / 'meeting.pptx')))
+    text = '\n'.join(s.text for slide in deck.slides for s in slide.shapes if s.has_text_frame)
+    assert len(deck.slides) == plain + 3
+    for expected in ('1 of 2 on target', 'target ≥ 98.0% | actual 98.3% | Met', 'Close', 'Score: 8 / 10', 'Faster size swaps',
+                     'ROUGH CALCULATION | KAM assumptions, not a quote', '€356,597', 'Range €336,966 to €376,228', 'Energy not used: €25,746',
+                     'Repairs that postpone a purchase: 50%', 'Compared with: Outsourced local laundry', 'Review allocation at Kotka', 'What is causing our service requests?',
+                     'Next meeting: 2026-06-01'):
+        assert expected in text, expected
+    assert len(PdfReader(export_pdf(with_meeting, str(tmp_path / 'meeting.pdf'))).pages) == len(deck.slides)
+    assert with_meeting == before
+
+
+def test_meeting_block_in_schema_only_shape_and_empty_block(review):
+    pages = build_pages(dict(review, meeting={'persona': 'ceo', 'targets': {'on_time_rate': 0.98}, 'agreed_actions': [], 'open_topics': []}))
+    titles = [t for t, _ in pages]
+    assert 'Our agreement | service KPIs' in titles  # actual read from the review's metrics
+    assert 'Agreed next steps & open topics' not in titles  # nothing agreed, nothing parked
+    assert [t for t, _ in build_pages(review)] == [t for t, _ in build_pages(dict(review, meeting=None))]
