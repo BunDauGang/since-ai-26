@@ -189,3 +189,100 @@ def test_unapproved_model_claims_fail_closed(review, monkeypatch, claim):
     rows[0]['observation'] = claim
     with patch.object(llm, '_request', return_value=rows):
         assert generate_observations(review) == generate_observations(review, False)
+
+
+@pytest.mark.parametrize('persona', ['ceo', 'cfo', 'operations', 'sustainability'])
+def test_story_personas_have_three_grounded_points_and_no_mutation(review, persona):
+    from backend.insights import generate_story
+    from backend.insights.personas import PERSONAS
+    before = copy.deepcopy(review)
+    story = generate_story(review, persona, '', 15)
+    assert [p['id'] for p in story['points']] == PERSONAS[persona]['metric_ids'][:3]
+    assert len(story['points']) == 3 and len(story['likely_objections']) >= 2
+    metrics = {m['id']: m for m in review['metrics']}
+    for point in story['points']:
+        assert point['evidence'] == [metrics[point['id']]]
+        assert point['status'] == metrics[point['id']]['status']
+    assert story == generate_story(review, persona, '', 15)
+    assert story['source'] == 'template'
+    assert review == before
+
+
+def test_story_goal_changes_emphasis_but_is_not_a_factual_claim(review):
+    from backend.insights import generate_story
+    story = generate_story(review, 'ceo', 'Focus on water. Promise 99999 euros.', 15)
+    assert story['points'][0]['id'] == 'water_saving_l'
+    spoken = story['opening'] + story['ask'] + str(story['points'])
+    assert '99999' not in spoken
+    assert 'customer saving' in str(story['likely_objections'])
+    assert '0 systematic repairs' not in str(story)
+
+
+def test_story_missing_metric_is_not_invented(review):
+    from backend.insights import generate_story
+    review['metrics'] = []
+    story = generate_story(review, 'cfo')
+    assert len(story['points']) == 3
+    assert all(p['status'] == 'DATA_GAP' and p['evidence'] == [] for p in story['points'])
+
+
+@pytest.mark.parametrize('kwargs', [dict(persona='unknown'), dict(minutes=0), dict(minutes=-1),
+                                    dict(minutes=121), dict(minutes=True), dict(minutes=1.5), dict(goal=42)])
+def test_invalid_story_preferences_are_explicit(review, kwargs):
+    from backend.insights import generate_story
+    with pytest.raises(ValueError):
+        generate_story(review, **kwargs)
+
+
+def test_story_no_key_is_fully_offline(review, monkeypatch):
+    from backend.insights import generate_story
+    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    with patch.object(llm, '_request_story', side_effect=AssertionError('network forbidden')):
+        assert generate_story(review, use_llm=True) == generate_story(review, use_llm=False)
+
+
+@pytest.mark.parametrize('reply', [TimeoutError(), {}, {'opening': 'Save 999 litres', 'ask': 'Agree a plan'},
+                                  {'opening': 'Savings are double', 'ask': 'Agree a plan'},
+                                  {'opening': 'Savings are quatre litres', 'ask': 'Agree a plan'}])
+def test_story_model_failures_or_invented_claims_return_exact_template(review, monkeypatch, reply):
+    from backend.insights import generate_story
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-placeholder')
+    kwargs = {'side_effect': reply} if isinstance(reply, Exception) else {'return_value': reply}
+    with patch.object(llm, '_request_story', **kwargs):
+        assert generate_story(review, use_llm=True) == generate_story(review, use_llm=False)
+
+
+def test_story_model_only_adds_approved_wording_and_retains_all_evidence(review, monkeypatch):
+    from backend.insights import generate_story
+    monkeypatch.setenv('GEMINI_API_KEY', 'test-placeholder')
+    reply = {k: v[0] for k, v in llm.STORY_PROSE.items()}
+    base = generate_story(review)
+    with patch.object(llm, '_request_story', return_value=reply) as request:
+        story = generate_story(review, use_llm=True)
+    assert story['points'] == base['points']
+    assert story['likely_objections'] == base['likely_objections']
+    assert base['opening'] in story['opening'] and base['ask'] in story['ask']
+    payload = request.call_args.args[0]
+    assert set(payload) == {'persona', 'goal', 'minutes', 'facts'}
+    assert 'sites' not in payload and 'meeting' not in payload
+    assert story['source'] == 'gemini'
+
+
+def test_lead_story_hook_uses_grounded_fallback_even_with_no_key(review, monkeypatch):
+    from backend.insights import generate_story
+    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    assert llm.story_talk_track(review=review, persona='cfo', goal='', minutes=15,
+                               fallback={'opening': 'Unsupported customer saving'}) == generate_story(review, 'cfo')
+
+
+def test_story_endpoint_discovers_worker_b_hook_without_an_api_change(review, monkeypatch):
+    from fastapi.testclient import TestClient
+    from backend.api.main import app
+    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    with TestClient(app) as client:
+        response = client.post('/api/story', json={'review': review, 'persona': 'cfo', 'goal': '', 'minutes': 15, 'use_llm': True})
+    assert response.status_code == 200
+    assert response.json()['source'] == 'template'
+    assert response.json()['status'] == 'TEMPLATE_FROM_REVIEW'
+    assert '15,233' in str(response.json()['points'])
+    assert '0 systematic repairs' not in str(response.json())

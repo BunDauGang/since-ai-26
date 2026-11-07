@@ -1,0 +1,23 @@
+{
+  "persona": "cfo",
+  "targets": {
+    "on_time_rate": 0.98,
+    "median_cycle_hours": 80,
+    "service_requests": 500
+  },
+  "satisfaction": {
+    "score": null,
+    "scale": 10,
+    "source": "KAM input"
+  },
+  "rough_calc": {
+    "inputs": {},
+    "label": "ROUGH CALCULATION"
+  },
+  "agreed_actions": [
+    "Example for rehearsal: investigate allocation at Kotka; confirm the owner and follow-up date with the customer."
+  ],
+  "open_topics": [
+    "Example for rehearsal: confirm repair causes and the customer-specific price assumptions."
+  ]
+}

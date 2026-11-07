@@ -24,7 +24,7 @@ def prepare_export_review(review):
     Older exports without meeting retain their original provenance unchanged.
     Free-text actions/topics are intentionally customer-shared KAM input.
     """
-    if 'meeting' not in review and 'peer_benchmark' not in review:
+    if 'meeting' not in review:
         return review
     if 'meeting' in review and not isinstance(review['meeting'], dict):
         raise ValueError('meeting must be an object')
@@ -39,6 +39,8 @@ def prepare_export_review(review):
     if 'meeting' in packet:
         packet['meeting'] = {k: v for k, v in packet['meeting'].items()
                              if k in ('persona', 'targets', 'satisfaction', 'rough_calc', 'agreed_actions', 'open_topics')}
+        if isinstance(packet['meeting'].get('rough_calc'), dict):
+            packet['meeting']['rough_calc']['label'] = 'ROUGH CALCULATION'
         if isinstance(packet['meeting'].get('satisfaction'), dict):
             packet['meeting']['satisfaction']['source'] = 'KAM input'
     packet['observations'] = [o for o in packet.get('observations', [])
@@ -49,7 +51,7 @@ def prepare_export_review(review):
         packet['peer_benchmark'] = {
             'scope': PEER_SCOPE,
             'customer': {k: {field: v for field, v in mapping(row).items()
-                             if field in ('network_median', 'percentile') and numeric(v)}
+                             if field in ('network_median', 'percentile', 'sample_size') and numeric(v)}
                          for k, row in mapping(peer.get('customer')).items() if k in PEER_METRICS},
             'sites': {sid: {k: v for k, v in mapping(row).items() if k in PEER_METRICS and numeric(v)}
                       for sid, row in mapping(peer.get('sites')).items() if sid in site_ids},
@@ -108,8 +110,15 @@ def peer_blocks(review):
         label = metric['label'] if metric else key.replace('_', ' ').title()
         unit = metric['unit'] if metric else ('requests/wearer' if key == 'service_requests_per_wearer' else '')
         actual = display(metric['value']['base'], unit) if metric else 'Not supplied'
+        if key == 'service_requests_per_wearer' and not metric:
+            requests = mapping(metrics.get('service_requests')).get('value', {}).get('base')
+            wearers = mapping(metrics.get('wearers_min_est')).get('value', {}).get('base')
+            if numeric(requests) and numeric(wearers) and wearers > 0:
+                actual = display(requests / wearers, 'requests/estimated wearer')
         rank = f'; percentile {percentile * 100:.1f}%' if numeric(percentile) and 0 <= percentile <= 1 else ''
-        network.append(f'{label}: customer {actual}; Lindström network median {display(median, unit)}{rank}')
+        n = row.get('sample_size')
+        cohort = f'; {fmt(n)} eligible customer aggregates' if numeric(n) and n > 0 else ''
+        network.append(f'{label}: customer {actual}; Lindström network median {display(median, unit)}{rank}{cohort}')
     blocks = [('Anonymised network context', '\n'.join(network) + '\nSYNTHETIC | not an industry benchmark.' if network else
                'Network benchmark not supplied. Show within-customer site peers only; no industry-wide comparison can be established.')]
     sites = [s for s in review.get('sites', []) if numeric(s.get('metrics', {}).get('allocation_use_rate'))]
@@ -118,12 +127,13 @@ def peer_blocks(review):
     for site in sorted(sites, key=lambda s: (s['metrics']['allocation_use_rate'], s['site_id']))[:5]:
         rate = site['metrics']['allocation_use_rate']
         supplied = mapping(mapping(peer.get('sites')).get(site['site_id'])).get('allocation_use_rate')
-        percentile = supplied if numeric(supplied) and 0 <= supplied <= 1 else (
-            sum(v < rate for v in values) + .5 * sum(v == rate for v in values)) / len(values)
+        fallback_rank = ((sum(v < rate for v in values) + (sum(v == rate for v in values) - 1) / 2) / (len(values) - 1)
+                         if len(values) > 1 else .5)
+        percentile = supplied if numeric(supplied) and 0 <= supplied <= 1 else fallback_rank
         rows.append(f"{site['site_name']}: use {pct(rate)}; within-customer percentile {percentile * 100:.1f}%")
     blocks.append(('Sites to discuss', '\n'.join(rows) if rows else 'Site allocation data unavailable.'))
     blocks.append(('Interpret the comparison', 'Percentiles show position, not performance quality. Compare product mix, site type and period before drawing conclusions. '
-                   'Site ranks use a midrank for ties when no supplied percentile exists. High repair activity is not automatically poor service.'))
+                   'Site ranks use zero-based midrank / (n-1), singleton 0.5, when no supplied percentile exists. High repair activity is not automatically poor service.'))
     return blocks
 
 

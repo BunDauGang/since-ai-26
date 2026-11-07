@@ -1,75 +1,57 @@
-### Scene 1 — Meet Laura (0:00–0:25)
+# Demo script — A customer conversation, not a wall of KPIs
 
-Meet Laura, a Key Account Manager at Lindström.
+**Three-minute rehearsal · NorthStar Foods Group · synthetic 2025 data · base case vs the typical local-laundry alternative.**
 
-Tomorrow, she has an annual review with NorthStar Foods Group, a customer operating 24 sites across three countries.
+Before recording, pull the integrated Meeting mode UI from the frontend team. The six scenes below follow the mentor's meeting order. If network peers are unavailable, use within-customer site peers. Show no euro result until the KAM has entered assumptions. Do not describe rehearsal actions or targets as an existing customer agreement.
 
-Compared with local laundry, Lindström delivered an **estimated 1.4 million litres of water and 255 tonnes of CO₂e saved**, with 98.3% on-time service performance.
+### Scene 1 — Title & basics (0:00–0:25)
 
-But how can Laura explain this value and identify opportunities for improvement?
+Meet Laura, a Key Account Manager at Lindström. She is preparing a customer conversation with NorthStar Foods Group: 24 sites across three countries.
 
-That's where our platform comes in.
+Her customer has limited time, so Laura starts with the relationship, not a dense dashboard.
 
-### Scene 2 — Two Sites, Two Problems (0:25–1:00)
+She selects the CFO persona. The Story Assistant prepares an opening, three evidence-linked points, likely objections and a clear ask. It also works without an AI connection.
 
-Laura opens NorthStar's dashboard and explores its individual sites.
+### Scene 2 — The bigger picture, for this audience (0:25–0:55)
 
-Let's focus on two examples.
+For the CFO, Laura focuses on repair activity and garment allocation: 15,233 repairs and 83.5% allocation use in the synthetic example.
 
-**Site A, NorthStar Kotka**, has the lowest garment utilization, at just 75.6%. Could some garments be reallocated more efficiently?
+For a CEO, the conversation would instead start with scale, service reliability and estimated environmental value. Sustainability colleagues see water and emissions with uncertainty ranges.
 
-Meanwhile, **Site B, NorthStar Kuopio**, has 21.1 repairs per thousand washes, above the customer median.
+The numbers do not change when the audience changes; the emphasis does. Laura can still open “Show the Calculation” for the evidence.
 
-These numbers don't automatically prove waste or poor performance, but they identify opportunities worth investigating.
+### Scene 3 — Agreement & KPIs (0:55–1:20)
 
-### Scene 3 — Data Trust Passport (1:00–1:30)
+Next, Laura compares service performance with targets discussed in the meeting.
 
-Before presenting these findings, Laura needs reliable evidence.
+The example's on-time rate is about 98.3%. Any target she enters is labelled “KAM input”, not an SLA found in the source data.
 
-Through our **Data Trust Passport**, she can click "Show the Calculation" behind each KPI.
+There is no customer satisfaction dataset. Laura can record a meeting score with its scale, or leave an honest data gap. Operational performance alone cannot tell us whether the customer is satisfied.
 
-The platform reveals its formula, sources, assumptions, confidence level, and uncertainty range.
+### Scene 4 — Peer review, with context (1:20–1:45)
 
-For Site A, Laura examines garment utilization. For Site B, she can distinguish recorded repair counts from estimated benefits, such as replacements postponed.
+Laura looks at the sites that deserve a closer conversation. Kotka's allocation use is about 75.6%, but that does not prove waste: shift buffers and scan completeness matter.
 
-**Instead of hiding uncertainty, our platform makes it visible.**
+Where available, the anonymised Lindström network median provides additional context. No other customer is named, and this small synthetic cohort is not an industry benchmark.
 
-### Scene 4 — Customer Objection Simulator (1:30–2:00)
+If that benchmark is unavailable, the conversation stays with NorthStar's own sites.
 
-But what if NorthStar challenges Laura's findings?
+### Scene 5 — A rough calculation, not a promise (1:45–2:20)
 
-The customer might ask:
+Now Laura explores alternatives: typical local laundry, in-house laundry and home washing.
 
-*"Only 83.5% of our garments are in use. Are we paying for idle stock?"*
+The example estimates around 1.4 million litres of water savings against local laundry, with the range and baseline visible.
 
-Our **Customer Objection Simulator** helps Laura prepare evidence-based answers, explaining that idle garments may include necessary operational buffers.
+For a financial discussion, Laura enters water and energy prices and any replacement assumptions. The result is clearly marked “ROUGH CALCULATION — KAM ASSUMPTIONS”.
 
-And when the customer asks, *"How much money will we save next year?"*, the platform honestly says the data cannot answer yet and identifies the missing information.
+NorthStar rents the garments. Illustrative stock purchase value is not their saving, and repairs do not automatically prove avoided purchases.
 
-**Because building trust also means knowing what we cannot claim.**
+### Scene 6 — Finish with a shared next step (2:20–3:00)
 
-### Scene 5 — What-if Scenario Simulator (2:00–2:35)
+Before closing, Laura records an allocation investigation as a proposed shared action and parks unresolved repair questions for follow-up. The customer confirms what is agreed, who owns it and when they will return to the evidence.
 
-Now Laura wants to explore possible improvements.
+Laura downloads a customer-facing PowerPoint or PDF with the meeting inputs, agreed actions and open topics. Detailed calculations remain available behind the simple story.
 
-Using our **What-if Scenario Simulator**, she investigates opportunities inspired by Sites A and B.
+Lindström can use this conversation to build trust and demonstrate ongoing customer value. Better retention and business growth are goals, not outcomes proven by this prototype.
 
-What if NorthStar reclaimed 50% of idle garments across its five lowest-utilization sites?
-
-The scenario shows **719 garments reclaimed**, increasing overall utilization from **83.5% to 85.5%**.
-
-And closing half the excess repair-rate gap at selected sites could mean approximately **265 fewer repairs** per reporting period.
-
-These results are illustrative, not guaranteed, but they help Laura and NorthStar explore better decisions together.
-
-### Scene 6 — Business Impact (2:35–3:00)
-
-Finally, Laura switches to **Customer View**, hiding internal information while keeping relevant customer-facing evidence.
-
-She can also export a professional PowerPoint review directly from the platform.
-
-Instead of spending hours preparing reports, Laura can focus on meaningful customer conversations.
-
-For Lindström, this means **faster preparation and stronger customer retention**.
-
-**We don't just turn data into reports. We turn data into trust, and trust into better business decisions.**
+**We turn data into a shared conversation, and a shared conversation into a clear next step.**

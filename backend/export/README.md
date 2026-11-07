@@ -1,15 +1,14 @@
-# Worker B: PowerPoint and PDF exports
+# Worker B: meeting-led PowerPoint and PDF exports
 
-Install from the repository root:
+Run from the repository root with Python 3.10+:
 
 ```sh
 python -m pip install -r backend/export/requirements.txt
 python -m backend.export contracts/sample_review.json --out-dir out
 ```
 
-Unicode rendering and layout measurement use DejaVu Sans on Linux or Arial/Segoe UI
-on Windows, and Arial on macOS. Debian/Ubuntu can install `fonts-dejavu-core`.
-The cloud environment already provides DejaVu Sans. No Office,
+Unicode rendering uses DejaVu Sans on Linux or Arial/Segoe UI on Windows and
+Arial on macOS. Debian/Ubuntu can install `fonts-dejavu-core`. No Office,
 LibreOffice, Gemini key or external conversion service is required.
 
 ```python
@@ -19,40 +18,77 @@ export_pdf(review, 'out/customer-review.pdf')
 ```
 
 Both functions return the written path and create missing parent directories.
-They never change the input review or recompute engine savings. They normally generate
-nine pages: title, executive summary, priority, baseline comparison, site
-performance, circularity, actions, steering questions, and methodology/data gaps.
-This follows the explicit Worker B brief's slide order. Every page carries the
-required synthetic disclaimer. Ratios retain their contract units (site rates
-are fractions); rule prose converts allocation/on-time rates to percentages.
+They do not mutate the input or recalculate the engine's environmental savings.
 
-One shared content builder and measured layout drive both outputs. Spotlight
-metrics follow `priority_view.emphasized_metric_ids` in the supplied order.
-Missing IDs are labeled unavailable. Oversized cards continue on additional
-pages at a minimum nine-point font; neither format discards overflowing text.
-Repeated monthly quality findings are summarized, with full records retained in
-the embedded source review. PowerPoint elements remain
-editable. Complete, unchanged `review.json` is retained in the last slide's
-speaker notes and as an embedded PDF attachment, including formulas, sources,
-assumptions, statuses, confidence, ranges, and all sites. Visible cards include
-provenance for displayed aggregate metrics. Generated files are gitignored.
+## Mentor meeting flow
 
-The shipped sample contains stale observation numbers and differences between
-metric and baseline-comparison totals. Exports regenerate deterministic
-observations unless supplied observation references and numeric evidence match
-current rule output. Valid generated Gemini prose is retained under this same
-check; no network call occurs during export. Source registries and comparison
-rows are retained as supplied, with visible caveats; source-data inconsistencies
-must be fixed by the contract/data owners, not silently rewritten by exports.
+The deck is paginated, not fixed to nine slides. Its front door follows:
 
-Repair types are rendered from `repairs_total.breakdown.by_repair_type` and
-waste routes from `textile_waste_kg.breakdown.by_route`. Each section says
-unavailable only when its own data is absent (as in the shipped sample). Values,
-units, evidence status and confidence are copied from the supplied metrics.
+1. Title & basics: customer, period, scale, countries and selected alternative.
+2. Executive summary: four KPI tiles and a conversation focus for the persona.
+3. Agreement & KPIs: actual service KPIs vs KAM-entered targets; satisfaction input or gap.
+4. Peer review: anonymised network context when supplied, plus within-customer sites.
+5. Rough calculation: explicit KAM inputs and their supplied euro scenario total.
+6. Agreed next steps & open topics: present only when `meeting` exists.
 
-Run tests using the installation and commands in `backend/insights/README.md`.
-The tests check actual PPTX/PDF content, all six priority variants, source
-attachments, schema validity, nonmutation, and repeat exports. Layout is measured before rendering in both formats. Continuation pages retain
-long source text, with provenance in the last rendered slide regardless of page
-count. Set `ENGINE_TEST_WORKBOOK` to exercise real-engine and API export paths;
-those tests explicitly skip if the workbook is unavailable.
+Existing priority, baseline, site, repair, observations, discussion questions and
+methodology sections remain as deep-dive appendices. Lindström branding and the
+synthetic disclaimer remain on every page. Shared measured layout drives both
+formats; long notes continue at a minimum nine-point font rather than clipping.
+
+- `meeting.persona` supports `ceo`, `cfo`, `operations`, `sustainability`;
+  absence defaults to CEO. Definitions are shared with the story helper in
+  `backend/insights/personas.py`. Appendix spotlight metrics still follow the
+  exact `priority_view.emphasized_metric_ids` supplied by the API.
+- `meeting.targets` are KAM input, not source SLAs. Service actuals use base-case
+  operational KPIs. No customer satisfaction dataset is inferred; an entered
+  score requires a valid scale and is labelled KAM input.
+- `peer_benchmark` is optional. Network values use anonymous metric summaries.
+  Supplied percentiles are retained; local fallback uses ascending zero-based
+  midrank/(n-1), with 0.5 for a singleton, matching Worker A. High rank is not
+  always better, and the small synthetic cohort is not an industry standard.
+- `meeting.rough_calc.result_eur` is displayed only when inputs exist. Its
+  arithmetic is supplied by the frontend calculator, not independently recomputed
+  here. Prices, boundaries and units need customer review. Every result is
+  labelled ROUGH CALCULATION; rental-stock value is not a customer saving.
+- Repair types and waste routes use `breakdown.by_repair_type` and `by_route`.
+  A section says unavailable only when that section's data is absent.
+
+## Customer packet and provenance
+
+When `meeting` is present, both visible pages and embedded provenance are
+customer packets: known internal idle-stock values and synthetic product
+purchase costs are removed, unsupported internal meeting keys are dropped, and
+peer metadata is restricted to anonymous numeric summaries. Satisfaction and
+rough-calculation labels cannot be promoted into measured or approved claims.
+Free-text agreed actions and open topics are intentionally customer-shared KAM
+notes: review them before export. This filtering is not enterprise access control.
+
+The final PPTX slide's notes and the PDF's `review.json` attachment contain the
+same packet. Without `meeting`, legacy source snapshots remain unchanged,
+including metric formulas, sources, assumptions, status, confidence and ranges.
+Presentation wording is regenerated if supplied observations have stale numeric
+evidence; valid observation order is preserved. Export makes no network calls.
+
+## Example and integration
+
+`examples/meeting.example.json` contains rehearsal inputs, not a real agreement:
+
+```python
+import json
+from backend.export import export_pptx, export_pdf
+review = json.load(open('contracts/sample_review.json', encoding='utf-8'))
+review['meeting'] = json.load(open('backend/export/examples/meeting.example.json', encoding='utf-8'))
+export_pptx(review, 'out/meeting.pptx')
+export_pdf(review, 'out/meeting.pdf')
+```
+
+The Lead's `/api/export` accepts a complete review with optional `meeting`, and
+selection parameters plus `meeting`. A direct-review payload preserves exactly
+what the UI displays. No required contract field or exporter signature changed.
+
+Run `python -m pytest backend/tests` with dependencies installed as described in
+`backend/insights/README.md`. Set `ENGINE_TEST_WORKBOOK` for real-engine tests.
+Coverage includes every persona, the six-step order, backwards compatibility,
+customer-source filtering, optional peers, valid zero inputs, long-note retention,
+layout bounds, and both file formats through the existing API.

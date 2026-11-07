@@ -12,7 +12,7 @@ from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
-from .content import build_pages, FOOTER
+from .content import build_pages, FOOTER, baseline_name
 from .meeting import prepare_export_review
 from .fonts import font_family
 from .layout import layout_pages
@@ -40,8 +40,10 @@ STATUS_COLORS = {
 
 def subtitle(review):
     meta = review['meta']
-    return (f"{meta['customer_name']} · {meta['industry']} · {meta['period']['from']} to {meta['period']['to']} · "
-            f"vs {meta.get('baseline_name', meta['baseline_id']).lower()} · {meta['priority'].title()} lens · {meta.get('sensitivity', 'base')} case")
+    persona = review.get('meeting', {}).get('persona', 'ceo').upper()
+    return (f"{meta['customer_name']} · {meta['period']['from']} to {meta['period']['to']} · "
+            f"{persona} meeting · vs {baseline_name(meta['baseline_id'], meta.get('baseline_name', '')).lower()} · "
+            f"{meta['priority'].title()} lens · {meta.get('sensitivity', 'base')} case")
 
 
 def _text(slide, x, y, width, height, text, size=14, color=INK, bold=False, card=False, align=None, anchor=None):

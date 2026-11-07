@@ -51,11 +51,45 @@ No workbook, full review, arbitrary user prompt, or secrets are sent in the
 model's facts payload. Requests have a ten-second timeout. The API key travels
 in a header, never a URL. Failures are logged without response/exception details.
 
-Gemini can rephrase observations, actions and questions. It cannot change
-references, owners or evidence values. Responses containing numeric digits,
-common spelled-out numbers or unsupported assurance claims are rejected.
-The application appends deterministic numerical evidence after accepting prose;
-malformed responses, timeouts and missing keys use templates. Semantic truth of
-free prose cannot be guaranteed by numeric validation: use `use_llm=False` for
-strictly deterministic customer-facing output. Live API access requires a key;
-tests mock both valid and invalid model responses.
+Gemini selects approved introductory wording for observations, actions and
+questions. It cannot replace the deterministic action plan, references, evidence,
+industry relevance or limitations. Any wording outside the approved set, numeric
+text, malformed response or timeout returns the offline template. This is a
+bounded wording selector, not unrestricted prose generation. Live API access
+requires a key; tests mock valid, invalid and failed responses.
+
+## Persona Story Assistant and Lead integration
+
+```python
+from backend.insights import generate_story
+story = generate_story(review, persona='cfo', goal='Discuss allocation and pricing',
+                       minutes=15, use_llm=False)
+```
+
+The response carries `opening`, three `points` (with `id`, `headline`, `text`,
+`detail`, `metric_ids`, full `evidence` and `status`), `likely_objections` (also
+aliased as `objections`), `ask`, customer identity, persona, goal, minutes and
+`source`. A missing KPI is a DATA_GAP, never a zero. Duration is a KAM preference
+from 1 to 120 minutes. Goal text changes metric emphasis but is never copied
+into spoken text as a factual claim. Financial benefits are not inferred.
+
+`use_llm=False` is fully offline. With `use_llm=True`, Gemini only selects approved
+non-numeric opening/ask phrasing. Python retains every evidence value, range,
+status, limitation, objection and action. Responses outside the approved choices,
+new numbers, malformed data and timeouts all return the deterministic template.
+Only persona, goal, minutes and compact metric facts are sent; never the workbook,
+site records, meeting notes or complete review. No raw key or response is logged.
+
+The Lead endpoint currently looks for
+`backend.insights.llm.story_talk_track(review, persona, goal, minutes, fallback)`.
+That hook is provided and tested through `/api/story` with `use_llm=True`; it
+works offline too when no key exists. It builds a grounded template rather than
+trusting the adapter's supplied fallback.
+
+**Lead handoff:** use `generate_story(...)` for both endpoint modes to share the
+same safe offline template. The existing API's explicit `use_llm=False` branch
+still uses its own older template (outside Worker B ownership), including claims
+such as zero systematic repairs at the alternative and assumed purchase avoidance.
+Those claims are not supported by the shared review and should be replaced by
+the helper above. No API code was changed in this branch. The endpoint's default
+`use_llm=True` already discovers the guarded hook without requiring a Gemini key.

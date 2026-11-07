@@ -445,3 +445,48 @@ def test_meeting_payload_reaches_export_through_existing_api(meeting_review, tmp
                     '\n'.join(s.text for slide in Presentation(path).slides for s in slide.shapes if s.has_text_frame))
             assert 'Review allocation at Kotka and Helsinki' in text
             assert 'Agreed next steps & open topics' in text
+
+
+@pytest.mark.parametrize('persona', ['ceo', 'cfo', 'operations', 'sustainability'])
+def test_rendered_meeting_order_persona_and_fit(meeting_review, tmp_path, persona):
+    from backend.export.layout import layout_pages, paragraph, CONTENT_BOTTOM
+    from backend.export.meeting import prepare_export_review
+    from backend.insights.personas import PERSONAS
+    meeting_review['meeting']['persona'] = persona
+    prepared = layout_pages(build_pages(meeting_review))
+    titles = ['Title & basics', 'Executive summary', 'Agreement & KPIs', 'Peer review',
+              'Rough calculation', 'Agreed next steps & open topics']
+    assert [p.title for p in prepared[:6]] == titles
+    for page in prepared:
+        for card in page.cards:
+            assert card.top - card.height >= CONTENT_BOTTOM
+            assert card.x >= 40 and card.x + card.width <= 1112
+            if not card.kpi and not card.chart:
+                assert paragraph(card.text, card.size).wrap(card.width - 24, card.height - 24)[1] <= card.height - 24
+    pdf = PdfReader(export_pdf(meeting_review, str(tmp_path / 'flow.pdf')))
+    deck = Presentation(export_pptx(meeting_review, str(tmp_path / 'flow.pptx')))
+    assert len(pdf.pages) == len(deck.slides) == len(prepared)
+    for index, title in enumerate(titles):
+        assert title in pdf.pages[index].extract_text()
+        assert title in '\n'.join(s.text for s in deck.slides[index].shapes if s.has_text_frame)
+    for key in PERSONAS[persona]['metric_ids']:
+        assert key in pdf.pages[1].extract_text()
+    assert json.loads(pdf.attachments['review.json'][0]) == prepare_export_review(meeting_review)
+
+
+def test_peer_fallback_rank_matches_engine_and_zero_inputs_are_valid(meeting_review):
+    from backend.engine.peer_benchmark import percentile
+    meeting_review['sites'] = [dict(site_id=f'S{i}', site_name=f'Site{i}', country='Finland', metrics={'allocation_use_rate': v})
+                               for i, v in enumerate([.5, .7, .7, .9])]
+    text = str(section(meeting_review, 'Peer review'))
+    for value in [.5, .7, .9]:
+        assert f'{percentile(value, [.5, .7, .7, .9]) * 100:.1f}%' in text
+    meeting_review['meeting']['satisfaction'] = {'score': 0, 'scale': 10, 'source': 'measured'}
+    meeting_review['meeting']['targets']['service_requests'] = 0
+    text = str(section(meeting_review, 'Agreement & KPIs'))
+    assert '0 / 10 | KAM input' in text and 'KAM input target: 0 requests' in text
+    from backend.export.meeting import prepare_export_review
+    meeting_review['meeting']['rough_calc']['label'] = 'Certified financial saving'
+    packet = prepare_export_review(meeting_review)
+    assert packet['meeting']['rough_calc']['label'] == 'ROUGH CALCULATION'
+    assert packet['meeting']['satisfaction']['source'] == 'KAM input'

@@ -17,11 +17,11 @@ INSTRUCTION = ("Select wording using ONLY the supplied facts. Return a JSON arra
                + json.dumps(APPROVED_PROSE) + ". The application appends immutable evidence and action plans.")
 
 
-def _request(facts, key):
+def _request(facts, key, instruction=INSTRUCTION):
     model = os.getenv('GEMINI_MODEL', 'gemini-2.5-flash')
     if not re.fullmatch(r'[a-zA-Z0-9._-]+', model):
         raise ValueError('Invalid Gemini model name')
-    payload = {'systemInstruction': {'parts': [{'text': INSTRUCTION}]},
+    payload = {'systemInstruction': {'parts': [{'text': instruction}]},
                'contents': [{'role': 'user', 'parts': [{'text': json.dumps(facts)}]}],
                'generationConfig': {'responseMimeType': 'application/json', 'temperature': 0}}
     request = urllib.request.Request(
@@ -62,3 +62,59 @@ def polish(facts, fallback):
         # Do not log responses, headers or exception strings (may contain credentials).
         log.warning('Gemini wording unavailable or rejected; using deterministic observations')
         return fallback
+
+
+# Story wording is deliberately bounded: no model-generated numbers or claims.
+STORY_PROSE = {
+    'opening': ['Start with the relationship and the evidence that matters to this audience.',
+                'Use the supplied evidence to frame a shared customer decision.'],
+    'ask': ['Agree the next investigation, its owner and the evidence needed for follow-up.',
+            'Confirm the assumptions together before choosing the next action.'],
+}
+STORY_INSTRUCTION = (
+    'Select an opening and ask appropriate to the supplied persona and goal. '
+    'Return a JSON object with exactly opening and ask. Copy each value verbatim '
+    'from the approved options below. Do not calculate, add quantities or make new claims. '
+    + json.dumps(STORY_PROSE))
+
+
+def _request_story(payload, key):
+    return _request(payload, key, instruction=STORY_INSTRUCTION)
+
+
+def _polish_story_template(template):
+    from copy import deepcopy
+    key = os.getenv('GEMINI_API_KEY')
+    if not key:
+        return template
+    # Send compact structured evidence, never the workbook, meeting notes or full review.
+    payload = dict(persona=template['persona'], goal=template['goal'], minutes=template['minutes'],
+                   facts=[dict(metric_ids=p['metric_ids'], evidence=[
+                       {k: e[k] for k in ('id', 'value', 'unit', 'status')} for e in p['evidence']])
+                          for p in template['points']])
+    try:
+        wording = _request_story(payload, key)
+        if not isinstance(wording, dict) or set(wording) != set(STORY_PROSE):
+            raise ValueError('Invalid story wording fields')
+        for field, options in STORY_PROSE.items():
+            value = wording[field]
+            if not isinstance(value, str) or UNSAFE.search(value) or value not in options:
+                raise ValueError('Unsupported story claim or numeric text')
+        result = deepcopy(template)
+        for field in STORY_PROSE:
+            result[field] = wording[field] + ' ' + template[field]
+        result.update(source='gemini', status='AI_WORDING_FROM_REVIEW')
+        return result
+    except Exception:
+        log.warning('Story wording unavailable or rejected; using deterministic template')
+        return template
+
+
+def story_talk_track(review, persona='ceo', goal='', minutes=15, fallback=None):
+    """Hook accepted by the Lead's /api/story adapter (including offline fallback).
+
+    Build a grounded template instead of trusting arbitrary claims in fallback.
+    API callers wanting no model request can use story.generate_story(use_llm=False).
+    """
+    from .story import generate_story
+    return generate_story(review, persona, goal, minutes, use_llm=True)
