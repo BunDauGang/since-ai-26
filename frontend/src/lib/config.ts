@@ -143,6 +143,7 @@ export const FLAG_LABELS: Record<string, { label: string; tone: "red" | "amber" 
   R4_SERVICE_REQUESTS: { label: "R4 Service requests", tone: "amber" },
   R5_WATER_PRIORITY: { label: "R5 Water priority", tone: "blue" },
   R6_DATA_GAP: { label: "R6 Data gap", tone: "blue" },
+  DQ4: { label: "DQ4 Laundry volume check", tone: "blue" },
 };
 
 export const SITE_METRIC_META: Record<SiteMetricKey, { label: string; unit: string }> = {
@@ -171,4 +172,40 @@ export function interpretPromptOffline(text: string, industry: string): { priori
     return { priority: rank1, secondary: [], matched: false };
   }
   return { priority: scores[0].id, secondary: scores.slice(1).map((s) => s.id), matched: true };
+}
+
+/** Readable labels used when the engine sends id-style labels ("Water saving l"). */
+export const METRIC_LABELS: Record<string, string> = {
+  delivery_sites: "Delivery sites",
+  wearers_min_est: "Active wearers (min. deduplicated est.)",
+  wearer_product_assignments: "Wearer-product assignments",
+  garments_allocated: "Garments allocated",
+  washed_kg: "Washed textile volume",
+  allocation_use_rate: "Allocation use rate",
+  idle_pieces: "Unscanned / idle allocated garments",
+  idle_value_eur: "Illustrative capital tied in idle stock",
+  wash_frequency: "Wash frequency",
+  service_requests: "Service requests",
+  on_time_rate: "On-time service cycles",
+  median_cycle_hours: "Median service-cycle time",
+  repairs_total: "Repairs completed",
+  repair_rate_per_1000: "Repair rate per 1,000 washes",
+  replacements_postponed: "Replacements postponed (est.)",
+  avoided_product_co2e_kg: "Avoided new-product CO₂e",
+  customer_water_l: "Allocated fresh-water use",
+  customer_energy_kwh: "Allocated laundry energy use",
+  customer_co2e_kg: "Allocated process + delivery CO₂e",
+  textile_waste_kg: "Allocated textile waste",
+  circular_waste_share: "Circular share of textile waste",
+  water_saving_l: "Water saving",
+  energy_saving_kwh: "Energy saving",
+  co2e_saving_kg: "CO₂e saving",
+};
+
+export const HANDPRINT_IDS = ["water_saving_l", "energy_saving_kwh", "co2e_saving_kg"];
+
+/** "NorthStar Helsinki" → "Helsinki" for compact chart labels (any customer, not just NorthStar). */
+export function shortSiteName(siteName: string, customerName: string): string {
+  const brand = customerName.split(" ")[0];
+  return brand && siteName.startsWith(`${brand} `) ? siteName.slice(brand.length + 1) : siteName;
 }

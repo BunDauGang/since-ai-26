@@ -2,7 +2,7 @@
 
 import { AlertTriangle, ArrowRight, Database, Info, Layers, ShieldCheck } from "lucide-react";
 import { formatValue, unitLabel } from "@/lib/format";
-import type { Review, Sensitivity } from "@/lib/types";
+import type { DataQualityItem, Review, Sensitivity } from "@/lib/types";
 import { ConfidenceDots, SectionTitle, StatusBadge } from "../ui";
 
 export function Methodology({ review, sensitivity, onOpenMetric }: { review: Review; sensitivity: Sensitivity; onOpenMetric: (id: string) => void }) {
@@ -27,23 +27,44 @@ export function Methodology({ review, sensitivity, onOpenMetric }: { review: Rev
       <div>
         <SectionTitle sub="Checks run on every load: blank cells (DQ1), unmapped keys (DQ2), site ↔ customer (DQ3), laundry share sum ≤ 100% (DQ4).">Data-quality findings</SectionTitle>
         <div className="grid gap-3 lg:grid-cols-2">
-          {review.data_quality.map((d) => (
-            <div key={d.check_id} className={`card p-4 ${d.severity === "warning" ? "border-amber-300" : ""}`}>
-              <div className="flex items-center gap-2">
-                {d.severity === "warning" ? <AlertTriangle size={16} className="text-amber-600" /> : <Info size={16} className="text-navy" />}
-                <span className="font-mono text-[12px] font-semibold text-ink">{d.check_id}</span>
-                <span className={`rounded px-1.5 py-0.5 text-[10.5px] font-semibold uppercase ${d.severity === "warning" ? "bg-amber-100 text-amber-800" : "bg-navy-50 text-navy"}`}>{d.severity}</span>
-                {d.affected_rows != null && <span className="ml-auto text-[11.5px] text-muted">{d.affected_rows} rows</span>}
+          {groupFindings(review.data_quality).map((g) => {
+            const warn = g.items.some((d) => d.severity === "warning" || d.severity === "error");
+            const [first, ...more] = g.items;
+            return (
+              <div key={g.checkId} className={`card p-4 ${warn ? "border-amber-300" : ""}`}>
+                <div className="flex items-center gap-2">
+                  {warn ? <AlertTriangle size={16} className="text-amber-600" /> : <Info size={16} className="text-navy" />}
+                  <span className="font-mono text-[12px] font-semibold text-ink">{g.checkId}</span>
+                  <span className={`rounded px-1.5 py-0.5 text-[10.5px] font-semibold uppercase ${warn ? "bg-amber-100 text-amber-800" : "bg-navy-50 text-navy"}`}>
+                    {warn ? "warning" : "info"}
+                  </span>
+                  <span className="ml-auto text-[11.5px] text-muted">
+                    {g.items.length > 1 ? `${g.items.length} findings · ` : ""}
+                    {g.rows} rows
+                  </span>
+                </div>
+                <div className="mt-1 text-[11.5px] text-muted">{Array.from(new Set(g.items.map((d) => d.dataset))).join(", ")}</div>
+                <p className="mt-2 text-[13px] text-slate-700">{first.message}</p>
+                {more.length > 0 && (
+                  <details className="mt-1.5 text-[12.5px] text-slate-600">
+                    <summary className="cursor-pointer text-navy">{more.length} more</summary>
+                    <ul className="mt-1.5 space-y-1">
+                      {more.map((d, i) => (
+                        <li key={i}>
+                          <span className="text-muted">{d.dataset}:</span> {d.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+                {first.treatment && (
+                  <p className="mt-2 rounded-md bg-canvas p-2.5 text-[12.5px] text-slate-700">
+                    <b className="text-navy">Treatment:</b> {first.treatment}
+                  </p>
+                )}
               </div>
-              <div className="mt-1 text-[11.5px] text-muted">{d.dataset}</div>
-              <p className="mt-2 text-[13px] text-slate-700">{d.message}</p>
-              {d.treatment && (
-                <p className="mt-2 rounded-md bg-canvas p-2.5 text-[12.5px] text-slate-700">
-                  <b className="text-navy">Treatment:</b> {d.treatment}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -113,8 +134,8 @@ export function Methodology({ review, sensitivity, onOpenMetric }: { review: Rev
           <div className="card p-4">
             <SectionTitle sub="What the prototype cannot show yet, and which Lindström source would close the gap.">Production data gaps</SectionTitle>
             <ul className="space-y-2">
-              {review.data_gaps.map((g) => (
-                <li key={g.gap} className="rounded-lg border border-line p-3">
+              {review.data_gaps.map((g, i) => (
+                <li key={`${g.gap}-${i}`} className="rounded-lg border border-line p-3">
                   <div className="text-[13px] font-semibold text-ink">{g.gap}</div>
                   <div className="text-[12px] text-muted">{g.impact}</div>
                   <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-navy">
@@ -140,6 +161,17 @@ export function Methodology({ review, sensitivity, onOpenMetric }: { review: Rev
       </div>
     </div>
   );
+}
+
+/** The engine emits one finding per sheet / laundry-month; show one card per check. Warnings first. */
+function groupFindings(items: DataQualityItem[]) {
+  const groups = new Map<string, DataQualityItem[]>();
+  for (const d of items) groups.set(d.check_id, [...(groups.get(d.check_id) ?? []), d]);
+  return Array.from(groups, ([checkId, list]) => ({
+    checkId,
+    items: list,
+    rows: list.reduce((a, d) => a + (d.affected_rows ?? 0), 0),
+  })).sort((a, b) => Number(b.items.some((d) => d.severity === "warning")) - Number(a.items.some((d) => d.severity === "warning")));
 }
 
 function Fact({ label, value }: { label: string; value: string }) {

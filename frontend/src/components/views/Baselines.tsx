@@ -3,6 +3,7 @@
 import { Recycle, Wrench } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, ErrorBar, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BASELINES } from "@/lib/config";
+import { metricMap } from "@/lib/derive";
 import { compact, formatValue, full, pct } from "@/lib/format";
 import type { Range, Review, Sensitivity } from "@/lib/types";
 import { SectionTitle, StatusBadge } from "../ui";
@@ -13,6 +14,13 @@ const IMPACTS = [
   { key: "co2e_saving_kg", label: "CO₂e saving", unit: "kgCO2e" },
 ] as const;
 
+const ROUTE_LABEL: Record<string, { label: string; color: string }> = {
+  recycling_kg: { label: "Recycling", color: "#0f766e" },
+  reuse_kg: { label: "Reuse", color: "#14b8a6" },
+  energy_recovery_kg: { label: "Energy recovery", color: "#94a3b8" },
+  incineration_kg: { label: "Incineration", color: "#cbd5e1" },
+};
+
 const PRODUCT_COLORS = ["#003f72", "#3b82c4", "#93c5fd", "#64748b", "#0f766e", "#b45309"];
 
 export function Baselines({ review, sensitivity, baselineId, onBaseline, onOpenMetric }: {
@@ -22,7 +30,8 @@ export function Baselines({ review, sensitivity, baselineId, onBaseline, onOpenM
   onBaseline: (id: string) => void;
   onOpenMetric: (id: string) => void;
 }) {
-  const metric = (id: string) => review.metrics.find((m) => m.id === id);
+  const byId = metricMap(review);
+  const metric = (id: string) => byId.get(id);
   const washed = metric("washed_kg");
   const customerWater = metric("customer_water_l");
   const waste = metric("textile_waste_kg");
@@ -33,10 +42,18 @@ export function Baselines({ review, sensitivity, baselineId, onBaseline, onOpenM
 
   const wasteVal = waste?.value[sensitivity] ?? 0;
   const circ = circShare?.value[sensitivity] ?? 0;
-  const wasteData = [
-    { name: "Recycling + reuse (circular)", value: wasteVal * circ, color: "#0f766e" },
-    { name: "Energy recovery + incineration", value: wasteVal * (1 - circ), color: "#cbd5e1" },
-  ];
+  // Prefer the engine's per-route allocation; fall back to the circular share (hand-made sample has no routes).
+  const routes = waste?.breakdown?.by_route?.filter((r) => typeof r.value === "number") as { route: string; value: number }[] | undefined;
+  const wasteData = routes?.length
+    ? routes.map((r) => ({ name: ROUTE_LABEL[r.route]?.label ?? r.route, value: r.value, color: ROUTE_LABEL[r.route]?.color ?? "#94a3b8" }))
+    : [
+        { name: "Recycling + reuse (circular)", value: wasteVal * circ, color: "#0f766e" },
+        { name: "Energy recovery + incineration", value: wasteVal * (1 - circ), color: "#cbd5e1" },
+      ];
+  const repairTypes = (repairs?.breakdown?.by_repair_type ?? [])
+    .filter((r): r is { repair_type: string; value: number } => typeof r.value === "number")
+    .sort((a, b) => b.value - a.value);
+  const repairMax = Math.max(0, ...repairTypes.map((r) => r.value));
   const products = review.products.map((p, i) => ({ ...p, color: PRODUCT_COLORS[i % PRODUCT_COLORS.length] }));
 
   return (
@@ -161,6 +178,22 @@ export function Baselines({ review, sensitivity, baselineId, onBaseline, onOpenM
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-navy" /> Repairs</span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-blue-300" /> Avoided product kgCO₂e</span>
           </div>
+          {repairTypes.length > 0 && (
+            <>
+              <div className="mt-4 text-[12px] font-semibold uppercase tracking-wider text-muted">By repair type</div>
+              <ul className="mt-2 space-y-1.5">
+                {repairTypes.map((r) => (
+                  <li key={r.repair_type} className="flex items-center gap-2 text-[12.5px]">
+                    <span className="w-40 truncate capitalize text-slate-700">{r.repair_type.toLowerCase()}</span>
+                    <span className="relative h-2 flex-1 rounded-full bg-canvas">
+                      <span className="absolute inset-y-0 left-0 rounded-full bg-navy/70" style={{ width: `${repairMax ? (r.value / repairMax) * 100 : 0}%` }} />
+                    </span>
+                    <span className="w-14 text-right text-slate-600 tnum">{full(r.value, 0)}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
 
         {/* Waste routes */}
@@ -201,7 +234,8 @@ export function Baselines({ review, sensitivity, baselineId, onBaseline, onOpenM
                 </button>
               )}
               <p className="text-[12px] text-muted">
-                In the baseline, the same waste would go 100% to mixed-waste treatment. Per-route kg are derived from the circular share; route-level detail is available in Waste_Circularity.
+                In the baseline, the same waste would go 100% to mixed-waste treatment.{" "}
+                {routes?.length ? "Route split allocated from Waste_Circularity by washed kg." : "Per-route kg are derived from the circular share (route detail needs the live engine)."}
               </p>
             </div>
           </div>

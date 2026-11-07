@@ -64,6 +64,7 @@ export default function Page() {
     r.siteLevelBaselineId !== controls.baselineId ? `vs ${baselineName(r.siteLevelBaselineId).toLowerCase()} (site/month detail needs live engine)` : undefined;
 
   async function onExport(format: "pptx" | "pdf") {
+    if (!r.canExport) return;
     setExporting(format);
     try {
       await exportReview(review, format);
@@ -87,8 +88,8 @@ export default function Page() {
       <Sidebar
         view={view}
         onView={setView}
-        customerName={review.meta.customer_name}
-        industry={`${review.meta.industry} · ${review.meta.segment}`}
+        customerName={r.blocking ? r.customer.name : review.meta.customer_name}
+        industry={r.blocking ? r.customer.industry : `${review.meta.industry} · ${review.meta.segment}`}
         counts={{ sites: review.sites.length, observations: review.observations.length, methodology: review.data_quality.length }}
         mode={r.mode}
         onRecheck={r.checkBackend}
@@ -108,6 +109,8 @@ export default function Page() {
           onView={setView}
           onExport={onExport}
           exporting={exporting}
+          canExport={r.canExport}
+          exportBlockedReason={!r.periodValid ? "Fix the reporting period first" : "Waiting for the engine to finish recalculating"}
         />
         <MobileNav view={view} onView={setView} />
 
@@ -115,8 +118,15 @@ export default function Page() {
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="text-[12px] font-medium text-muted">
-                {review.meta.customer_name} · {review.meta.period.from} → {review.meta.period.to} · {review.sites.length} sites ({Array.from(new Set(review.sites.map((s) => s.country))).join(", ")}) ·
-                vs {review.meta.baseline_name.toLowerCase()} · {priorityDef(controls.priority).label} lens
+                {r.blocking ? (
+                  <>{r.customer.name} · {controls.periodFrom} → {controls.periodTo}</>
+                ) : (
+                  <>
+                    {review.meta.customer_name} · {review.meta.period.from} → {review.meta.period.to} · {review.sites.length} sites (
+                    {Array.from(new Set(review.sites.map((s) => s.country))).join(", ")}) · vs {review.meta.baseline_name.toLowerCase()} ·{" "}
+                    {priorityDef(controls.priority).label} lens
+                  </>
+                )}
               </div>
               <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-ink">{TITLES[view]}</h1>
             </div>
@@ -126,21 +136,50 @@ export default function Page() {
                   <Loader2 size={13} className="animate-spin" /> Recalculating…
                 </span>
               )}
-              {flagged > 0 && view !== "sites" && (
+              {flagged > 0 && view !== "sites" && !r.blocking && (
                 <button onClick={() => setView("sites")} className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100">
                   {flagged} sites flagged
                 </button>
               )}
-              <button onClick={() => downloadJson(review)} className="inline-flex items-center gap-1 hover:text-navy" title="Download the exact review.json behind this view">
+              <button
+                onClick={() => downloadJson(review)}
+                disabled={!r.canExport}
+                className="inline-flex items-center gap-1 hover:text-navy disabled:opacity-40"
+                title="Download the exact review.json behind this view"
+              >
                 <Braces size={13} /> review.json
               </button>
             </div>
           </div>
-          {r.error && (
+          {r.error && !r.blocking && (
             <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 text-[13px] text-red-700 ring-1 ring-red-200">
-              Live engine error: {r.error}. Showing the last successful review.
+              Live engine error: {r.error}. The view below is from the previous settings and cannot be exported until a recalculation succeeds.
             </div>
           )}
+          {!r.periodValid && (
+            <div className="mb-4 rounded-lg bg-amber-50 px-4 py-2.5 text-[13px] text-amber-800 ring-1 ring-amber-200">
+              The reporting period starts after it ends. Choose a valid period to recalculate.
+            </div>
+          )}
+
+          {r.blocking ? (
+            <div className="card flex flex-col items-center justify-center gap-3 px-6 py-20 text-center">
+              {r.error ? (
+                <>
+                  <AlertTriangle size={28} className="text-brand-red" />
+                  <div className="text-lg font-semibold text-ink">Could not calculate the review for {r.customer.name}</div>
+                  <div className="max-w-lg text-[13px] text-muted">{r.error}. No data is shown rather than another customer&apos;s numbers.</div>
+                  <button onClick={r.retry} className="btn-secondary mt-2">Try again</button>
+                </>
+              ) : (
+                <>
+                  <Loader2 size={28} className="animate-spin text-navy" />
+                  <div className="text-[15px] font-medium text-ink">Calculating {r.customer.name} from the data pack…</div>
+                </>
+              )}
+            </div>
+          ) : (
+          <div className={`transition-opacity ${r.stale && r.loading ? "opacity-60" : ""}`}>
 
           {view === "overview" && (
             <Overview
@@ -168,9 +207,11 @@ export default function Page() {
             <Observations review={review} priority={controls.priority} emphasized={emphasized} onOpenMetric={openMetric} onOpenSite={openSite} />
           )}
           {view === "methodology" && <Methodology review={review} sensitivity={controls.sensitivity} onOpenMetric={openMetric} />}
+          </div>
+          )}
 
           <footer className="mt-10 border-t border-line pt-4 text-[11.5px] text-muted">
-            Synthetic, illustrative data. Not audited. Not a Lindström claim. · Generated {new Date(review.meta.generated_at).toLocaleString("en-GB")} · Lindström × Since AI
+            Synthetic, illustrative data. Not audited. Not a Lindström claim. · Generated {new Date(review.meta.generated_at).toLocaleString("en-GB", { timeZone: "UTC" })} UTC · Lindström × Since AI
             Hackathon 2026 prototype
           </footer>
         </main>

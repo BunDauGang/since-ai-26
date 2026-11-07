@@ -2,7 +2,7 @@
 
 import { Bot, ClipboardCopy, MapPin, MessageCircleQuestion, Target, Users } from "lucide-react";
 import { useState } from "react";
-import { INDUSTRY_RULES, priorityDef } from "@/lib/config";
+import { INDUSTRY_RULES, priorityDef, shortSiteName } from "@/lib/config";
 import type { Priority, Review } from "@/lib/types";
 import { ConfidenceDots, SectionTitle } from "../ui";
 
@@ -50,7 +50,7 @@ export function Observations({ review, priority, emphasized, onOpenMetric, onOpe
         {review.observations.map((o, i) => {
           const relevant = o.metric_ids.some((id) => emphasized.includes(id));
           return (
-            <article key={o.title} className={`lift-in card overflow-hidden ${relevant ? "ring-1 ring-navy/20" : ""}`}>
+            <article key={o.id ?? `obs-${i}`} className={`lift-in card overflow-hidden ${relevant ? "ring-1 ring-navy/20" : ""}`}>
               <div className="flex items-start gap-3 px-5 pt-4">
                 <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold ${relevant ? "bg-navy text-white" : "bg-canvas text-muted"}`}>
                   {i + 1}
@@ -95,7 +95,7 @@ export function Observations({ review, priority, emphasized, onOpenMetric, onOpe
                     onClick={() => onOpenSite(id)}
                     className="inline-flex items-center gap-0.5 rounded-md bg-white px-1.5 py-0.5 text-[11px] text-slate-700 ring-1 ring-inset ring-line hover:ring-navy/50"
                   >
-                    <MapPin size={10} /> {siteName(id).replace(/^NorthStar /, "")}
+                    <MapPin size={10} /> {shortSiteName(siteName(id), review.meta.customer_name)}
                   </button>
                 ))}
                 <span className="ml-auto flex items-center gap-3">
@@ -125,7 +125,7 @@ export function Observations({ review, priority, emphasized, onOpenMetric, onOpe
           </SectionTitle>
           <ol className="space-y-2.5">
             {questions.map((q, i) => (
-              <li key={q} className="flex gap-2.5 text-[13px] text-slate-700">
+              <li key={i} className="flex gap-2.5 text-[13px] text-slate-700">
                 <span className="font-semibold text-brand-red tnum">{i + 1}.</span>
                 {q}
               </li>

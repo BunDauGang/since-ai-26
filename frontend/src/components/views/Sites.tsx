@@ -103,7 +103,7 @@ export function Sites({ review, onOpenSite, siteBaselineNote }: { review: Review
       {/* Scatter: where are the outliers */}
       <div className="card p-4">
         <SectionTitle sub="Bubble size = washed kg. Bottom-left quadrant of a well-run site is high use, low repairs. Red = rule-flagged. Click a bubble to drill down.">
-          Allocation use vs repair rate — 24 sites
+          Allocation use vs repair rate — {review.sites.length} sites
         </SectionTitle>
         <div className="h-80">
           <ResponsiveContainer>

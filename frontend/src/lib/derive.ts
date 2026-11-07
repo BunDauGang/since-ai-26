@@ -1,5 +1,5 @@
-import { BASELINES, priorityDef } from "./config";
-import type { Metric, Observation, Priority, Review, Sensitivity } from "./types";
+import { BASELINES, HANDPRINT_IDS as HANDPRINT, METRIC_LABELS, priorityDef } from "./config";
+import type { Metric, Observation, Priority, Review } from "./types";
 
 const HANDPRINT_IDS = ["water_saving_l", "energy_saving_kwh", "co2e_saving_kg"] as const;
 
@@ -30,8 +30,23 @@ export function rebaseReview(review: Review, baselineId: string): { review: Revi
   };
 }
 
-export function v(metric: Metric | undefined, s: Sensitivity): number {
-  return metric ? metric.value[s] : NaN;
+const squash = (x: string) => x.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/**
+ * Smooths engine output for display without touching any number:
+ * - id-style labels ("Water saving l") → readable labels, handprint labels name the baseline
+ * - severity casing ("WARNING" → "warning") to match the contract enum
+ */
+export function normalizeReview(r: Review): Review {
+  const baseline = r.meta.baseline_name.toLowerCase();
+  const metrics = r.metrics.map((m) => {
+    let label = m.label;
+    if (squash(label) === squash(m.id) && METRIC_LABELS[m.id]) label = METRIC_LABELS[m.id];
+    if (HANDPRINT.includes(m.id) && !/\bvs\b/i.test(label)) label = `${label} vs ${baseline}`;
+    return label === m.label ? m : { ...m, label };
+  });
+  const data_quality = r.data_quality.map((d) => (typeof d.severity === "string" ? { ...d, severity: d.severity.toLowerCase() } : d));
+  return { ...r, metrics, data_quality };
 }
 
 export function metricMap(review: Review): Map<string, Metric> {
