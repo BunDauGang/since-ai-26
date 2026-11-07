@@ -55,3 +55,36 @@ def test_export_pptx_and_pdf():
         )
         assert r.status_code == 200
         assert len(r.content) > 1000
+
+
+def test_multi_customer_and_prompt_interpretation():
+    """Verify multi-customer / multi-industry scaling (CUST002 Manufacturing, CUST003 Healthcare) and /api/interpret."""
+    for cid, expected_industry, expected_default_prio, expected_sites in (
+        ("CUST002", "Manufacturing", "cost", 6),
+        ("CUST003", "Healthcare", "service", 4),
+    ):
+        r = client.post(
+            "/api/review",
+            json={
+                "customer_id": cid,
+                "period_from": "2025-01",
+                "period_to": "2025-12",
+                "baseline_id": "B_LOCAL",
+                "sensitivity": "base",
+                "use_llm": False,
+            },
+        )
+        assert r.status_code == 200
+        data = r.json()
+        assert data["meta"]["customer_id"] == cid
+        assert data["meta"]["industry"] == expected_industry
+        assert data["meta"]["priority"] == expected_default_prio
+        assert len(data["sites"]) == expected_sites
+
+    interp = client.post(
+        "/api/interpret",
+        json={"prompt": "Which sites have the highest repair rate and textile waste?", "industry": "Manufacturing"},
+    )
+    assert interp.status_code == 200
+    assert interp.json()["priority"] == "circularity"
+

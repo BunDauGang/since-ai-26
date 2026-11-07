@@ -58,6 +58,40 @@ KEYWORD_PRIORITY_MAP: list[tuple[list[str], str]] = [
 ]
 
 
+CUSTOMER_META: dict[str, dict[str, str | int]] = {
+    "CUST001": {
+        "customer_id": "CUST001",
+        "customer_name": "NorthStar Foods Group",
+        "industry": "Food & Beverage",
+        "segment": "Strategic High Value",
+        "hq_country": "Finland",
+        "sites_count": 24,
+        "default_priority": "water",
+    },
+    "CUST002": {
+        "customer_id": "CUST002",
+        "customer_name": "Apex Industrial Systems",
+        "industry": "Manufacturing",
+        "segment": "High Value",
+        "hq_country": "Sweden",
+        "sites_count": 6,
+        "default_priority": "cost",
+    },
+    "CUST003": {
+        "customer_id": "CUST003",
+        "customer_name": "Mediora Health Network",
+        "industry": "Healthcare",
+        "segment": "High Value",
+        "hq_country": "Poland",
+        "sites_count": 4,
+        "default_priority": "service",
+    },
+}
+
+_ACTIVE_DATA_PATH: Path = DEFAULT_DATA_PATH
+_REVIEW_CACHE: dict[tuple[str, str, str, str, str, str, bool], dict] = {}
+
+
 class ReviewRequest(BaseModel):
     customer_id: str = "CUST001"
     period_from: str = "2025-01"
@@ -72,6 +106,14 @@ class ReviewRequest(BaseModel):
 class InterpretRequest(BaseModel):
     prompt: str
     industry: str = "Food & Beverage"
+
+
+def _customer_industry(customer_id: str) -> str:
+    return str(CUSTOMER_META.get(customer_id, CUSTOMER_META["CUST001"])["industry"])
+
+
+def _customer_default_priority(customer_id: str) -> str:
+    return str(CUSTOMER_META.get(customer_id, CUSTOMER_META["CUST001"])["default_priority"])
 
 
 def _load_sample_review() -> dict:
@@ -95,7 +137,12 @@ def _fallback_interpret_prompt(prompt: str, industry: str = "Food & Beverage") -
 def _apply_dynamic_overrides(review: dict, req: ReviewRequest, resolved_priority: str) -> dict:
     """Adjust priority, baseline, and sensitivity on the fallback sample so UI switches work immediately."""
     out = copy.deepcopy(review)
+    cmeta = CUSTOMER_META.get(req.customer_id, CUSTOMER_META["CUST001"])
     out["meta"]["customer_id"] = req.customer_id
+    out["meta"]["customer_name"] = cmeta["customer_name"]
+    out["meta"]["industry"] = cmeta["industry"]
+    out["meta"]["segment"] = cmeta["segment"]
+    out["meta"]["hq_country"] = cmeta["hq_country"]
     out["meta"]["period"] = {"from": req.period_from, "to": req.period_to}
     out["meta"]["baseline_id"] = req.baseline_id
     out["meta"]["sensitivity"] = req.sensitivity
@@ -123,24 +170,37 @@ def _apply_dynamic_overrides(review: dict, req: ReviewRequest, resolved_priority
 
 
 def _compute_full_review(req: ReviewRequest) -> dict:
-    # Step 1: Resolve priority (from explicit priority, free-text prompt, or default)
+    # Step 1: Resolve priority using the customer's actual industry context
+    industry = _customer_industry(req.customer_id)
     resolved_priority = req.priority
     if req.prompt and not resolved_priority:
         try:
             from backend.insights.generate import interpret_prompt  # type: ignore
 
-            resolved_priority = interpret_prompt(req.prompt, "Food & Beverage")
+            resolved_priority = interpret_prompt(req.prompt, industry)
         except Exception:
-            resolved_priority = _fallback_interpret_prompt(req.prompt)
+            resolved_priority = _fallback_interpret_prompt(req.prompt, industry)
     if not resolved_priority:
-        resolved_priority = "water"
+        resolved_priority = _customer_default_priority(req.customer_id)
+
+    cache_key = (
+        req.customer_id,
+        req.period_from,
+        req.period_to,
+        req.baseline_id,
+        req.sensitivity,
+        resolved_priority,
+        req.use_llm,
+    )
+    if cache_key in _REVIEW_CACHE:
+        return copy.deepcopy(_REVIEW_CACHE[cache_key])
 
     # Step 2: Run Worker A's calculation engine if available; else use sample_review.json
     review: dict | None = None
     try:
         from backend.engine.build_review import build_review  # type: ignore
 
-        source = str(DEFAULT_DATA_PATH) if DEFAULT_DATA_PATH.exists() else None
+        source = str(_ACTIVE_DATA_PATH) if _ACTIVE_DATA_PATH.exists() else None
         review = build_review(
             customer_id=req.customer_id,
             period_from=req.period_from,
@@ -179,46 +239,23 @@ def _compute_full_review(req: ReviewRequest) -> dict:
     except Exception:
         pass
 
+    _REVIEW_CACHE[cache_key] = copy.deepcopy(review)
     return review
 
 
 @app.get("/api/health")
 def health_check() -> dict:
-    return {"status": "ok", "excel_pack_present": DEFAULT_DATA_PATH.exists()}
+    return {
+        "status": "ok",
+        "excel_pack_present": _ACTIVE_DATA_PATH.exists(),
+        "cached_reviews": len(_REVIEW_CACHE),
+    }
 
 
 @app.get("/api/customers")
 def list_customers() -> dict:
     return {
-        "customers": [
-            {
-                "customer_id": "CUST001",
-                "customer_name": "NorthStar Foods Group",
-                "industry": "Food & Beverage",
-                "segment": "Strategic High Value",
-                "hq_country": "Finland",
-                "sites_count": 24,
-                "default_priority": "water",
-            },
-            {
-                "customer_id": "CUST002",
-                "customer_name": "Apex Industrial Systems",
-                "industry": "Manufacturing",
-                "segment": "High Value",
-                "hq_country": "Sweden",
-                "sites_count": 6,
-                "default_priority": "cost",
-            },
-            {
-                "customer_id": "CUST003",
-                "customer_name": "Mediora Health Network",
-                "industry": "Healthcare",
-                "segment": "High Value",
-                "hq_country": "Poland",
-                "sites_count": 4,
-                "default_priority": "service",
-            },
-        ],
+        "customers": list(CUSTOMER_META.values()),
         "baselines": [
             {"baseline_id": "B_LOCAL", "name": "Outsourced local laundry", "is_default": True},
             {"baseline_id": "B_HOME", "name": "Home washing", "is_default": False},
