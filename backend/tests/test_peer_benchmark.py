@@ -21,7 +21,8 @@ def test_percentile_endpoints_ties_singleton_and_missing():
 def test_network_is_customer_weighted_anonymised_and_period_scoped():
     tables = dict(Customers=[], Sites=[], Products=[dict(product_id="P")], Laundries=[dict(laundry_id="L")],
                   Service_Activity=[], Repairs=[], Service_Cycles=[])
-    for cid, rate, scanned, hours in [("CURRENT", 0.5, 50, 20), ("SECRET_A", 1, 90, 10), ("SECRET_B", 0, 10, 30)]:
+    for cid, rate, scanned, hours in [("CURRENT", 0.5, 50, 20), ("SECRET_A", 1, 90, 10), ("SECRET_B", 0, 10, 30),
+                                      ("SECRET_C", 0.5, 50, 20), ("SECRET_D", 0.5, 50, 20)]:
         tables["Customers"].append(dict(customer_id=cid, customer_name="Private name " + cid))
         tables["Sites"].append(dict(customer_id=cid, site_id=cid + "_SITE"))
         keys = dict(customer_id=cid, site_id=cid + "_SITE", product_id="P", laundry_id="L")
@@ -42,13 +43,21 @@ def test_network_is_customer_weighted_anonymised_and_period_scoped():
     before = deepcopy(tables)
     r = build_peer_benchmark(tables, "CURRENT", "2025-01", "2025-01", current, site_rows)
     assert set(r["customer"]) == set(KPI_DIRECTIONS)
-    assert r["customer"]["on_time_rate"] == dict(network_median=0.5, percentile=0.5, sample_size=3)
+    assert r["customer"]["on_time_rate"] == dict(network_median=0.5, percentile=0.5, sample_size=5)
     assert r["customer"]["median_cycle_hours"]["network_median"] == 20
     assert r["customer"]["service_requests_per_wearer"]["network_median"] == 0.5
     assert r["sites"]["SELECTED_1"]["on_time_rate"] == 0
     assert r["sites"]["SELECTED_2"]["on_time_rate"] == 1
     assert "SECRET" not in json.dumps(r) and "Private name" not in json.dumps(r)
     assert tables == before
+    # Five customers in the workbook do not imply five eligible KPI values.
+    for row in tables["Service_Cycles"]:
+        if row["customer_id"] == "SECRET_D":
+            row["performance_flag"] = None
+    partial = build_peer_benchmark(tables, "CURRENT", "2025-01", "2025-01", current, site_rows)
+    assert "on_time_rate" not in partial["customer"]
+    assert "on_time_rate" in partial["methodology"]["suppressed_metrics"]
+    assert partial["customer"]["allocation_use_rate"]["sample_size"] == 5
 
 
 def test_empty_cohort_and_invalid_current_kpis_are_not_ranked():
@@ -57,3 +66,21 @@ def test_empty_cohort_and_invalid_current_kpis_are_not_ranked():
     assert r["customer"] == {}
     assert r["sites"] == {"S": {}}
     json.dumps(r, allow_nan=False)
+
+
+@pytest.mark.parametrize("n", [1, 3, 4])
+def test_small_cohorts_are_suppressed_before_loading_other_customer_data(n, monkeypatch):
+    import backend.engine.peer_benchmark as module
+    def forbidden(*args):
+        raise AssertionError("Small cohorts must not calculate other customers' KPIs")
+    monkeypatch.setattr(module, "_customer_values", forbidden)
+    tables = dict(Customers=[dict(customer_id=str(i)) for i in range(n)])
+    current = dict(on_time_rate=0.987654, service_requests=5, wearers_min_est=10)
+    r = build_peer_benchmark(tables, "0", "2025-01", "2025-01", current, [dict(site_id="S", metrics=current)])
+    assert r["customer"] == {}
+    assert r["sites"]["S"]["on_time_rate"] == 0.5
+    assert set(r["methodology"]["suppressed_metrics"]) == set(KPI_DIRECTIONS)
+    assert "network_median" not in json.dumps(r)
+    # Repeated master rows must not bypass the distinct-customer threshold.
+    tables["Customers"] *= 5
+    assert build_peer_benchmark(tables, "0", "2025-01", "2025-01", current, [])["customer"] == {}

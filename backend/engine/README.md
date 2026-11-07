@@ -133,7 +133,16 @@ the frontend owner after a contract sample update.
 `customer` map contains `on_time_rate`, `allocation_use_rate`,
 `repair_rate_per_1000`, `median_cycle_hours`, `service_requests_per_wearer`.
 Each available KPI contains `network_median`, `percentile` (0–1) and
-`sample_size`. The population is all eligible workbook customers, including
+`sample_size`. Network statistics are withheld unless **at least five distinct
+customers have a finite value for that specific KPI**. A workbook with five
+customers but four valid values for a KPI still suppresses that KPI. The current
+three-customer demo returns `customer: {}`; the UI must show site peers only,
+not substitute fake network values. `methodology.suppressed_metrics` explains
+withheld KPIs, and `minimum_group_size` documents the policy. Site percentiles
+are unaffected because they describe only the selected customer's own sites.
+This is a small-cohort disclosure safeguard, not a formal anonymity guarantee.
+
+The population is all eligible workbook customers, including
 the selected one, in the same reporting period. Each customer contributes one
 operational aggregate; sites/cycles are not pooled across customers. Selection
 uses the same valid customer/site/product/laundry keys and pickup-month rule
@@ -150,6 +159,10 @@ people or a month-normalised rate. Missing/zero wearer denominators are omitted.
 
 The block discloses its synthetic, small-cohort limitations and contains no
 other customer names, IDs or individual values. It is not an industry standard.
+For small cohorts, no other customer metrics are calculated at all. For eligible
+cohorts, operational records are grouped once per request by customer instead
+of rescanning every customer's rows for every comparison. No shared cache is
+introduced, so changing the workbook, period or factors cannot reuse stale peers.
 Baseline/sensitivity changes do not affect these operational comparisons.
 
 `products[].synthetic_purchase_cost_eur` exposes the source synthetic unit
