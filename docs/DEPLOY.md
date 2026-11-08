@@ -1,8 +1,14 @@
-# Deploying the demo (free: Render for the API, Vercel for the dashboard)
+# Deploying the demo
+
+## Online demo (already set up): GitHub Pages
+
+https://bundaugang.github.io/since-ai-26/ is rebuilt by [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) on every push to `main` that touches `frontend/` or `contracts/`. It is a static copy with no API: it runs on the bundled NorthStar review, shows an "Online demo" banner, and its deck buttons link to the ready-made decks in [`deliverables/`](../deliverables/). Run it manually under **Actions → Deploy demo to GitHub Pages → Run workflow**.
+
+## Full hosted setup (free: Render for the API, Vercel for the dashboard)
 
 About 10 minutes, all in the browser, signing in with GitHub. Result: a public **Demo URL** (the Vercel link).
 
-## 1. Backend API on Render
+### 1. Backend API on Render
 
 1. Go to https://dashboard.render.com, sign in with GitHub.
 2. **New → Blueprint**, pick the repository `since-ai-26`, branch `main`. Render reads [`render.yaml`](../render.yaml) and builds the [`Dockerfile`](../Dockerfile).
@@ -16,7 +22,7 @@ Without the data pack the API serves the bundled NorthStar review, and the dashb
 
 The free plan sleeps after about 15 minutes idle; the first request then takes up to a minute. The dashboard shows the bundled sample meanwhile and switches to the live API by itself. Open the demo once a few minutes before judging to wake it.
 
-## 2. Dashboard on Vercel
+### 2. Dashboard on Vercel
 
 1. Go to https://vercel.com/new, sign in with GitHub, import `since-ai-26`.
 2. **Root Directory:** `frontend` (Framework: Next.js is detected).
@@ -26,6 +32,6 @@ The free plan sleeps after about 15 minutes idle; the first request then takes u
 
 If `NEXT_PUBLIC_API_URL` changes later, redeploy on Vercel (it is built into the page).
 
-## Quick fallback
+### Quick fallback
 
 The dashboard also runs with no API at all (sample data, everything except export): deploy only step 2 without `NEXT_PUBLIC_API_URL`.

@@ -26,7 +26,7 @@ export function Sidebar({ view, onView, customerName, industry, counts, mode, on
     <aside className="no-print sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-white lg:flex">
       <div className="flex h-16 items-center border-b border-line px-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/lindstrom-logo.png" alt="Lindström" className="h-7 w-auto" />
+        <img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/lindstrom-logo.png`} alt="Lindström" className="h-7 w-auto" />
       </div>
       <div className="px-5 pb-3 pt-5">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">Value review</div>

@@ -9,6 +9,8 @@ A Key Account Manager (KAM) tool that turns multi-site laundry, RFID, repair and
 2. **How does the circular service compare** with the relevant alternatives?
 3. **What should Lindström and the customer improve next?**
 
+**Try it online:** https://bundaugang.github.io/since-ai-26/ (runs in the browser on the bundled NorthStar sample; for live recalculation and deck export, run it locally, see §4).
+
 **3-minute demo:** [`Script.md`](./Script.md) (what to say, what to click, every number checked against the running product).
 
 ---
@@ -78,7 +80,7 @@ npm run dev
 - **Data pack:** put `Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx` in [`data/`](./data/) (kept out of Git) for live calculations across all customers, periods, baselines and cases.
 - **Offline:** without the data pack or the API, the dashboard and API serve the bundled [`contracts/sample_review.json`](./contracts/sample_review.json) (`CUST001`, 2025) and say so on screen.
 - **Optional AI wording:** `cp .env.example .env` and add `GEMINI_API_KEY`. The API reads `.env` at startup; everything works without it.
-- **Hosted demo:** Render (API, [`render.yaml`](./render.yaml) + [`Dockerfile`](./Dockerfile)) and Vercel (dashboard); steps in [`docs/DEPLOY.md`](./docs/DEPLOY.md).
+- **Hosted demo:** a static copy is published to GitHub Pages on every push to `main` ([`.github/workflows/pages.yml`](./.github/workflows/pages.yml)); a full hosted setup (Render API + Vercel) is in [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ```bash
 python -m pytest -q backend          # 350 tests, no network needed

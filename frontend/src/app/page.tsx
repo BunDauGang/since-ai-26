@@ -37,6 +37,10 @@ const TITLES: Record<ViewId, string> = {
 
 const VIEW_IDS = Object.keys(TITLES) as ViewId[];
 
+/** Static copy on GitHub Pages: no API, runs on the bundled sample review. */
+const STATIC_DEMO = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
+const DECKS_URL = "https://github.com/BunDauGang/since-ai-26/tree/main/deliverables";
+
 export default function Page() {
   const [audience, setAudience] = useState<Audience>("kam");
   const r = useReview();
@@ -135,6 +139,14 @@ export default function Page() {
 
   async function onExport(format: "pptx" | "pdf") {
     if (!r.canExport) return;
+    if (STATIC_DEMO && r.mode !== "live") {
+      setToast({
+        kind: "info",
+        text: "This online demo has no API, so it cannot build a deck. Ready-made NorthStar decks (PPTX and PDF) are in the repository.",
+        action: { label: "Open the decks", run: () => window.open(DECKS_URL, "_blank", "noopener") },
+      });
+      return;
+    }
     setExporting(format);
     try {
       await exportReview({ ...review, meeting: meetingBlock(review, meeting) }, format);
@@ -248,6 +260,16 @@ export default function Page() {
               </button>
             </div>
           </div>
+          {STATIC_DEMO && r.mode !== "live" && (
+            <div className="mb-4 rounded-lg bg-navy-50 px-4 py-2.5 text-[13px] text-navy-900 ring-1 ring-blue-200">
+              Online demo: runs in your browser on the bundled NorthStar review (synthetic 2025 data). Live recalculation, other customers and deck
+              downloads need the API (see the repository README);{" "}
+              <a href={DECKS_URL} target="_blank" rel="noopener noreferrer" className="font-semibold underline">
+                ready-made decks are here
+              </a>
+              .
+            </div>
+          )}
           {r.error && !r.blocking && (
             <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 text-[13px] text-red-700 ring-1 ring-red-200">
               Live engine error: {r.error}. The view below is from the previous settings and cannot be exported until a recalculation succeeds.
