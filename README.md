@@ -78,6 +78,7 @@ npm run dev
 - **Data pack:** put `Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx` in [`data/`](./data/) (kept out of Git) for live calculations across all customers, periods, baselines and cases.
 - **Offline:** without the data pack or the API, the dashboard and API serve the bundled [`contracts/sample_review.json`](./contracts/sample_review.json) (`CUST001`, 2025) and say so on screen.
 - **Optional AI wording:** `cp .env.example .env` and add `GEMINI_API_KEY`. The API reads `.env` at startup; everything works without it.
+- **Hosted demo:** Render (API, [`render.yaml`](./render.yaml) + [`Dockerfile`](./Dockerfile)) and Vercel (dashboard); steps in [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ```bash
 python -m pytest -q backend          # 350 tests, no network needed
@@ -113,7 +114,7 @@ Excel data pack ──► backend/engine ──► review.json ──► backend
 | [`backend/export/`](./backend/export/) | Lindström-branded PPTX and PDF |
 | [`frontend/`](./frontend/) | Dashboard: customer meeting, prep AI, deep-dive views |
 | [`contracts/`](./contracts/) | `review.schema.json`, `prep.schema.json`, `sample_review.json` |
-| [`docs/`](./docs/) | Challenge brief, methodology, data readiness, judge Q&A, prep API |
+| [`docs/`](./docs/) | Challenge brief, methodology, data readiness, judge Q&A, prep API, deployment |
 
 ---
 

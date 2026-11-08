@@ -1,0 +1,20 @@
+# Render Blueprint for the backend API (free plan). The dashboard goes on Vercel with
+# NEXT_PUBLIC_API_URL set to this service's URL. See docs/DEPLOY.md.
+services:
+  - type: web
+    name: lindstrom-review-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      # Optional AI wording; leave empty to run on deterministic templates only.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: GEMINI_FALLBACK_MODELS
+        value: gemini-3.6-flash
+      # Only used if the data pack is uploaded as a Render secret file; otherwise the sample is served.
+      - key: LINDSTROM_DATA_PACK
+        value: /etc/secrets/Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx

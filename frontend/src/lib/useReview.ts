@@ -47,14 +47,33 @@ export function useReview() {
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
+  // Without the data pack (e.g. a hosted demo) the API can only serve the sample customer.
+  const [pack, setPack] = useState(true);
   const checkBackend = useCallback(async () => {
     setMode("checking");
-    setMode((await pingBackend()) ? "live" : "offline");
+    const { ok, pack: hasPack } = await pingBackend();
+    setPack(hasPack);
+    setMode(ok ? "live" : "offline");
   }, []);
 
   useEffect(() => {
-    void checkBackend();
-  }, [checkBackend]);
+    // A sleeping hosted API can take up to a minute to wake: keep the sample on screen and retry quietly.
+    let cancelled = false;
+    let tries = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const attempt = async () => {
+      const { ok, pack: hasPack } = await pingBackend();
+      if (cancelled) return;
+      setPack(hasPack);
+      setMode(ok ? "live" : "offline");
+      if (!ok && ++tries < 5) timer = setTimeout(attempt, 15000);
+    };
+    void attempt();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
 
   const periodValid = controls.periodFrom <= controls.periodTo;
   const key = requestKey(controls);
@@ -138,7 +157,7 @@ export function useReview() {
 
   const update = useCallback((patch: Partial<Controls>) => setControls((c) => ({ ...c, ...patch })), []);
 
-  const customerAvailable = (id: string) => mode === "live" || id === SAMPLE_REVIEW.meta.customer_id;
+  const customerAvailable = (id: string) => (mode === "live" && pack) || id === SAMPLE_REVIEW.meta.customer_id;
   const customer = CUSTOMERS.find((c) => c.id === controls.customerId) ?? CUSTOMERS[0];
 
   return {

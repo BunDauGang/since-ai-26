@@ -16,12 +16,15 @@ async function withTimeout<T>(p: (signal: AbortSignal) => Promise<T>, ms: number
 }
 
 /** True when the FastAPI backend answers. */
-export async function pingBackend(): Promise<boolean> {
+/** Is the API reachable, and does it have the Excel data pack (all customers) or only the bundled sample? */
+export async function pingBackend(): Promise<{ ok: boolean; pack: boolean }> {
   try {
-    const res = await withTimeout((signal) => fetch(`${API_URL}/api/customers`, { signal }), 1500);
-    return res.ok;
+    const res = await withTimeout((signal) => fetch(`${API_URL}/api/health`, { signal }), 8000);
+    if (!res.ok) return { ok: false, pack: false };
+    const body = (await res.json()) as { excel_pack_present?: boolean };
+    return { ok: true, pack: body.excel_pack_present !== false };
   } catch {
-    return false;
+    return { ok: false, pack: false };
   }
 }
 

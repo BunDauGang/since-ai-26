@@ -59,7 +59,10 @@ if "pytest" not in _sys.modules:
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 SAMPLE_REVIEW_PATH = ROOT_DIR / "contracts" / "sample_review.json"
-DEFAULT_DATA_PATH = ROOT_DIR / "data" / "Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx"
+# A hosted deployment can mount the (git-ignored) data pack elsewhere, e.g. as a secret file.
+import os as _os
+DEFAULT_DATA_PATH = (Path(_os.environ["LINDSTROM_DATA_PACK"]) if _os.environ.get("LINDSTROM_DATA_PACK")
+                     else ROOT_DIR / "data" / "Lindstrom_SinceAI_Customer_Value_Synthetic_Data_Pack.xlsx")
 
 app = FastAPI(
     title="Lindström Customer Value & Sustainability Review API",
